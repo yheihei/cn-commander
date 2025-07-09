@@ -24,13 +24,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 基本フロー
 
-- PRD の各項目を「Plan → Imp → Debug → Review → Doc」サイクルで処理する
-- irreversible / high-risk 操作（削除・本番 DB 変更・外部 API 決定）は必ず停止する
+- PRDや与えられたドキュメントを見て、「Plan → Imp → Debug → Review → Doc」サイクルで処理する
 
 #### Phase1 Plan
 
-- PRDを受け取ったら、PRDを確認し、不明点がないか確認する
-- その後、PRD の各項目を Planに落とし込む
+- 受け取った情報を確認し、不明点がないか確認する
+- その後、受け取った情報 の各項目を Planに落とし込む
   - Planは `.docs/todo/YYYYMMDDhhmm_${タスクの概要}.md` に保存
 
 #### Phase2 Imp
@@ -47,8 +46,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### Phase4 Review
 
-- これまでのやり取りの中でPRDの変更があったら。最新のPRDに更新する
-- subagentを起動し、PRDを伝え、レビューしてもらう
+- これまでのやり取りの中で @.docs/prd/requirements.md の変更があったら。最新の要求に更新する
+- 自己レビューする。特に要求に違反するものがあれば指摘するか、ユーザーに確認を取る
 - レビュー指摘があればImpに戻る
 
 #### Phase5 Doc
