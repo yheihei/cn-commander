@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 本ゲームの指針
 
-@.docs/prd/cryptoninja-rts-requirements.md
+@.docs/prd/basic-requirements.md
 
 ## 応答のルール
 
