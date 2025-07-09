@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 本ゲームの指針
 
-@.docs/prd/basic-requirements.md
+@docs/prd/requirements.md
 
 ## 応答のルール
 
@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 受け取った情報を確認し、不明点がないか確認する
 - その後、受け取った情報 の各項目を Planに落とし込む
-  - Planは `.docs/todo/YYYYMMDDhhmm_${タスクの概要}.md` に保存
+  - Planは `docs/todo/YYYYMMDDhhmm_${タスクの概要}.md` に保存
 
 #### Phase2 Imp
 
@@ -46,11 +46,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### Phase4 Review
 
-- これまでのやり取りの中で @.docs/prd/requirements.md の変更があったら。最新の要求に更新する
+- これまでのやり取りの中で @docs/prd/requirements.md の変更があったら。最新の要求に更新する
 - 自己レビューする。特に要求に違反するものがあれば指摘するか、ユーザーに確認を取る
 - レビュー指摘があればImpに戻る
 
 #### Phase5 Doc
 
-- 基本設計書を`.docs/design/YYYYMMDD_${タスクの概要}.md` に保存
+- 基本設計書を`docs/design/YYYYMMDD_${タスクの概要}.md` に保存
 - ユーザーからのフィードバックを待つ。フィードバックがあれば適宜前のフェーズに戻ること
