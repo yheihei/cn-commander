@@ -1,0 +1,33 @@
+{
+  "name": "cn-commander",
+  "version": "0.1.0",
+  "description": "クリプト忍者咲耶コマンダー - 2D RTS game built with Phaser 3",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "webpack serve --config webpack.config.js --mode development",
+    "build": "webpack --config webpack.config.js --mode production",
+    "serve": "http-server dist -p 8080 -c-1"
+  },
+  "keywords": [
+    "phaser3",
+    "game",
+    "rts",
+    "ninja"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phaser": "^3.70.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "html-webpack-plugin": "^5.5.3",
+    "http-server": "^14.1.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
