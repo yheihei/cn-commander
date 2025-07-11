@@ -35,6 +35,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 #### Phase2 Imp
 
 - Planをもとに実装する
+- スプライトシートなど、素材が必要なものがあればユーザーに確認する
 
 #### Phase3 Debug
 
