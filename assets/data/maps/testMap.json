@@ -1,0 +1,110 @@
+{
+  "name": "testMap",
+  "width": 40,
+  "height": 40,
+  "tileSize": 16,
+  "layers": [
+    {
+      "name": "terrain",
+      "visible": true,
+      "tiles": [
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain"],
+        ["plain","plain","plain","mountain","mountain","mountain","mountain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","mountain","mountain","mountain","mountain","plain","plain","plain","plain"],
+        ["plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","forest","forest","forest","forest","forest","forest","forest","forest","forest","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain"],
+        ["plain","plain","plain","mountain","mountain","mountain","mountain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","mountain","mountain","mountain","mountain","plain","plain","plain","plain"],
+        ["plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","mountain","mountain","mountain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"],
+        ["plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain","plain"]
+      ]
+    }
+  ],
+  "startPositions": {
+    "player": { "x": 5, "y": 5 },
+    "enemy": { "x": 34, "y": 34 }
+  },
+  "bases": [
+    {
+      "id": "player-hq",
+      "name": "プレイヤー本拠地",
+      "type": "headquarters",
+      "x": 5,
+      "y": 5,
+      "hp": 200,
+      "maxHp": 200,
+      "owner": "player"
+    },
+    {
+      "id": "enemy-hq",
+      "name": "敵本拠地",
+      "type": "headquarters",
+      "x": 34,
+      "y": 34,
+      "hp": 200,
+      "maxHp": 200,
+      "owner": "enemy"
+    },
+    {
+      "id": "neutral-base-1",
+      "name": "中立拠点1",
+      "type": "normal_base",
+      "x": 20,
+      "y": 10,
+      "hp": 80,
+      "maxHp": 80,
+      "owner": "neutral"
+    },
+    {
+      "id": "neutral-base-2",
+      "name": "中立拠点2",
+      "type": "normal_base",
+      "x": 10,
+      "y": 30,
+      "hp": 80,
+      "maxHp": 80,
+      "owner": "neutral"
+    },
+    {
+      "id": "neutral-base-3",
+      "name": "中立拠点3",
+      "type": "normal_base",
+      "x": 30,
+      "y": 20,
+      "hp": 80,
+      "maxHp": 80,
+      "owner": "neutral"
+    }
+  ]
+}
