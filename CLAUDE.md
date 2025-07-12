@@ -41,7 +41,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 指定のテストがあればテストを行う
 - 指定がなければ関連のテストを探してテストを行う
-- 関連のテストがなければ停止して、なんのテストを行うべきかユーザーに確認する
+- 関連のテストがなければ統合テストを作成する
+  - テスト作成ルール: @.claude/rules/integration-test.md （モックベースの統合テスト作成ガイド）
 - テストが通ったらフォーマッタをかける
 - lintチェックを行い、エラーがあればImpに戻り、修正する
 
