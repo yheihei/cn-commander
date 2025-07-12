@@ -227,6 +227,14 @@ export class Army extends Phaser.GameObjects.Container {
     this.movementState.isMoving = true;
     this.movementState.targetPosition = target;
     this.movementState.mode = mode;
+    
+    // update メソッドで使用される movement プロパティも設定
+    this.movement = {
+      targetPosition: target,
+      path: [target],
+      currentPathIndex: 0,
+      isMoving: true,
+    };
   }
 
   stopMovement(): void {
@@ -234,10 +242,17 @@ export class Army extends Phaser.GameObjects.Container {
     this.movementState.targetPosition = null;
     this.movementState.currentPath = null;
     this.movementState.currentSpeed = 0;
+    
+    // movement プロパティもクリア
+    this.movement = null;
   }
 
   getMovementState(): MovementState {
     return { ...this.movementState };
+  }
+
+  getPosition(): Position {
+    return { x: this.x, y: this.y };
   }
 
   getMovementMode(): MovementMode {

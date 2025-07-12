@@ -7,11 +7,17 @@ import { ArmyManager } from "../army/ArmyManager";
 import { ArmyFactory } from "../army/ArmyFactory";
 import { Army } from "../army/Army";
 import { MovementManager } from "../movement/MovementManager";
+import { UIManager } from "../ui/UIManager";
+import { MovementInputHandler } from "../input/MovementInputHandler";
+import { MovementCommandSystem } from "../movement/MovementCommand";
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
   private armyManager!: ArmyManager;
   private movementManager!: MovementManager;
+  private uiManager!: UIManager;
+  private inputHandler!: MovementInputHandler;
+  private commandSystem!: MovementCommandSystem;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private debugText!: Phaser.GameObjects.Text;
   private isDragging: boolean = false;
@@ -19,7 +25,6 @@ export class GameScene extends Phaser.Scene {
   private dragStartY: number = 0;
   private cameraStartX: number = 0;
   private cameraStartY: number = 0;
-  private selectedArmy: Army | null = null;
 
   constructor() {
     super({ key: "GameScene" });
@@ -32,11 +37,27 @@ export class GameScene extends Phaser.Scene {
     // 軍団マネージャーの初期化
     this.armyManager = new ArmyManager(this);
 
+    // 移動コマンドシステムの初期化
+    this.commandSystem = new MovementCommandSystem();
+
     // 移動マネージャーの初期化
     this.movementManager = new MovementManager(
       this,
       this.armyManager,
       this.mapManager,
+      this.commandSystem,
+    );
+
+    // UIマネージャーの初期化
+    this.uiManager = new UIManager(this);
+
+    // 入力ハンドラーの初期化
+    this.inputHandler = new MovementInputHandler(
+      this,
+      this.armyManager,
+      this.mapManager,
+      this.commandSystem,
+      this.uiManager,
     );
 
     // テストマップを読み込むか、デフォルトマップを作成
@@ -205,7 +226,7 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
-    // マウスドラッグでカメラ移動
+    // マウスドラッグでカメラ移動（右ドラッグのみ処理）
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown()) {
         this.isDragging = true;
@@ -213,20 +234,8 @@ export class GameScene extends Phaser.Scene {
         this.dragStartY = pointer.y;
         this.cameraStartX = this.cameras.main.scrollX;
         this.cameraStartY = this.cameras.main.scrollY;
-      } else if (pointer.leftButtonDown()) {
-        // 左クリックで軍団選択
-        const worldPoint = this.cameras.main.getWorldPoint(
-          pointer.x,
-          pointer.y,
-        );
-        const army = this.armyManager.getArmyAt(worldPoint.x, worldPoint.y);
-
-        if (army) {
-          this.selectArmy(army);
-        } else {
-          this.selectArmy(null);
-        }
       }
+      // 左クリックはMovementInputHandlerで処理するため、ここでは何もしない
     });
 
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
@@ -260,14 +269,8 @@ export class GameScene extends Phaser.Scene {
     this.debugText.setDepth(1000);
   }
 
-  private selectArmy(army: Army | null): void {
-    this.selectedArmy = army;
-
-    if (army) {
-      console.log(`Selected army: ${army.getName()}`);
-    } else {
-      console.log("Deselected army");
-    }
+  private getSelectedArmy(): Army | null {
+    return this.inputHandler.getSelectedArmy();
   }
 
   private updateDebugInfo(pointer: Phaser.Input.Pointer): void {
@@ -303,16 +306,17 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 選択中の軍団情報を表示
-    if (this.selectedArmy) {
+    const selectedArmy = this.getSelectedArmy();
+    if (selectedArmy) {
       debugInfo += `\n\n[Selected Army]\n`;
-      debugInfo += `Name: ${this.selectedArmy.getName()}\n`;
-      debugInfo += `Members: ${this.selectedArmy.getMemberCount()}\n`;
-      debugInfo += `Alive: ${this.selectedArmy.getAliveMembers().length}\n`;
-      debugInfo += `Avg Speed: ${this.selectedArmy.getAverageMovementSpeed().toFixed(1)}\n`;
+      debugInfo += `Name: ${selectedArmy.getName()}\n`;
+      debugInfo += `Members: ${selectedArmy.getMemberCount()}\n`;
+      debugInfo += `Alive: ${selectedArmy.getAliveMembers().length}\n`;
+      debugInfo += `Avg Speed: ${selectedArmy.getAverageMovementSpeed().toFixed(1)}\n`;
       // 軍団の中心位置をグリッド座標で表示
       const armyGrid = this.mapManager.pixelToGrid(
-        this.selectedArmy.x,
-        this.selectedArmy.y,
+        selectedArmy.x,
+        selectedArmy.y,
       );
       debugInfo += `Grid Pos: ${armyGrid.x}, ${armyGrid.y}`;
     }
