@@ -54,5 +54,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### Phase5 Doc
 
-- 基本設計書を`docs/design/YYYYMMDD_${タスクの概要}.md` に保存
 - ユーザーからのフィードバックを待つ。フィードバックがあれば適宜前のフェーズに戻ること
