@@ -17,10 +17,19 @@
 ### 1. テストファイルの配置
 ```
 test/
-├── integration/      # 統合テスト
-├── fixtures/         # テストデータ
-└── setup.ts         # テスト環境のセットアップ
+├── integration/           # 統合テスト
+│   ├── epic-01-foundation/  # 基盤システムテスト
+│   ├── epic-02-map-terrain/ # マップ・地形システムテスト
+│   ├── epic-03-character/   # キャラクターシステムテスト
+│   └── ...
+├── fixtures/              # テストデータ
+└── setup.ts              # テスト環境のセットアップ
 ```
+
+#### エピック単位のテスト構成
+- 各エピックの機能が連携して動作することを確認
+- エピック内の複数タスクをまとめてテスト
+- 命名規則: `[SystemName].integration.test.ts`
 
 ### 2. テストケースの構成
 統合テストは以下の観点で構成します：
@@ -95,7 +104,8 @@ export const createMockScene = () => {
 
 ### テストの書き方
 ```typescript
-describe('システム Integration Tests', () => {
+// test/integration/epic-02-map-terrain/MapSystem.integration.test.ts
+describe('[エピック2] MapSystem Integration Tests', () => {
   let scene: any;
   let manager: Manager;
 
@@ -119,6 +129,10 @@ describe('システム Integration Tests', () => {
   });
 });
 ```
+
+#### テストファイル命名規則
+- エピック番号をフォルダ名に含める: `epic-XX-name/`
+- テスト名にエピック番号を表記: `[エピックX]`
 
 ## ベストプラクティス
 
@@ -153,7 +167,10 @@ package.jsonに以下のスクリプトを定義：
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  testMatch: ['<rootDir>/test/**/*.test.ts'],
+  testMatch: [
+    '<rootDir>/test/integration/epic-*/**/*.test.ts',
+    '<rootDir>/test/unit/**/*.test.ts'
+  ],
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/index.ts'],
 };
