@@ -3,7 +3,16 @@ import { TileType, TileData, TERRAIN_EFFECTS } from '../types/TileTypes';
 import { GridCoordinate, PixelCoordinate } from '../types/MapTypes';
 import { MAP_CONFIG } from '../config/mapConfig';
 
-export class MapTile extends Phaser.GameObjects.Sprite {
+// テスト環境でPhaser.GameObjects.Spriteがundefinedの場合のフォールバック
+const SpriteBase = Phaser.GameObjects?.Sprite || class {
+  constructor(public scene: any, public x: number, public y: number, public texture: string, public frame?: string | number) {}
+  setDisplaySize() { return this; }
+  setInteractive() { return this; }
+  on() { return this; }
+  destroy() {}
+};
+
+export class MapTile extends SpriteBase {
   private tileData: TileData;
   private gridPosition: GridCoordinate;
   private highlightGraphics?: Phaser.GameObjects.Graphics;
