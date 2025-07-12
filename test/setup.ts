@@ -122,9 +122,14 @@ jest.mock('phaser', () => ({
   GameObjects: {
     Sprite: class MockSprite {
       constructor(public scene: any, public x: number, public y: number, public texture: string, public frame?: string | number) {}
-      setDisplaySize = jest.fn();
-      setInteractive = jest.fn();
-      on = jest.fn();
+      setDisplaySize = jest.fn().mockReturnThis();
+      setInteractive = jest.fn().mockReturnThis();
+      setPosition = jest.fn(function(this: any, x?: number, y?: number) {
+        if (x !== undefined) this.x = x;
+        if (y !== undefined) this.y = y;
+        return this;
+      });
+      on = jest.fn().mockReturnThis();
       destroy = jest.fn();
     },
     Graphics: class MockGraphics {
@@ -145,9 +150,11 @@ jest.mock('phaser', () => ({
     },
     Container: class MockContainer {
       constructor(public scene: any, public x: number, public y: number) {}
-      add = jest.fn();
-      setVisible = jest.fn();
+      add = jest.fn().mockReturnThis();
+      remove = jest.fn().mockReturnThis();
+      setVisible = jest.fn().mockReturnThis();
       destroy = jest.fn();
+      list = [];
     }
   }
 }));
