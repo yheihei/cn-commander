@@ -1,4 +1,4 @@
-import * as Phaser from 'phaser';
+import * as Phaser from "phaser";
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -6,33 +6,33 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   height: 720,
   fps: {
     target: 30,
-    forceSetTimeOut: false
+    forceSetTimeOut: false,
   },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    parent: 'game-container',
+    parent: "game-container",
     min: {
       width: 640,
-      height: 360
+      height: 360,
     },
     max: {
       width: 1920,
-      height: 1080
-    }
+      height: 1080,
+    },
   },
   physics: {
-    default: 'arcade',
+    default: "arcade",
     arcade: {
       gravity: { x: 0, y: 0 },
-      debug: false
-    }
+      debug: false,
+    },
   },
-  backgroundColor: '#2d2d2d',
+  backgroundColor: "#2d2d2d",
   pixelArt: true,
   antialias: false,
   roundPixels: true,
-  scene: []
+  scene: [],
 };
 
 export default gameConfig;

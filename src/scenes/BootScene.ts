@@ -1,4 +1,4 @@
-import * as Phaser from 'phaser';
+import * as Phaser from "phaser";
 
 export default class BootScene extends Phaser.Scene {
   private loadingText?: Phaser.GameObjects.Text;
@@ -6,7 +6,7 @@ export default class BootScene extends Phaser.Scene {
   private progressBox?: Phaser.GameObjects.Graphics;
 
   constructor() {
-    super({ key: 'BootScene' });
+    super({ key: "BootScene" });
   }
 
   preload(): void {
@@ -14,10 +14,15 @@ export default class BootScene extends Phaser.Scene {
     const height = this.cameras.main.height;
 
     // ロゴテキスト
-    const logoText = this.add.text(width / 2, height / 2 - 100, 'クリプト忍者咲耶コマンダー', {
-      font: '48px sans-serif',
-      color: '#ffffff'
-    });
+    const logoText = this.add.text(
+      width / 2,
+      height / 2 - 100,
+      "クリプト忍者咲耶コマンダー",
+      {
+        font: "48px sans-serif",
+        color: "#ffffff",
+      },
+    );
     logoText.setOrigin(0.5, 0.5);
 
     // プログレスボックス（背景）
@@ -29,26 +34,31 @@ export default class BootScene extends Phaser.Scene {
     this.progressBar = this.add.graphics();
 
     // ローディングテキスト
-    this.loadingText = this.add.text(width / 2, height / 2 + 60, 'Loading...', {
-      font: '20px sans-serif',
-      color: '#ffffff'
+    this.loadingText = this.add.text(width / 2, height / 2 + 60, "Loading...", {
+      font: "20px sans-serif",
+      color: "#ffffff",
     });
     this.loadingText.setOrigin(0.5, 0.5);
 
     // アセットの読み込み進捗を監視
-    this.load.on('progress', (value: number) => {
+    this.load.on("progress", (value: number) => {
       if (this.progressBar) {
         this.progressBar.clear();
         this.progressBar.fillStyle(0xffffff, 1);
-        this.progressBar.fillRect(width / 2 - 150, height / 2 + 10, 300 * value, 30);
+        this.progressBar.fillRect(
+          width / 2 - 150,
+          height / 2 + 10,
+          300 * value,
+          30,
+        );
       }
-      
+
       if (this.loadingText) {
         this.loadingText.setText(`Loading... ${Math.floor(value * 100)}%`);
       }
     });
 
-    this.load.on('complete', () => {
+    this.load.on("complete", () => {
       if (this.progressBar) {
         this.progressBar.destroy();
       }
@@ -70,13 +80,13 @@ export default class BootScene extends Phaser.Scene {
     const titleText = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.centerY - 50,
-      'クリプト忍者咲耶コマンダー',
+      "クリプト忍者咲耶コマンダー",
       {
-        font: '48px sans-serif',
-        color: '#ffffff',
-        align: 'center',
-        lineSpacing: 10
-      }
+        font: "48px sans-serif",
+        color: "#ffffff",
+        align: "center",
+        lineSpacing: 10,
+      },
     );
     titleText.setOrigin(0.5);
 
@@ -84,48 +94,55 @@ export default class BootScene extends Phaser.Scene {
     const startButton = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.centerY + 50,
-      'クリックして開始',
+      "クリックして開始",
       {
-        font: '24px sans-serif',
-        color: '#ffffff',
-        backgroundColor: '#444444',
-        padding: { x: 20, y: 10 }
-      }
+        font: "24px sans-serif",
+        color: "#ffffff",
+        backgroundColor: "#444444",
+        padding: { x: 20, y: 10 },
+      },
     );
     startButton.setOrigin(0.5);
     startButton.setInteractive();
-    
+
     // ホバー効果
-    startButton.on('pointerover', () => {
-      startButton.setBackgroundColor('#666666');
+    startButton.on("pointerover", () => {
+      startButton.setBackgroundColor("#666666");
     });
-    
-    startButton.on('pointerout', () => {
-      startButton.setBackgroundColor('#444444');
+
+    startButton.on("pointerout", () => {
+      startButton.setBackgroundColor("#444444");
     });
-    
+
     // クリックでPreloadSceneへ遷移
-    startButton.on('pointerdown', () => {
-      this.scene.start('PreloadScene');
+    startButton.on("pointerdown", () => {
+      this.scene.start("PreloadScene");
     });
 
     // FPS表示（デバッグ用）
-    this.add.text(10, 10, 'FPS: 30', {
-      font: '16px sans-serif',
-      color: '#00ff00'
+    this.add.text(10, 10, "FPS: 30", {
+      font: "16px sans-serif",
+      color: "#00ff00",
     });
 
     // 解像度情報表示（デバッグ用）
-    this.add.text(10, 30, `Resolution: ${this.game.config.width}x${this.game.config.height}`, {
-      font: '16px sans-serif',
-      color: '#00ff00'
-    });
+    this.add.text(
+      10,
+      30,
+      `Resolution: ${this.game.config.width}x${this.game.config.height}`,
+      {
+        font: "16px sans-serif",
+        color: "#00ff00",
+      },
+    );
   }
 
   update(_time: number, _delta: number): void {
     // FPS表示を更新
     const fps = this.game.loop.actualFps;
-    const fpsText = this.children.list[this.children.list.length - 2] as Phaser.GameObjects.Text;
+    const fpsText = this.children.list[
+      this.children.list.length - 2
+    ] as Phaser.GameObjects.Text;
     if (fpsText) {
       fpsText.setText(`FPS: ${Math.round(fps)}`);
     }
