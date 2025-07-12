@@ -1,9 +1,11 @@
 import * as Phaser from 'phaser';
 import gameConfig from './config/gameConfig';
 import BootScene from './scenes/BootScene';
+import { PreloadScene } from './scenes/PreloadScene';
+import { GameScene } from './scenes/GameScene';
 
 // シーンを設定に追加
-gameConfig.scene = [BootScene];
+gameConfig.scene = [BootScene, PreloadScene, GameScene];
 
 // ゲームインスタンスを作成
 const game = new Phaser.Game(gameConfig);

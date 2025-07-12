@@ -66,19 +66,48 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    // 開発用のテキストを表示
-    const text = this.add.text(
+    // タイトル画面のテキストを表示
+    const titleText = this.add.text(
       this.cameras.main.centerX,
-      this.cameras.main.centerY,
-      'Phaser3プロジェクト初期化完了\n解像度: 1280x720\nFPS: 30',
+      this.cameras.main.centerY - 50,
+      'クリプト忍者咲耶コマンダー',
       {
-        font: '32px sans-serif',
+        font: '48px sans-serif',
         color: '#ffffff',
         align: 'center',
         lineSpacing: 10
       }
     );
-    text.setOrigin(0.5);
+    titleText.setOrigin(0.5);
+
+    // 開始ボタン
+    const startButton = this.add.text(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY + 50,
+      'クリックして開始',
+      {
+        font: '24px sans-serif',
+        color: '#ffffff',
+        backgroundColor: '#444444',
+        padding: { x: 20, y: 10 }
+      }
+    );
+    startButton.setOrigin(0.5);
+    startButton.setInteractive();
+    
+    // ホバー効果
+    startButton.on('pointerover', () => {
+      startButton.setBackgroundColor('#666666');
+    });
+    
+    startButton.on('pointerout', () => {
+      startButton.setBackgroundColor('#444444');
+    });
+    
+    // クリックでPreloadSceneへ遷移
+    startButton.on('pointerdown', () => {
+      this.scene.start('PreloadScene');
+    });
 
     // FPS表示（デバッグ用）
     this.add.text(10, 10, 'FPS: 30', {
