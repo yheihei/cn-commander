@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "webpack serve --config webpack.config.js --mode development",
     "build": "webpack --config webpack.config.js --mode production",
-    "serve": "http-server dist -p 8080 -c-1"
+    "serve": "http-server dist -p 8080 -c-1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "phaser3",
@@ -20,10 +23,15 @@
     "phaser": "^3.70.0"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
     "copy-webpack-plugin": "^11.0.0",
     "html-webpack-plugin": "^5.5.3",
     "http-server": "^14.1.1",
+    "jest": "^30.0.4",
+    "jest-canvas-mock": "^2.5.2",
+    "jest-environment-jsdom": "^30.0.4",
+    "ts-jest": "^29.4.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.2",
     "webpack": "^5.89.0",
