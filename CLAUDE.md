@@ -32,6 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - @docs/epics/epic.md を読み、どのタスクかを明確にする
 - 受け取った情報をもとに基本設計書を出力する
   - 出力のルールは @.claude/rules/design-doc.md を読むこと
+- @docs/design/epic-* 配下を参照し、関連する設計書がないか確認する。関連する設計書があればそちらも更新する
 
 #### Phase2 Imp
 
@@ -55,4 +56,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### Phase5 Doc
 - 基本設計書に修正があれば修正する
+- やり取りの結果、@docs/prd/requirements.md に修正が必要であれば修正する
 - ユーザーからのフィードバックを待つ。フィードバックがあれば適宜前のフェーズに戻ること
