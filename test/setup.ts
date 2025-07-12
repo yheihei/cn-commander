@@ -67,14 +67,17 @@ jest.mock('phaser', () => ({
     add = {
       text: jest.fn(),
       graphics: jest.fn(() => ({
-        fillStyle: jest.fn(),
-        fillRect: jest.fn(),
-        lineStyle: jest.fn(),
-        strokeRect: jest.fn(),
-        moveTo: jest.fn(),
-        lineTo: jest.fn(),
-        strokePath: jest.fn(),
-        clear: jest.fn(),
+        fillStyle: jest.fn().mockReturnThis(),
+        fillRect: jest.fn().mockReturnThis(),
+        fillCircle: jest.fn().mockReturnThis(),
+        lineStyle: jest.fn().mockReturnThis(),
+        strokeRect: jest.fn().mockReturnThis(),
+        moveTo: jest.fn().mockReturnThis(),
+        lineTo: jest.fn().mockReturnThis(),
+        strokePath: jest.fn().mockReturnThis(),
+        clear: jest.fn().mockReturnThis(),
+        setPosition: jest.fn().mockReturnThis(),
+        setDepth: jest.fn().mockReturnThis(),
         destroy: jest.fn()
       })),
       sprite: jest.fn((x, y, texture, frame) => ({
@@ -93,7 +96,21 @@ jest.mock('phaser', () => ({
         add: jest.fn(),
         setVisible: jest.fn(),
         destroy: jest.fn()
-      }))
+      })),
+      rectangle: jest.fn((x, y, width, height, fillColor, fillAlpha) => ({
+        x,
+        y,
+        width,
+        height,
+        fillColor,
+        fillAlpha,
+        setStrokeStyle: jest.fn().mockReturnThis(),
+        setInteractive: jest.fn().mockReturnThis(),
+        on: jest.fn().mockReturnThis(),
+        emit: jest.fn().mockReturnThis(),
+        destroy: jest.fn()
+      })),
+      existing: jest.fn()
     };
     load = {
       on: jest.fn(),
@@ -115,8 +132,24 @@ jest.mock('phaser', () => ({
         setZoom: jest.fn(),
         setScroll: jest.fn(),
         centerOn: jest.fn(),
-        getWorldPoint: jest.fn()
+        getWorldPoint: jest.fn(),
+        worldView: {
+          left: 0,
+          right: 1280,
+          top: 0,
+          bottom: 720
+        }
       }
+    };
+    input = {
+      on: jest.fn(),
+      off: jest.fn(),
+      emit: jest.fn()
+    };
+    time = {
+      delayedCall: jest.fn((delay, callback) => {
+        setTimeout(callback, delay);
+      })
     };
   },
   GameObjects: {
@@ -124,37 +157,83 @@ jest.mock('phaser', () => ({
       constructor(public scene: any, public x: number, public y: number, public texture: string, public frame?: string | number) {}
       setDisplaySize = jest.fn().mockReturnThis();
       setInteractive = jest.fn().mockReturnThis();
+      setOrigin = jest.fn().mockReturnThis();
+      setTint = jest.fn().mockReturnThis();
+      clearTint = jest.fn().mockReturnThis();
       setPosition = jest.fn(function(this: any, x?: number, y?: number) {
         if (x !== undefined) this.x = x;
         if (y !== undefined) this.y = y;
         return this;
       });
       on = jest.fn().mockReturnThis();
+      getBounds = jest.fn(() => ({
+        contains: jest.fn(() => false)
+      }));
       destroy = jest.fn();
     },
     Graphics: class MockGraphics {
-      fillStyle = jest.fn();
-      fillRect = jest.fn();
-      lineStyle = jest.fn();
-      strokeRect = jest.fn();
-      moveTo = jest.fn();
-      lineTo = jest.fn();
-      strokePath = jest.fn();
-      clear = jest.fn();
+      fillStyle = jest.fn().mockReturnThis();
+      fillRect = jest.fn().mockReturnThis();
+      fillCircle = jest.fn().mockReturnThis();
+      lineStyle = jest.fn().mockReturnThis();
+      strokeRect = jest.fn().mockReturnThis();
+      moveTo = jest.fn().mockReturnThis();
+      lineTo = jest.fn().mockReturnThis();
+      strokePath = jest.fn().mockReturnThis();
+      clear = jest.fn().mockReturnThis();
+      setPosition = jest.fn().mockReturnThis();
+      setDepth = jest.fn().mockReturnThis();
       destroy = jest.fn();
     },
     Text: class MockText {
       constructor(public scene: any, public x: number, public y: number, public text: string, public style: any) {}
-      setOrigin = jest.fn();
+      setOrigin = jest.fn().mockReturnThis();
+      setText = jest.fn().mockReturnThis();
+      destroy = jest.fn();
+    },
+    Rectangle: class MockRectangle {
+      constructor(public scene: any, public x: number, public y: number, public width: number, public height: number, public fillColor?: number, public fillAlpha?: number) {}
+      setStrokeStyle = jest.fn().mockReturnThis();
+      setInteractive = jest.fn().mockReturnThis();
+      on = jest.fn().mockReturnThis();
+      emit = jest.fn().mockReturnThis();
       destroy = jest.fn();
     },
     Container: class MockContainer {
-      constructor(public scene: any, public x: number, public y: number) {}
-      add = jest.fn().mockReturnThis();
+      x: number;
+      y: number;
+      visible: boolean = true;
+      list: any[] = [];
+      
+      constructor(public scene: any, x: number, y: number) {
+        this.x = x;
+        this.y = y;
+        this.list = [];
+      }
+      add = jest.fn(function(this: any, child: any) {
+        this.list.push(child);
+        return this;
+      });
       remove = jest.fn().mockReturnThis();
-      setVisible = jest.fn().mockReturnThis();
+      setVisible = jest.fn(function(this: any, visible: boolean) {
+        this.visible = visible;
+        return this;
+      });
+      setActive = jest.fn().mockReturnThis();
+      getBounds = jest.fn(() => ({
+        contains: jest.fn(() => false)
+      }));
+      getAt = jest.fn(function(this: any, index: number) {
+        return this.list[index];
+      });
+      setPosition = jest.fn(function(this: any, x?: number, y?: number) {
+        if (x !== undefined) this.x = x;
+        if (y !== undefined) this.y = y;
+        return this;
+      });
+      once = jest.fn().mockReturnThis();
+      setDepth = jest.fn().mockReturnThis();
       destroy = jest.fn();
-      list = [];
     }
   }
 }));
@@ -165,18 +244,22 @@ export const createMockScene = () => {
     add: {
       existing: jest.fn(),
       text: jest.fn(() => ({
-        setOrigin: jest.fn(),
+        setOrigin: jest.fn().mockReturnThis(),
+        setText: jest.fn().mockReturnThis(),
         destroy: jest.fn()
       })),
       graphics: jest.fn(() => ({
-        fillStyle: jest.fn(),
-        fillRect: jest.fn(),
-        lineStyle: jest.fn(),
-        strokeRect: jest.fn(),
-        moveTo: jest.fn(),
-        lineTo: jest.fn(),
-        strokePath: jest.fn(),
-        clear: jest.fn(),
+        fillStyle: jest.fn().mockReturnThis(),
+        fillRect: jest.fn().mockReturnThis(),
+        fillCircle: jest.fn().mockReturnThis(),
+        lineStyle: jest.fn().mockReturnThis(),
+        strokeRect: jest.fn().mockReturnThis(),
+        moveTo: jest.fn().mockReturnThis(),
+        lineTo: jest.fn().mockReturnThis(),
+        strokePath: jest.fn().mockReturnThis(),
+        clear: jest.fn().mockReturnThis(),
+        setPosition: jest.fn().mockReturnThis(),
+        setDepth: jest.fn().mockReturnThis(),
         destroy: jest.fn()
       })),
       sprite: jest.fn((x: number, y: number, texture: string, frame?: string | number) => ({
@@ -186,14 +269,52 @@ export const createMockScene = () => {
         frame,
         setDisplaySize: jest.fn(),
         setInteractive: jest.fn(),
+        setOrigin: jest.fn().mockReturnThis(),
+        setTint: jest.fn().mockReturnThis(),
+        clearTint: jest.fn().mockReturnThis(),
         on: jest.fn(),
+        getBounds: jest.fn(() => ({
+          contains: jest.fn(() => false)
+        })),
         destroy: jest.fn()
       })),
-      container: jest.fn((x?: number, y?: number) => ({
-        x: x || 0,
-        y: y || 0,
-        add: jest.fn(),
-        setVisible: jest.fn(),
+      container: jest.fn((x?: number, y?: number) => {
+        const container = {
+          x: x || 0,
+          y: y || 0,
+          visible: true,
+          list: [],
+          add: jest.fn(function(this: any, child: any) {
+            this.list.push(child);
+            return this;
+          }),
+          setVisible: jest.fn(function(this: any, visible: boolean) {
+            this.visible = visible;
+            return this;
+          }),
+          setActive: jest.fn().mockReturnThis(),
+          getBounds: jest.fn(() => ({
+            contains: jest.fn(() => false)
+          })),
+          getAt: jest.fn(function(this: any, index: number) {
+            return this.list[index];
+          }),
+          setDepth: jest.fn().mockReturnThis(),
+          destroy: jest.fn()
+        };
+        return container;
+      }),
+      rectangle: jest.fn((x: number, y: number, width: number, height: number, fillColor?: number, fillAlpha?: number) => ({
+        x,
+        y,
+        width,
+        height,
+        fillColor,
+        fillAlpha,
+        setStrokeStyle: jest.fn().mockReturnThis(),
+        setInteractive: jest.fn().mockReturnThis(),
+        on: jest.fn().mockReturnThis(),
+        emit: jest.fn().mockReturnThis(),
         destroy: jest.fn()
       }))
     },
@@ -217,8 +338,24 @@ export const createMockScene = () => {
         setZoom: jest.fn(),
         setScroll: jest.fn(),
         centerOn: jest.fn(),
-        getWorldPoint: jest.fn()
+        getWorldPoint: jest.fn(),
+        worldView: {
+          left: 0,
+          right: 1280,
+          top: 0,
+          bottom: 720
+        }
       }
+    },
+    input: {
+      on: jest.fn(),
+      off: jest.fn(),
+      emit: jest.fn()
+    },
+    time: {
+      delayedCall: jest.fn((delay, callback) => {
+        setTimeout(callback, delay);
+      })
     }
   };
   

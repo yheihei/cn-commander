@@ -6,15 +6,7 @@ import { ArmyManager } from '../../../src/army/ArmyManager';
 import { ArmyFactory } from '../../../src/army/ArmyFactory';
 import { CharacterStats, JobType } from '../../../src/types/CharacterTypes';
 import { ARMY_CONSTRAINTS } from '../../../src/types/ArmyTypes';
-
-// モックシーン
-const createMockScene = () => {
-  return {
-    add: {
-      existing: jest.fn()
-    }
-  };
-};
+import { createMockScene } from '../../setup';
 
 describe('[エピック3] Character and Army System Integration Tests', () => {
   let scene: any;

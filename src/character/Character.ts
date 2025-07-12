@@ -104,8 +104,8 @@ export class Character extends Phaser.GameObjects.Sprite {
   }
 
   private createCommanderMarker(): void {
-    // Graphicsオブジェクトを作成（シーンに追加せずに）
-    this.commanderMarker = new Phaser.GameObjects.Graphics(this.scene);
+    // Graphicsオブジェクトを作成
+    this.commanderMarker = this.scene.add.graphics();
     this.commanderMarker.fillStyle(0xff0000, 1); // 赤色
     this.commanderMarker.fillCircle(0, 0, 5); // 半径5ピクセルの円（直径10px）
     this.commanderMarker.setPosition(0, -10); // キャラクターの上部に配置（相対位置）
