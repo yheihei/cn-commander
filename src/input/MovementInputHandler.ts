@@ -157,8 +157,8 @@ export class MovementInputHandler {
       console.log("パス選択メッセージがクリックされました");
     });
 
-    // 1秒待ってから経路選択モードを開始
-    this.scene.time.delayedCall(1000, () => {
+    // 2秒待ってから経路選択モードを開始（仕様通り）
+    this.scene.time.delayedCall(2000, () => {
       // まだ選択中の軍団がある場合のみ経路設定を開始
       if (this.selectedArmy && !this.isSettingPath) {
         this.startPathSetting();
@@ -183,8 +183,7 @@ export class MovementInputHandler {
   private startPathSetting(): void {
     this.isSettingPath = true;
     this.waypointBuffer = [];
-    // 経路選択モード開始時にメッセージを非表示
-    this.uiManager.hidePathSelectionMessage();
+    // メッセージは自動的に非表示にしない（ユーザーがクリックするまで表示）
   }
 
   private addWaypoint(x: number, y: number): void {
