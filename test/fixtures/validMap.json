@@ -1,0 +1,60 @@
+{
+  "name": "validTestMap",
+  "width": 10,
+  "height": 10,
+  "tileSize": 16,
+  "layers": [
+    {
+      "name": "terrain",
+      "visible": true,
+      "tiles": [
+        ["plain", "plain", "forest", "forest", "mountain", "mountain", "plain", "plain", "plain", "plain"],
+        ["plain", "plain", "forest", "forest", "mountain", "mountain", "plain", "plain", "plain", "plain"],
+        ["plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"],
+        ["plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"],
+        ["forest", "forest", "plain", "plain", "plain", "plain", "plain", "plain", "mountain", "mountain"],
+        ["forest", "forest", "plain", "plain", "plain", "plain", "plain", "plain", "mountain", "mountain"],
+        ["plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"],
+        ["plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"],
+        ["plain", "plain", "plain", "plain", "plain", "plain", "forest", "forest", "plain", "plain"],
+        ["plain", "plain", "plain", "plain", "plain", "plain", "forest", "forest", "plain", "plain"]
+      ]
+    }
+  ],
+  "startPositions": {
+    "player": { "x": 1, "y": 1 },
+    "enemy": { "x": 8, "y": 8 }
+  },
+  "bases": [
+    {
+      "id": "player-hq",
+      "name": "プレイヤー本拠地",
+      "type": "headquarters",
+      "x": 1,
+      "y": 1,
+      "hp": 200,
+      "maxHp": 200,
+      "owner": "player"
+    },
+    {
+      "id": "enemy-hq",
+      "name": "敵本拠地",
+      "type": "headquarters",
+      "x": 8,
+      "y": 8,
+      "hp": 200,
+      "maxHp": 200,
+      "owner": "enemy"
+    },
+    {
+      "id": "neutral-base-1",
+      "name": "中立拠点1",
+      "type": "normal_base",
+      "x": 5,
+      "y": 5,
+      "hp": 80,
+      "maxHp": 80,
+      "owner": "neutral"
+    }
+  ]
+}

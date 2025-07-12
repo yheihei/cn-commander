@@ -1,0 +1,35 @@
+{
+  "name": "invalidTestMap",
+  "width": 5,
+  "height": 5,
+  "tileSize": 16,
+  "layers": [
+    {
+      "name": "terrain",
+      "visible": true,
+      "tiles": [
+        ["plain", "plain", "invalid_type", "forest", "mountain"],
+        ["plain", "plain", "forest", "forest"],
+        ["plain", "plain", "plain", "plain", "plain"],
+        ["plain", "plain", "plain", "plain", "plain"],
+        ["forest", "forest", "plain", "plain", "plain", "extra_tile"]
+      ]
+    }
+  ],
+  "startPositions": {
+    "player": { "x": -1, "y": 0 },
+    "enemy": { "x": 10, "y": 10 }
+  },
+  "bases": [
+    {
+      "id": "invalid-base",
+      "name": "不正な拠点",
+      "type": "unknown_type",
+      "x": 100,
+      "y": 100,
+      "hp": -50,
+      "maxHp": 0,
+      "owner": "invalid_owner"
+    }
+  ]
+}
