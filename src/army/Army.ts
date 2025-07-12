@@ -1,32 +1,52 @@
-import * as Phaser from 'phaser';
-import { ArmyConfig, SightArea, FormationType, ArmyMovement, ARMY_CONSTRAINTS } from '../types/ArmyTypes';
-import { Character } from '../character/Character';
-import { Position } from '../types/CharacterTypes';
+import * as Phaser from "phaser";
+import {
+  ArmyConfig,
+  SightArea,
+  FormationType,
+  ArmyMovement,
+  ARMY_CONSTRAINTS,
+} from "../types/ArmyTypes";
+import { Character } from "../character/Character";
+import { Position } from "../types/CharacterTypes";
+import { MovementMode, MovementState } from "../types/MovementTypes";
 
 export class Army extends Phaser.GameObjects.Container {
   private id: string;
   private armyName: string;
   private commander: Character;
   private soldiers: Character[] = [];
-  private formation: FormationType = 'standard';
+  private formation: FormationType = "standard";
   private movement: ArmyMovement | null = null;
+  private movementState: MovementState = {
+    isMoving: false,
+    currentPath: null,
+    currentSpeed: 0,
+    mode: MovementMode.NORMAL,
+    targetPosition: null,
+  };
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
     super(scene, x, y);
-    
+
     this.id = config.id;
     this.armyName = config.name;
     this.commander = config.commander;
-    
+
     this.add(this.commander);
     this.commander.setPosition(0, 0);
     
-    if (config.soldiers) {
-      config.soldiers.forEach(soldier => this.addSoldier(soldier));
+    // 指揮官マークをコンテナに追加
+    const marker = this.commander.getCommanderMarker();
+    if (marker) {
+      this.add(marker);
     }
-    
+
+    if (config.soldiers) {
+      config.soldiers.forEach((soldier) => this.addSoldier(soldier));
+    }
+
     this.arrangeFormation();
-    
+
     scene.add.existing(this);
   }
 
@@ -59,28 +79,28 @@ export class Army extends Phaser.GameObjects.Container {
   }
 
   getAliveMembers(): Character[] {
-    return this.getAllMembers().filter(member => member.isAlive());
+    return this.getAllMembers().filter((member) => member.isAlive());
   }
 
   getAverageMovementSpeed(): number {
     const aliveMembers = this.getAliveMembers();
     if (aliveMembers.length === 0) return 0;
-    
+
     const totalSpeed = aliveMembers.reduce((sum, member) => {
       return sum + member.getStats().moveSpeed;
     }, 0);
-    
+
     return totalSpeed / aliveMembers.length;
   }
 
   getTotalSight(): SightArea[] {
-    return this.getAliveMembers().map(member => ({
+    return this.getAliveMembers().map((member) => ({
       character: member,
       range: member.getStats().sight,
       center: {
         x: this.x + member.x,
-        y: this.y + member.y
-      }
+        y: this.y + member.y,
+      },
     }));
   }
 
@@ -88,15 +108,22 @@ export class Army extends Phaser.GameObjects.Container {
     if (this.soldiers.length >= ARMY_CONSTRAINTS.maxSoldiers) {
       return false;
     }
-    
+
     this.soldiers.push(soldier);
     this.add(soldier);
+    
+    // 兵士が指揮官の場合、マークも追加
+    const marker = soldier.getCommanderMarker();
+    if (marker) {
+      this.add(marker);
+    }
+    
     this.arrangeFormation();
     return true;
   }
 
   removeSoldier(soldierId: string): void {
-    const index = this.soldiers.findIndex(s => s.getId() === soldierId);
+    const index = this.soldiers.findIndex((s) => s.getId() === soldierId);
     if (index !== -1) {
       const soldier = this.soldiers.splice(index, 1)[0];
       this.remove(soldier);
@@ -111,21 +138,21 @@ export class Army extends Phaser.GameObjects.Container {
 
   private arrangeFormation(): void {
     const halfTile = 8;
-    
+
     switch (this.formation) {
-      case 'standard':
+      case "standard":
         // 正方形に配置（各メンバーをグリッドの中央に配置）
         // Container中心からの相対位置で各グリッドの中央に配置
         const positions = [
           { x: -halfTile, y: -halfTile }, // 左上
-          { x: halfTile, y: -halfTile },  // 右上
-          { x: -halfTile, y: halfTile },  // 左下
-          { x: halfTile, y: halfTile }     // 右下
+          { x: halfTile, y: -halfTile }, // 右上
+          { x: -halfTile, y: halfTile }, // 左下
+          { x: halfTile, y: halfTile }, // 右下
         ];
-        
+
         // 指揮官を最初の位置に配置
         this.commander.setPosition(positions[0].x, positions[0].y);
-        
+
         // 兵士を残りの位置に配置
         this.soldiers.forEach((soldier, index) => {
           if (index < 3) {
@@ -134,8 +161,8 @@ export class Army extends Phaser.GameObjects.Container {
           }
         });
         break;
-        
-      case 'defensive':
+
+      case "defensive":
         // 防御陣形：指揮官を後方中央、兵士を前方に横一列
         this.commander.setPosition(0, halfTile);
         this.soldiers.forEach((soldier, index) => {
@@ -143,8 +170,8 @@ export class Army extends Phaser.GameObjects.Container {
           soldier.setPosition(xOffset, -halfTile);
         });
         break;
-        
-      case 'offensive':
+
+      case "offensive":
         // 攻撃陣形：指揮官を前方中央、兵士を後方に横一列
         this.commander.setPosition(0, -halfTile);
         this.soldiers.forEach((soldier, index) => {
@@ -160,7 +187,7 @@ export class Army extends Phaser.GameObjects.Container {
       targetPosition: position,
       path: [position],
       currentPathIndex: 0,
-      isMoving: true
+      isMoving: true,
     };
   }
 
@@ -168,12 +195,12 @@ export class Army extends Phaser.GameObjects.Container {
     if (this.movement && this.movement.isMoving) {
       const speed = this.getAverageMovementSpeed();
       const moveDistance = (speed * delta) / 1000;
-      
+
       const target = this.movement.targetPosition;
       const dx = target.x - this.x;
       const dy = target.y - this.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       if (distance <= moveDistance) {
         this.x = target.x;
         this.y = target.y;
@@ -183,19 +210,54 @@ export class Army extends Phaser.GameObjects.Container {
         this.y += (dy / distance) * moveDistance;
       }
     }
-    
+
     this.removeDeadMembers();
   }
 
   private removeDeadMembers(): void {
-    const deadSoldiers = this.soldiers.filter(s => !s.isAlive());
-    deadSoldiers.forEach(soldier => {
+    const deadSoldiers = this.soldiers.filter((s) => !s.isAlive());
+    deadSoldiers.forEach((soldier) => {
       this.removeSoldier(soldier.getId());
     });
   }
 
+  // 移動システム関連のメソッド
+
+  startMovement(target: Position, mode: MovementMode): void {
+    this.movementState.isMoving = true;
+    this.movementState.targetPosition = target;
+    this.movementState.mode = mode;
+  }
+
+  stopMovement(): void {
+    this.movementState.isMoving = false;
+    this.movementState.targetPosition = null;
+    this.movementState.currentPath = null;
+    this.movementState.currentSpeed = 0;
+  }
+
+  getMovementState(): MovementState {
+    return { ...this.movementState };
+  }
+
+  getMovementMode(): MovementMode {
+    return this.movementState.mode;
+  }
+
+  setMovementMode(mode: MovementMode): void {
+    this.movementState.mode = mode;
+  }
+
+  isMoving(): boolean {
+    return this.movementState.isMoving;
+  }
+
+  setMovementSpeed(pixelsPerSecond: number): void {
+    this.movementState.currentSpeed = pixelsPerSecond;
+  }
+
   destroy(): void {
-    this.getAllMembers().forEach(member => member.destroy());
+    this.getAllMembers().forEach((member) => member.destroy());
     super.destroy();
   }
 }
