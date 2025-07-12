@@ -1,13 +1,13 @@
-import { MapManager } from '../../src/map/MapManager';
-import { MapTile } from '../../src/map/MapTile';
-import { TileType, TERRAIN_EFFECTS } from '../../src/types/TileTypes';
-import { MapData, BaseType } from '../../src/types/MapTypes';
-import { createMockScene } from '../setup';
+import { MapManager } from '../../../src/map/MapManager';
+import { MapTile } from '../../../src/map/MapTile';
+import { TileType, TERRAIN_EFFECTS } from '../../../src/types/TileTypes';
+import { MapData, BaseType } from '../../../src/types/MapTypes';
+import { createMockScene } from '../../setup';
 
 // テストデータのインポート
-import validMapData from '../fixtures/validMap.json';
+import validMapData from '../../fixtures/validMap.json';
 
-describe('MapSystem Integration Tests', () => {
+describe('[エピック2] MapSystem Integration Tests', () => {
   let scene: any;  // テストではany型を使用
   let mapManager: MapManager;
 
