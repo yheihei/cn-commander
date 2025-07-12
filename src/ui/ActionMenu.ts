@@ -21,7 +21,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.onCancelCallback = config.onCancel;
 
     // メニューの背景
-    this.background = config.scene.add.rectangle(0, 0, 120, 60, 0x333333, 0.9);
+    this.background = config.scene.add.rectangle(0, 0, 120, 64, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
@@ -46,14 +46,15 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     // ボタンの背景
-    const buttonBg = this.scene.add.rectangle(0, 0, 100, 40, 0x555555);
+    const buttonBg = this.scene.add.rectangle(0, 0, 100, 44, 0x555555);
     buttonBg.setStrokeStyle(1, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
 
     // ボタンのテキスト
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontSize: "16px",
+      fontSize: "14px",
       color: "#ffffff",
+      padding: { x: 2, y: 2 }
     });
     buttonText.setOrigin(0.5);
 
@@ -124,7 +125,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     // 画面内に収まるように位置を調整
     const cam = this.scene.cameras.main;
     const menuWidth = 120;
-    const menuHeight = 60;
+    const menuHeight = 64;
 
     // 右端チェック
     if (x + menuWidth / 2 > cam.worldView.right) {

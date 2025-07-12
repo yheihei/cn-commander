@@ -26,16 +26,16 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     this.onCancelCallback = config.onCancel;
 
     // メニューの背景（2つのボタンを含むサイズ）
-    this.background = config.scene.add.rectangle(0, 0, 140, 110, 0x333333, 0.9);
+    this.background = config.scene.add.rectangle(0, 0, 140, 118, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
     // 通常移動ボタン
-    this.normalMoveButton = this.createButton("通常移動", 0, -25, MovementMode.NORMAL);
+    this.normalMoveButton = this.createButton("通常移動", 0, -27, MovementMode.NORMAL);
     this.add(this.normalMoveButton);
 
     // 戦闘移動ボタン
-    this.combatMoveButton = this.createButton("戦闘移動", 0, 25, MovementMode.COMBAT);
+    this.combatMoveButton = this.createButton("戦闘移動", 0, 27, MovementMode.COMBAT);
     this.add(this.combatMoveButton);
 
     // Containerを配置
@@ -60,14 +60,15 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     // ボタンの背景
-    const buttonBg = this.scene.add.rectangle(0, 0, 120, 40, 0x555555);
+    const buttonBg = this.scene.add.rectangle(0, 0, 120, 44, 0x555555);
     buttonBg.setStrokeStyle(1, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
 
     // ボタンのテキスト
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontSize: "16px",
+      fontSize: "14px",
       color: "#ffffff",
+      padding: { x: 2, y: 2 }
     });
     buttonText.setOrigin(0.5);
 
@@ -140,7 +141,7 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     // 画面内に収まるように位置を調整
     const cam = this.scene.cameras.main;
     const menuWidth = 140;
-    const menuHeight = 110;
+    const menuHeight = 118;
 
     // 右端チェック
     if (x + menuWidth / 2 > cam.worldView.right) {
