@@ -137,25 +137,16 @@ export class GameScene extends Phaser.Scene {
       this.mapManager.getMapHeightInPixels()
     );
     
-    // カメラのズームを設定（初期値）
-    this.cameras.main.setZoom(2);
+    // カメラのズームを設定（20x20マスが画面に収まるように）
+    // 画面サイズ1280x720で、20マス×16px=320pxを表示
+    // zoom = min(1280/320, 720/320) = 2.25
+    this.cameras.main.setZoom(2.25);
   }
 
   private setupInput(): void {
     // キーボード入力
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
-      
-      // ズームキー
-      this.input.keyboard.on('keydown-Q', () => {
-        const currentZoom = this.cameras.main.zoom;
-        this.cameras.main.setZoom(Math.max(0.5, currentZoom - 0.25));
-      });
-      
-      this.input.keyboard.on('keydown-E', () => {
-        const currentZoom = this.cameras.main.zoom;
-        this.cameras.main.setZoom(Math.min(4, currentZoom + 0.25));
-      });
       
       // デバッグモード切り替え
       this.input.keyboard.on('keydown-D', () => {
@@ -192,15 +183,6 @@ export class GameScene extends Phaser.Scene {
       this.isDragging = false;
     });
     
-    // マウスホイールでズーム
-    this.input.on('wheel', (_pointer: any, _gameObjects: any[], _deltaX: number, deltaY: number) => {
-      const currentZoom = this.cameras.main.zoom;
-      if (deltaY > 0) {
-        this.cameras.main.setZoom(Math.max(0.5, currentZoom - 0.1));
-      } else {
-        this.cameras.main.setZoom(Math.min(4, currentZoom + 0.1));
-      }
-    });
   }
 
   private setupDebugDisplay(): void {
@@ -230,7 +212,6 @@ export class GameScene extends Phaser.Scene {
     const base = this.mapManager.getBaseAt(gridPos.x, gridPos.y);
     
     let debugInfo = `Camera: ${Math.round(this.cameras.main.scrollX)}, ${Math.round(this.cameras.main.scrollY)}\n`;
-    debugInfo += `Zoom: ${this.cameras.main.zoom.toFixed(2)}\n`;
     debugInfo += `Grid: ${gridPos.x}, ${gridPos.y}\n`;
     
     if (tile) {
