@@ -3,9 +3,13 @@ import { MapManager } from '../map/MapManager';
 import { TileType } from '../types/TileTypes';
 import { MapData, BaseType } from '../types/MapTypes';
 import { MAP_CONFIG, DEBUG_CONFIG } from '../config/mapConfig';
+import { ArmyManager } from '../army/ArmyManager';
+import { ArmyFactory } from '../army/ArmyFactory';
+import { Army } from '../army/Army';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
+  private armyManager!: ArmyManager;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private debugText!: Phaser.GameObjects.Text;
   private isDragging: boolean = false;
@@ -13,6 +17,7 @@ export class GameScene extends Phaser.Scene {
   private dragStartY: number = 0;
   private cameraStartX: number = 0;
   private cameraStartY: number = 0;
+  private selectedArmy: Army | null = null;
   
   constructor() {
     super({ key: 'GameScene' });
@@ -21,6 +26,9 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     // マップマネージャーの初期化
     this.mapManager = new MapManager(this);
+    
+    // 軍団マネージャーの初期化
+    this.armyManager = new ArmyManager(this);
     
     // テストマップを読み込むか、デフォルトマップを作成
     const testMapData = this.cache.json.get('testMap');
@@ -40,9 +48,13 @@ export class GameScene extends Phaser.Scene {
     // デバッグ表示の設定
     this.setupDebugDisplay();
     
-    // 初期カメラ位置を設定（プレイヤー開始位置）
-    const startPos = this.mapManager.gridToPixel(10, 10);
-    this.cameras.main.centerOn(startPos.x, startPos.y);
+    // テスト用の軍団を作成
+    this.createTestArmies();
+    
+    // 初期カメラ位置を設定（プレイヤー軍団の中心）
+    const cameraX = 10 * 16 + 16;
+    const cameraY = 10 * 16 + 16;
+    this.cameras.main.centerOn(cameraX, cameraY);
   }
 
   private createDefaultMap(): void {
@@ -128,6 +140,45 @@ export class GameScene extends Phaser.Scene {
     this.mapManager.loadMap(mapData);
   }
 
+  private createTestArmies(): void {
+    // 軍団をグリッド座標で配置（各軍団は2x2マスを占有）
+    // プレイヤー軍団を作成（グリッド座標10,10から）
+    ArmyFactory.createPlayerArmyAtGrid(
+      this,
+      this.armyManager,
+      10,
+      10
+    );
+    
+    // 敵軍団を作成（グリッド座標40,40から）
+    ArmyFactory.createEnemyArmyAtGrid(
+      this,
+      this.armyManager,
+      40,
+      40,
+      'normal'
+    );
+    
+    // 追加のテスト軍団（4マス分離れた位置）
+    ArmyFactory.createTestArmyAtGrid(
+      this,
+      this.armyManager,
+      14,  // 10 + 4
+      14,  // 10 + 4
+      'speed'
+    );
+    
+    ArmyFactory.createTestArmyAtGrid(
+      this,
+      this.armyManager,
+      36,  // 40 - 4
+      36,  // 40 - 4
+      'defense'
+    );
+    
+    console.log(`Created ${this.armyManager.getActiveArmies().length} armies`);
+  }
+
   private setupCamera(): void {
     // カメラの境界を設定
     this.cameras.main.setBounds(
@@ -162,6 +213,16 @@ export class GameScene extends Phaser.Scene {
         this.dragStartY = pointer.y;
         this.cameraStartX = this.cameras.main.scrollX;
         this.cameraStartY = this.cameras.main.scrollY;
+      } else if (pointer.leftButtonDown()) {
+        // 左クリックで軍団選択
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        const army = this.armyManager.getArmyAt(worldPoint.x, worldPoint.y);
+        
+        if (army) {
+          this.selectArmy(army);
+        } else {
+          this.selectArmy(null);
+        }
       }
     });
     
@@ -197,6 +258,16 @@ export class GameScene extends Phaser.Scene {
     this.debugText.setDepth(1000);
   }
 
+  private selectArmy(army: Army | null): void {
+    this.selectedArmy = army;
+    
+    if (army) {
+      console.log(`Selected army: ${army.getName()}`);
+    } else {
+      console.log('Deselected army');
+    }
+  }
+
   private updateDebugInfo(pointer: Phaser.Input.Pointer): void {
     if (!DEBUG_CONFIG.showTileInfo) {
       this.debugText.setText('');
@@ -229,10 +300,22 @@ export class GameScene extends Phaser.Scene {
       debugInfo += `HP: ${base.hp}/${base.maxHp}`;
     }
     
+    // 選択中の軍団情報を表示
+    if (this.selectedArmy) {
+      debugInfo += `\n\n[Selected Army]\n`;
+      debugInfo += `Name: ${this.selectedArmy.getName()}\n`;
+      debugInfo += `Members: ${this.selectedArmy.getMemberCount()}\n`;
+      debugInfo += `Alive: ${this.selectedArmy.getAliveMembers().length}\n`;
+      debugInfo += `Avg Speed: ${this.selectedArmy.getAverageMovementSpeed().toFixed(1)}\n`;
+      // 軍団の中心位置をグリッド座標で表示
+      const armyGrid = this.mapManager.pixelToGrid(this.selectedArmy.x, this.selectedArmy.y);
+      debugInfo += `Grid Pos: ${armyGrid.x}, ${armyGrid.y}`;
+    }
+    
     this.debugText.setText(debugInfo);
   }
 
-  update(): void {
+  update(time: number, delta: number): void {
     // キーボードでカメラ移動
     const scrollSpeed = 5;
     
@@ -248,5 +331,8 @@ export class GameScene extends Phaser.Scene {
     if (this.cursors.down.isDown) {
       this.cameras.main.scrollY += scrollSpeed;
     }
+    
+    // 軍団の更新
+    this.armyManager.update(time, delta);
   }
 }
