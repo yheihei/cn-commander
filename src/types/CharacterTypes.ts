@@ -13,9 +13,10 @@ export interface CharacterConfig {
   name: string;
   jobType: JobType;
   stats: CharacterStats;
+  isCommander?: boolean;
 }
 
-export type JobType = 'wind' | 'iron' | 'shadow' | 'medicine';
+export type JobType = "wind" | "iron" | "shadow" | "medicine";
 
 export interface Position {
   x: number;
@@ -34,5 +35,5 @@ export const STAT_RANGES = {
   defense: { min: 3, max: 100 },
   speed: { min: 5, max: 50 },
   moveSpeed: { min: 3, max: 30 },
-  sight: { min: 3, max: 20 }
+  sight: { min: 3, max: 20 },
 } as const;
