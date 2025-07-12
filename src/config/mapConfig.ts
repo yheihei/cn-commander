@@ -46,6 +46,6 @@ export const TILE_INDICES = {
 export const DEBUG_CONFIG = {
   showGrid: false,          // グリッド線を表示
   showCoordinates: false,   // 座標を表示
-  showTileInfo: false,      // タイル情報を表示
+  showTileInfo: true,       // タイル情報を表示（デフォルトで有効）
   highlightTileOnHover: true // ホバー時にタイルをハイライト
 };
