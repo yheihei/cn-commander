@@ -29,8 +29,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 #### Phase1 Plan
 
 - 受け取った情報を確認し、不明点がないか確認する
-- その後、受け取った情報 の各項目を Planに落とし込む
-  - Planは `docs/todo/YYYYMMDDhhmm_${タスクの概要}.md` に保存
+- @docs/epics/epic.md を読み、どのタスクかを明確にする
+- 受け取った情報をもとに基本設計書を出力する
+  - 出力のルールは @.claude/rules/design-doc.md を読むこと
 
 #### Phase2 Imp
 
@@ -53,5 +54,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - レビュー指摘があればImpに戻る
 
 #### Phase5 Doc
-
+- 基本設計書に修正があれば修正する
 - ユーザーからのフィードバックを待つ。フィードバックがあれば適宜前のフェーズに戻ること
