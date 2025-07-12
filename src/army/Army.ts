@@ -1,0 +1,201 @@
+import * as Phaser from 'phaser';
+import { ArmyConfig, SightArea, FormationType, ArmyMovement, ARMY_CONSTRAINTS } from '../types/ArmyTypes';
+import { Character } from '../character/Character';
+import { Position } from '../types/CharacterTypes';
+
+export class Army extends Phaser.GameObjects.Container {
+  private id: string;
+  private armyName: string;
+  private commander: Character;
+  private soldiers: Character[] = [];
+  private formation: FormationType = 'standard';
+  private movement: ArmyMovement | null = null;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
+    super(scene, x, y);
+    
+    this.id = config.id;
+    this.armyName = config.name;
+    this.commander = config.commander;
+    
+    this.add(this.commander);
+    this.commander.setPosition(0, 0);
+    
+    if (config.soldiers) {
+      config.soldiers.forEach(soldier => this.addSoldier(soldier));
+    }
+    
+    this.arrangeFormation();
+    
+    scene.add.existing(this);
+  }
+
+  getId(): string {
+    return this.id;
+  }
+
+  getName(): string {
+    return this.armyName;
+  }
+
+  getCommander(): Character {
+    return this.commander;
+  }
+
+  getSoldiers(): Character[] {
+    return [...this.soldiers];
+  }
+
+  getAllMembers(): Character[] {
+    return [this.commander, ...this.soldiers];
+  }
+
+  isActive(): boolean {
+    return this.getAliveMembers().length > 0;
+  }
+
+  getMemberCount(): number {
+    return 1 + this.soldiers.length;
+  }
+
+  getAliveMembers(): Character[] {
+    return this.getAllMembers().filter(member => member.isAlive());
+  }
+
+  getAverageMovementSpeed(): number {
+    const aliveMembers = this.getAliveMembers();
+    if (aliveMembers.length === 0) return 0;
+    
+    const totalSpeed = aliveMembers.reduce((sum, member) => {
+      return sum + member.getStats().moveSpeed;
+    }, 0);
+    
+    return totalSpeed / aliveMembers.length;
+  }
+
+  getTotalSight(): SightArea[] {
+    return this.getAliveMembers().map(member => ({
+      character: member,
+      range: member.getStats().sight,
+      center: {
+        x: this.x + member.x,
+        y: this.y + member.y
+      }
+    }));
+  }
+
+  addSoldier(soldier: Character): boolean {
+    if (this.soldiers.length >= ARMY_CONSTRAINTS.maxSoldiers) {
+      return false;
+    }
+    
+    this.soldiers.push(soldier);
+    this.add(soldier);
+    this.arrangeFormation();
+    return true;
+  }
+
+  removeSoldier(soldierId: string): void {
+    const index = this.soldiers.findIndex(s => s.getId() === soldierId);
+    if (index !== -1) {
+      const soldier = this.soldiers.splice(index, 1)[0];
+      this.remove(soldier);
+      this.arrangeFormation();
+    }
+  }
+
+  setFormation(formation: FormationType): void {
+    this.formation = formation;
+    this.arrangeFormation();
+  }
+
+  private arrangeFormation(): void {
+    const halfTile = 8;
+    
+    switch (this.formation) {
+      case 'standard':
+        // 正方形に配置（各メンバーをグリッドの中央に配置）
+        // Container中心からの相対位置で各グリッドの中央に配置
+        const positions = [
+          { x: -halfTile, y: -halfTile }, // 左上
+          { x: halfTile, y: -halfTile },  // 右上
+          { x: -halfTile, y: halfTile },  // 左下
+          { x: halfTile, y: halfTile }     // 右下
+        ];
+        
+        // 指揮官を最初の位置に配置
+        this.commander.setPosition(positions[0].x, positions[0].y);
+        
+        // 兵士を残りの位置に配置
+        this.soldiers.forEach((soldier, index) => {
+          if (index < 3) {
+            const pos = positions[index + 1];
+            soldier.setPosition(pos.x, pos.y);
+          }
+        });
+        break;
+        
+      case 'defensive':
+        // 防御陣形：指揮官を後方中央、兵士を前方に横一列
+        this.commander.setPosition(0, halfTile);
+        this.soldiers.forEach((soldier, index) => {
+          const xOffset = (index - 1) * 16;
+          soldier.setPosition(xOffset, -halfTile);
+        });
+        break;
+        
+      case 'offensive':
+        // 攻撃陣形：指揮官を前方中央、兵士を後方に横一列
+        this.commander.setPosition(0, -halfTile);
+        this.soldiers.forEach((soldier, index) => {
+          const xOffset = (index - 1) * 16;
+          soldier.setPosition(xOffset, halfTile);
+        });
+        break;
+    }
+  }
+
+  moveToPosition(position: Position): void {
+    this.movement = {
+      targetPosition: position,
+      path: [position],
+      currentPathIndex: 0,
+      isMoving: true
+    };
+  }
+
+  update(_time: number, delta: number): void {
+    if (this.movement && this.movement.isMoving) {
+      const speed = this.getAverageMovementSpeed();
+      const moveDistance = (speed * delta) / 1000;
+      
+      const target = this.movement.targetPosition;
+      const dx = target.x - this.x;
+      const dy = target.y - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance <= moveDistance) {
+        this.x = target.x;
+        this.y = target.y;
+        this.movement.isMoving = false;
+      } else {
+        this.x += (dx / distance) * moveDistance;
+        this.y += (dy / distance) * moveDistance;
+      }
+    }
+    
+    this.removeDeadMembers();
+  }
+
+  private removeDeadMembers(): void {
+    const deadSoldiers = this.soldiers.filter(s => !s.isAlive());
+    deadSoldiers.forEach(soldier => {
+      this.removeSoldier(soldier.getId());
+    });
+  }
+
+  destroy(): void {
+    this.getAllMembers().forEach(member => member.destroy());
+    super.destroy();
+  }
+}
