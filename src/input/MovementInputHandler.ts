@@ -1,12 +1,12 @@
-import * as Phaser from "phaser";
-import { Army } from "../army/Army";
-import { ArmyManager } from "../army/ArmyManager";
-import { MapManager } from "../map/MapManager";
-import { MovementCommandSystem } from "../movement/MovementCommand";
-import { MovementMode } from "../types/MovementTypes";
-import { Position } from "../types/CharacterTypes";
-import { UIManager } from "../ui/UIManager";
-import { WaypointMarker } from "../ui/WaypointMarker";
+import * as Phaser from 'phaser';
+import { Army } from '../army/Army';
+import { ArmyManager } from '../army/ArmyManager';
+import { MapManager } from '../map/MapManager';
+import { MovementCommandSystem } from '../movement/MovementCommand';
+import { MovementMode } from '../types/MovementTypes';
+import { Position } from '../types/CharacterTypes';
+import { UIManager } from '../ui/UIManager';
+import { WaypointMarker } from '../ui/WaypointMarker';
 
 export class MovementInputHandler {
   private scene: Phaser.Scene;
@@ -41,14 +41,14 @@ export class MovementInputHandler {
 
   private setupInputHandlers(): void {
     // 左クリック: 選択と移動指示
-    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.leftButtonDown()) {
         this.handleLeftClick(pointer.worldX, pointer.worldY);
       }
     });
 
     // 右クリック: キャンセル
-    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown()) {
         this.handleRightClick();
       }
@@ -214,11 +214,7 @@ export class MovementInputHandler {
     if (!this.selectedArmy || this.waypointBuffer.length === 0) return;
 
     // 移動コマンドを設定
-    this.commandSystem.setPath(
-      this.selectedArmy,
-      this.waypointBuffer,
-      this.currentMode,
-    );
+    this.commandSystem.setPath(this.selectedArmy, this.waypointBuffer, this.currentMode);
 
     // 状態をリセット
     this.isSettingPath = false;
@@ -310,7 +306,7 @@ export class MovementInputHandler {
   }
 
   public destroy(): void {
-    this.scene.input.off("pointerdown");
+    this.scene.input.off('pointerdown');
     this.deselectArmy();
     this.uiManager.destroy();
     if (this.pathLines) {

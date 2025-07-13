@@ -1,23 +1,23 @@
-import { MapConfig } from "../types/MapTypes";
+import { MapConfig } from '../types/MapTypes';
 
 export const MAP_CONFIG: MapConfig = {
   tileSize: 16, // 16x16ピクセルのタイル
   mapWidth: 512, // 512タイル幅
   mapHeight: 512, // 512タイル高さ
-  tileSpriteSheet: "tilemap",
+  tileSpriteSheet: 'tilemap',
 };
 
 // タイルマップ画像のマッピング設定
 export const TILEMAP_ASSETS = {
-  base: "pipo-map001",
-  road: "pipo-map001_at-miti",
-  forest: "pipo-map001_at-mori",
-  desert: "pipo-map001_at-sabaku",
-  soil: "pipo-map001_at-tuti",
-  sea: "pipo-map001_at-umi",
-  mountain1: "pipo-map001_at-yama1",
-  mountain2: "pipo-map001_at-yama2",
-  mountain3: "pipo-map001_at-yama3",
+  base: 'pipo-map001',
+  road: 'pipo-map001_at-miti',
+  forest: 'pipo-map001_at-mori',
+  desert: 'pipo-map001_at-sabaku',
+  soil: 'pipo-map001_at-tuti',
+  sea: 'pipo-map001_at-umi',
+  mountain1: 'pipo-map001_at-yama1',
+  mountain2: 'pipo-map001_at-yama2',
+  mountain3: 'pipo-map001_at-yama3',
 };
 
 // タイルセット内のタイルインデックス設定

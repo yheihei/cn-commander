@@ -1,7 +1,7 @@
-import { Army } from "./Army";
-import { ArmyManager } from "./ArmyManager";
-import { CharacterFactory } from "../character/CharacterFactory";
-import { JobType } from "../types/CharacterTypes";
+import { Army } from './Army';
+import { ArmyManager } from './ArmyManager';
+import { CharacterFactory } from '../character/CharacterFactory';
+import { JobType } from '../types/CharacterTypes';
 
 export class ArmyFactory {
   /**
@@ -12,11 +12,11 @@ export class ArmyFactory {
     armyManager: ArmyManager,
     gridX: number,
     gridY: number,
-    type: "balanced" | "speed" | "defense" | "stealth" = "balanced",
+    type: 'balanced' | 'speed' | 'defense' | 'stealth' = 'balanced',
   ): Army | null {
     let characters;
 
-    if (type === "balanced") {
+    if (type === 'balanced') {
       characters = CharacterFactory.createBalancedArmy(scene, 0, 0);
     } else {
       characters = CharacterFactory.createSpecializedArmy(scene, 0, 0, type);
@@ -37,11 +37,11 @@ export class ArmyFactory {
     armyManager: ArmyManager,
     x: number,
     y: number,
-    type: "balanced" | "speed" | "defense" | "stealth" = "balanced",
+    type: 'balanced' | 'speed' | 'defense' | 'stealth' = 'balanced',
   ): Army | null {
     let characters;
 
-    if (type === "balanced") {
+    if (type === 'balanced') {
       characters = CharacterFactory.createBalancedArmy(scene, x, y);
     } else {
       characters = CharacterFactory.createSpecializedArmy(scene, x, y, type);
@@ -95,20 +95,14 @@ export class ArmyFactory {
     gridX: number,
     gridY: number,
   ): Army | null {
-    const commander = CharacterFactory.createCommander(
-      scene,
-      0,
-      0,
-      "wind",
-      "咲耶",
-    );
+    const commander = CharacterFactory.createCommander(scene, 0, 0, 'wind', '咲耶');
     const army = armyManager.createArmyAtGrid(commander, gridX, gridY);
 
     if (army) {
       const soldiers = [
-        CharacterFactory.createCharacter(scene, 0, 0, "iron", "鉄忍A"),
-        CharacterFactory.createCharacter(scene, 0, 0, "shadow", "影忍A"),
-        CharacterFactory.createCharacter(scene, 0, 0, "medicine", "薬忍A"),
+        CharacterFactory.createCharacter(scene, 0, 0, 'iron', '鉄忍A'),
+        CharacterFactory.createCharacter(scene, 0, 0, 'shadow', '影忍A'),
+        CharacterFactory.createCharacter(scene, 0, 0, 'medicine', '薬忍A'),
       ];
 
       soldiers.forEach((soldier) => army.addSoldier(soldier));
@@ -123,20 +117,14 @@ export class ArmyFactory {
     x: number,
     y: number,
   ): Army | null {
-    const commander = CharacterFactory.createCommander(
-      scene,
-      x,
-      y,
-      "wind",
-      "咲耶",
-    );
+    const commander = CharacterFactory.createCommander(scene, x, y, 'wind', '咲耶');
     const army = armyManager.createArmy(commander, x, y);
 
     if (army) {
       const soldiers = [
-        CharacterFactory.createCharacter(scene, x, y, "iron", "鉄忍A"),
-        CharacterFactory.createCharacter(scene, x, y, "shadow", "影忍A"),
-        CharacterFactory.createCharacter(scene, x, y, "medicine", "薬忍A"),
+        CharacterFactory.createCharacter(scene, x, y, 'iron', '鉄忍A'),
+        CharacterFactory.createCharacter(scene, x, y, 'shadow', '影忍A'),
+        CharacterFactory.createCharacter(scene, x, y, 'medicine', '薬忍A'),
       ];
 
       soldiers.forEach((soldier) => army.addSoldier(soldier));
@@ -153,23 +141,23 @@ export class ArmyFactory {
     armyManager: ArmyManager,
     gridX: number,
     gridY: number,
-    difficulty: "easy" | "normal" | "hard" = "normal",
+    difficulty: 'easy' | 'normal' | 'hard' = 'normal',
   ): Army | null {
     let commanderType: JobType;
     let soldierTypes: JobType[];
 
     switch (difficulty) {
-      case "easy":
-        commanderType = "wind";
-        soldierTypes = ["wind", "medicine"];
+      case 'easy':
+        commanderType = 'wind';
+        soldierTypes = ['wind', 'medicine'];
         break;
-      case "normal":
-        commanderType = "iron";
-        soldierTypes = ["iron", "wind", "shadow"];
+      case 'normal':
+        commanderType = 'iron';
+        soldierTypes = ['iron', 'wind', 'shadow'];
         break;
-      case "hard":
-        commanderType = "shadow";
-        soldierTypes = ["iron", "iron", "shadow"];
+      case 'hard':
+        commanderType = 'shadow';
+        soldierTypes = ['iron', 'iron', 'shadow'];
         break;
     }
 
@@ -178,7 +166,7 @@ export class ArmyFactory {
       0,
       0,
       commanderType,
-      "敵指揮官",
+      '敵指揮官',
       undefined,
       true,
     );
@@ -186,13 +174,7 @@ export class ArmyFactory {
 
     if (army) {
       soldierTypes.forEach((type, index) => {
-        const soldier = CharacterFactory.createCharacter(
-          scene,
-          0,
-          0,
-          type,
-          `敵兵士${index + 1}`,
-        );
+        const soldier = CharacterFactory.createCharacter(scene, 0, 0, type, `敵兵士${index + 1}`);
         army.addSoldier(soldier);
       });
     }
@@ -205,23 +187,23 @@ export class ArmyFactory {
     armyManager: ArmyManager,
     x: number,
     y: number,
-    difficulty: "easy" | "normal" | "hard" = "normal",
+    difficulty: 'easy' | 'normal' | 'hard' = 'normal',
   ): Army | null {
     let commanderType: JobType;
     let soldierTypes: JobType[];
 
     switch (difficulty) {
-      case "easy":
-        commanderType = "wind";
-        soldierTypes = ["wind", "medicine"];
+      case 'easy':
+        commanderType = 'wind';
+        soldierTypes = ['wind', 'medicine'];
         break;
-      case "normal":
-        commanderType = "iron";
-        soldierTypes = ["iron", "wind", "shadow"];
+      case 'normal':
+        commanderType = 'iron';
+        soldierTypes = ['iron', 'wind', 'shadow'];
         break;
-      case "hard":
-        commanderType = "shadow";
-        soldierTypes = ["iron", "iron", "shadow"];
+      case 'hard':
+        commanderType = 'shadow';
+        soldierTypes = ['iron', 'iron', 'shadow'];
         break;
     }
 
@@ -230,7 +212,7 @@ export class ArmyFactory {
       x,
       y,
       commanderType,
-      "敵指揮官",
+      '敵指揮官',
       undefined,
       true,
     );
@@ -238,13 +220,7 @@ export class ArmyFactory {
 
     if (army) {
       soldierTypes.forEach((type, index) => {
-        const soldier = CharacterFactory.createCharacter(
-          scene,
-          x,
-          y,
-          type,
-          `敵兵士${index + 1}`,
-        );
+        const soldier = CharacterFactory.createCharacter(scene, x, y, type, `敵兵士${index + 1}`);
         army.addSoldier(soldier);
       });
     }
@@ -256,7 +232,7 @@ export class ArmyFactory {
     scene: Phaser.Scene,
     armyManager: ArmyManager,
     positions: Array<{ x: number; y: number }>,
-    types: Array<"balanced" | "speed" | "defense" | "stealth">,
+    types: Array<'balanced' | 'speed' | 'defense' | 'stealth'>,
   ): Army[] {
     const armies: Army[] = [];
     const count = Math.min(positions.length, types.length);

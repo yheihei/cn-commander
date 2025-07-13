@@ -1,8 +1,8 @@
-import * as Phaser from "phaser";
-import { MapTile } from "./MapTile";
-import { TileType } from "../types/TileTypes";
-import { MapLayer as MapLayerData } from "../types/MapTypes";
-import { MAP_CONFIG, TILE_INDICES } from "../config/mapConfig";
+import * as Phaser from 'phaser';
+import { MapTile } from './MapTile';
+import { TileType } from '../types/TileTypes';
+import { MapLayer as MapLayerData } from '../types/MapTypes';
+import { MAP_CONFIG, TILE_INDICES } from '../config/mapConfig';
 
 export class MapLayer {
   private scene: Phaser.Scene;
@@ -38,20 +38,20 @@ export class MapLayer {
 
   private createTile(x: number, y: number, tileType: TileType): MapTile {
     // タイルタイプに応じてテクスチャとフレームを決定
-    let texture = "tilemap-base";
+    let texture = 'tilemap-base';
     let frame = 0;
 
     switch (tileType) {
       case TileType.PLAIN:
-        texture = "tilemap-base";
+        texture = 'tilemap-base';
         frame = TILE_INDICES.plain.grass;
         break;
       case TileType.FOREST:
-        texture = "tilemap-forest";
+        texture = 'tilemap-forest';
         frame = TILE_INDICES.forest.normal;
         break;
       case TileType.MOUNTAIN:
-        texture = "tilemap-mountain1";
+        texture = 'tilemap-mountain1';
         frame = TILE_INDICES.mountain.medium;
         break;
     }

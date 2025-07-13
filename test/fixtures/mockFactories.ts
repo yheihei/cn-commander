@@ -1,8 +1,8 @@
-import { Army } from "../../src/army/Army";
-import { Character } from "../../src/character/Character";
-import { MapManager } from "../../src/map/MapManager";
-import { MovementMode, MovementState } from "../../src/types/MovementTypes";
-import { CharacterStats } from "../../src/types/CharacterTypes";
+import { Army } from '../../src/army/Army';
+import { Character } from '../../src/character/Character';
+import { MapManager } from '../../src/map/MapManager';
+import { MovementMode, MovementState } from '../../src/types/MovementTypes';
+import { CharacterStats } from '../../src/types/CharacterTypes';
 
 // モック軍団の作成
 export function createMockArmy(
@@ -12,11 +12,9 @@ export function createMockArmy(
     soldiers?: Partial<CharacterStats>[];
   },
 ): Army {
-  const mockCommander = createMockCharacter("commander", config?.commander);
+  const mockCommander = createMockCharacter('commander', config?.commander);
   const mockSoldiers =
-    config?.soldiers?.map((stats, i) =>
-      createMockCharacter(`soldier${i}`, stats),
-    ) || [];
+    config?.soldiers?.map((stats, i) => createMockCharacter(`soldier${i}`, stats)) || [];
 
   const army = {
     getId: jest.fn(() => id),
@@ -27,10 +25,7 @@ export function createMockArmy(
     getAliveMembers: jest.fn(() => [mockCommander, ...mockSoldiers]),
     getAverageMovementSpeed: jest.fn(() => {
       const allMembers = [mockCommander, ...mockSoldiers];
-      const totalSpeed = allMembers.reduce(
-        (sum, member) => sum + member.getStats().moveSpeed,
-        0,
-      );
+      const totalSpeed = allMembers.reduce((sum, member) => sum + member.getStats().moveSpeed, 0);
       return totalSpeed / allMembers.length;
     }),
     isActive: jest.fn(() => true),
@@ -61,10 +56,7 @@ export function createMockArmy(
 }
 
 // モックキャラクターの作成
-export function createMockCharacter(
-  id: string,
-  stats?: Partial<CharacterStats>,
-): Character {
+export function createMockCharacter(id: string, stats?: Partial<CharacterStats>): Character {
   const defaultStats: CharacterStats = {
     hp: 50,
     maxHp: 50,
@@ -104,7 +96,7 @@ export function createMockMapManager(): MapManager {
       y: y * 16 + 8,
     })),
     getTileAt: jest.fn(() => ({
-      getTileType: jest.fn(() => "plain"),
+      getTileType: jest.fn(() => 'plain'),
       isWalkable: jest.fn(() => true),
     })),
     getMapWidth: jest.fn(() => 512),

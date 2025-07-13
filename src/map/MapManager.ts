@@ -1,9 +1,9 @@
-import * as Phaser from "phaser";
-import { MapLayer } from "./MapLayer";
-import { MapTile } from "./MapTile";
-import { MapData, GridCoordinate, BaseData } from "../types/MapTypes";
-import { TileType } from "../types/TileTypes";
-import { MAP_CONFIG, DEBUG_CONFIG } from "../config/mapConfig";
+import * as Phaser from 'phaser';
+import { MapLayer } from './MapLayer';
+import { MapTile } from './MapTile';
+import { MapData, GridCoordinate, BaseData } from '../types/MapTypes';
+import { TileType } from '../types/TileTypes';
+import { MAP_CONFIG, DEBUG_CONFIG } from '../config/mapConfig';
 
 export class MapManager {
   private scene: Phaser.Scene;
@@ -17,7 +17,7 @@ export class MapManager {
 
     // デフォルトのマップデータ
     this.mapData = {
-      name: "default",
+      name: 'default',
       width: MAP_CONFIG.mapWidth,
       height: MAP_CONFIG.mapHeight,
       tileSize: MAP_CONFIG.tileSize,
@@ -63,14 +63,14 @@ export class MapManager {
     }
 
     const mapData: MapData = {
-      name: "empty",
-      width: width,
-      height: height,
+      name: 'empty',
+      width,
+      height,
       tileSize: MAP_CONFIG.tileSize,
       layers: [
         {
-          name: "terrain",
-          tiles: tiles,
+          name: 'terrain',
+          tiles,
           visible: true,
         },
       ],
@@ -84,11 +84,7 @@ export class MapManager {
     this.loadMap(mapData);
   }
 
-  public getTileAt(
-    x: number,
-    y: number,
-    layerName: string = "terrain",
-  ): MapTile | null {
+  public getTileAt(x: number, y: number, layerName: string = 'terrain'): MapTile | null {
     const layer = this.layers.get(layerName);
     if (layer) {
       return layer.getTile(x, y);
@@ -99,7 +95,7 @@ export class MapManager {
   public getTileAtPixel(
     pixelX: number,
     pixelY: number,
-    layerName: string = "terrain",
+    layerName: string = 'terrain',
   ): MapTile | null {
     const layer = this.layers.get(layerName);
     if (layer) {
@@ -172,19 +168,13 @@ export class MapManager {
     // 縦線
     for (let x = 0; x <= this.mapData.width; x++) {
       this.debugGraphics.moveTo(x * MAP_CONFIG.tileSize, 0);
-      this.debugGraphics.lineTo(
-        x * MAP_CONFIG.tileSize,
-        this.mapData.height * MAP_CONFIG.tileSize,
-      );
+      this.debugGraphics.lineTo(x * MAP_CONFIG.tileSize, this.mapData.height * MAP_CONFIG.tileSize);
     }
 
     // 横線
     for (let y = 0; y <= this.mapData.height; y++) {
       this.debugGraphics.moveTo(0, y * MAP_CONFIG.tileSize);
-      this.debugGraphics.lineTo(
-        this.mapData.width * MAP_CONFIG.tileSize,
-        y * MAP_CONFIG.tileSize,
-      );
+      this.debugGraphics.lineTo(this.mapData.width * MAP_CONFIG.tileSize, y * MAP_CONFIG.tileSize);
     }
 
     this.debugGraphics.strokePath();

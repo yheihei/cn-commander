@@ -1,6 +1,6 @@
-import { Army } from "./Army";
-import { Character } from "../character/Character";
-import { ARMY_CONSTRAINTS } from "../types/ArmyTypes";
+import { Army } from './Army';
+import { Character } from '../character/Character';
+import { ARMY_CONSTRAINTS } from '../types/ArmyTypes';
 
 export class ArmyManager {
   private armies: Map<string, Army> = new Map();
@@ -17,11 +17,7 @@ export class ArmyManager {
    * @param gridX 左上のグリッドX座標
    * @param gridY 左上のグリッドY座標
    */
-  createArmyAtGrid(
-    commander: Character,
-    gridX: number,
-    gridY: number,
-  ): Army | null {
+  createArmyAtGrid(commander: Character, gridX: number, gridY: number): Army | null {
     // 2x2グリッドの中心に配置
     // 各メンバーがグリッドの中央に来るように調整
     const tileSize = 16;
@@ -32,9 +28,7 @@ export class ArmyManager {
 
   createArmy(commander: Character, x: number = 0, y: number = 0): Army | null {
     if (this.armies.size >= ARMY_CONSTRAINTS.maxArmies) {
-      console.warn(
-        `Cannot create more than ${ARMY_CONSTRAINTS.maxArmies} armies`,
-      );
+      console.warn(`Cannot create more than ${ARMY_CONSTRAINTS.maxArmies} armies`);
       return null;
     }
 
@@ -42,7 +36,7 @@ export class ArmyManager {
     const army = new Army(this.scene, x, y, {
       id: armyId,
       name: `${commander.getName()}の軍団`,
-      commander: commander,
+      commander,
     });
 
     this.armies.set(armyId, army);

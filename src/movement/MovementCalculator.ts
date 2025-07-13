@@ -1,11 +1,11 @@
-import { Army } from "../army/Army";
-import { TileType, TERRAIN_EFFECTS } from "../types/TileTypes";
+import { Army } from '../army/Army';
+import { TileType, TERRAIN_EFFECTS } from '../types/TileTypes';
 import {
   MovementMode,
   MOVEMENT_MODE_CONFIGS,
   MovementCalculation,
   MOVEMENT_CONSTRAINTS,
-} from "../types/MovementTypes";
+} from '../types/MovementTypes';
 
 export class MovementCalculator {
   /**
@@ -26,11 +26,7 @@ export class MovementCalculator {
    * 実際の移動時間を計算（秒/マス）
    * 計算式: (40 / 軍団移動速度) × (1 / モード補正) × 地形コスト
    */
-  public calculateMovementTime(
-    army: Army,
-    mode: MovementMode,
-    terrainType: TileType,
-  ): number {
+  public calculateMovementTime(army: Army, mode: MovementMode, terrainType: TileType): number {
     const armySpeed = this.calculateArmySpeed(army);
     if (armySpeed === 0) return Infinity;
 
@@ -51,11 +47,7 @@ export class MovementCalculator {
   /**
    * ピクセル単位の移動速度を計算（ピクセル/秒）
    */
-  public calculatePixelSpeed(
-    army: Army,
-    mode: MovementMode,
-    terrainType: TileType,
-  ): number {
+  public calculatePixelSpeed(army: Army, mode: MovementMode, terrainType: TileType): number {
     const timePerTile = this.calculateMovementTime(army, mode, terrainType);
     if (timePerTile === Infinity) return 0;
 
@@ -89,12 +81,7 @@ export class MovementCalculator {
   /**
    * 2点間の距離を計算（ピクセル単位）
    */
-  public calculateDistance(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-  ): number {
+  public calculateDistance(x1: number, y1: number, x2: number, y2: number): number {
     const dx = x2 - x1;
     const dy = y2 - y1;
     return Math.sqrt(dx * dx + dy * dy);

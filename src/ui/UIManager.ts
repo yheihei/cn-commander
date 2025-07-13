@@ -1,7 +1,7 @@
-import * as Phaser from "phaser";
-import { ActionMenu } from "./ActionMenu";
-import { MovementModeMenu } from "./MovementModeMenu";
-import { Army } from "../army/Army";
+import * as Phaser from 'phaser';
+import { ActionMenu } from './ActionMenu';
+import { MovementModeMenu } from './MovementModeMenu';
+import { Army } from '../army/Army';
 
 export class UIManager {
   private scene: Phaser.Scene;
@@ -13,11 +13,7 @@ export class UIManager {
     this.scene = scene;
   }
 
-  public showActionMenu(
-    army: Army,
-    onMove: () => void,
-    onCancel: () => void,
-  ): void {
+  public showActionMenu(army: Army, onMove: () => void, onCancel: () => void): void {
     // 既存のメニューがあれば削除
     this.hideActionMenu();
 
@@ -110,7 +106,6 @@ export class UIManager {
   public isAnyMenuVisible(): boolean {
     return this.isActionMenuVisible() || this.isMovementModeMenuVisible();
   }
-
 
   public getCurrentSelectedArmy(): Army | null {
     return this.currentSelectedArmy;

@@ -1,11 +1,11 @@
 // Jest Canvas Mock
-import "jest-canvas-mock";
+import 'jest-canvas-mock';
 
 // グローバルなモックとテスト環境の設定
 global.Image = class {
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
-  src: string = "";
+  src: string = '';
   width: number = 0;
   height: number = 0;
 
@@ -48,7 +48,7 @@ global.cancelAnimationFrame = jest.fn((id) => {
 }) as any;
 
 // Phaser固有のモック設定
-jest.mock("phaser", () => ({
+jest.mock('phaser', () => ({
   Geom: {
     Rectangle: class MockRectangle {
       constructor(
@@ -58,12 +58,7 @@ jest.mock("phaser", () => ({
         public height: number,
       ) {}
       contains = jest.fn((x: number, y: number) => {
-        return (
-          x >= this.x &&
-          x <= this.x + this.width &&
-          y >= this.y &&
-          y <= this.y + this.height
-        );
+        return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
       });
     },
   },
@@ -80,7 +75,7 @@ jest.mock("phaser", () => ({
     },
     destroy: jest.fn(),
   })),
-  HEADLESS: "headless",
+  HEADLESS: 'headless',
   Scene: class MockScene {
     add = {
       text: jest.fn(),
@@ -332,44 +327,42 @@ export const createMockScene = () => {
         setDepth: jest.fn().mockReturnThis(),
         destroy: jest.fn(),
       })),
-      sprite: jest.fn(
-        (x: number, y: number, texture: string, frame?: string | number) => {
-          const sprite: any = {
-            x,
-            y,
-            texture,
-            frame,
-            setDisplaySize: jest.fn(),
-            setInteractive: jest.fn(),
-            setOrigin: jest.fn().mockReturnThis(),
-            setTint: jest.fn().mockReturnThis(),
-            clearTint: jest.fn().mockReturnThis(),
-            on: jest.fn(),
-            getBounds: jest.fn(function (this: any) {
-              return {
-                contains: jest.fn((cx: number, cy: number) => {
-                  const halfWidth = 8;
-                  const halfHeight = 8;
-                  return (
-                    cx >= sprite.x - halfWidth &&
-                    cx <= sprite.x + halfWidth &&
-                    cy >= sprite.y - halfHeight &&
-                    cy <= sprite.y + halfHeight
-                  );
-                }),
-              };
-            }),
-            getCenter: jest.fn((output?: any) => {
-              const center = output || { x: 0, y: 0 };
-              center.x = sprite.x;
-              center.y = sprite.y;
-              return center;
-            }),
-            destroy: jest.fn(),
-          };
-          return sprite;
-        },
-      ),
+      sprite: jest.fn((x: number, y: number, texture: string, frame?: string | number) => {
+        const sprite: any = {
+          x,
+          y,
+          texture,
+          frame,
+          setDisplaySize: jest.fn(),
+          setInteractive: jest.fn(),
+          setOrigin: jest.fn().mockReturnThis(),
+          setTint: jest.fn().mockReturnThis(),
+          clearTint: jest.fn().mockReturnThis(),
+          on: jest.fn(),
+          getBounds: jest.fn(function (this: any) {
+            return {
+              contains: jest.fn((cx: number, cy: number) => {
+                const halfWidth = 8;
+                const halfHeight = 8;
+                return (
+                  cx >= sprite.x - halfWidth &&
+                  cx <= sprite.x + halfWidth &&
+                  cy >= sprite.y - halfHeight &&
+                  cy <= sprite.y + halfHeight
+                );
+              }),
+            };
+          }),
+          getCenter: jest.fn((output?: any) => {
+            const center = output || { x: 0, y: 0 };
+            center.x = sprite.x;
+            center.y = sprite.y;
+            return center;
+          }),
+          destroy: jest.fn(),
+        };
+        return sprite;
+      }),
       container: jest.fn((x?: number, y?: number) => {
         const container = {
           x: x || 0,
@@ -464,6 +457,6 @@ export const createMockScene = () => {
 };
 
 // エラーハンドリング
-process.on("unhandledRejection", (error) => {
-  console.error("Unhandled Promise Rejection:", error);
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Promise Rejection:', error);
 });

@@ -1,17 +1,11 @@
-import { MovementCommandSystem } from "../../../src/movement/MovementCommand";
-import { MovementCalculator } from "../../../src/movement/MovementCalculator";
-import { MovementProcessor } from "../../../src/movement/MovementProcessor";
-import {
-  MovementMode,
-  MOVEMENT_CONSTRAINTS,
-} from "../../../src/types/MovementTypes";
-import { TileType } from "../../../src/types/TileTypes";
-import {
-  createMockArmy,
-  createMockMapManager,
-} from "../../fixtures/mockFactories";
+import { MovementCommandSystem } from '../../../src/movement/MovementCommand';
+import { MovementCalculator } from '../../../src/movement/MovementCalculator';
+import { MovementProcessor } from '../../../src/movement/MovementProcessor';
+import { MovementMode, MOVEMENT_CONSTRAINTS } from '../../../src/types/MovementTypes';
+import { TileType } from '../../../src/types/TileTypes';
+import { createMockArmy, createMockMapManager } from '../../fixtures/mockFactories';
 
-describe("[エピック4] MovementSystem Integration Tests", () => {
+describe('[エピック4] MovementSystem Integration Tests', () => {
   let commandSystem: MovementCommandSystem;
   let calculator: MovementCalculator;
   let processor: MovementProcessor;
@@ -22,9 +16,9 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
     processor = new MovementProcessor(commandSystem);
   });
 
-  describe("移動指示システム", () => {
-    test("経路指定と移動コマンドの生成", () => {
-      const army = createMockArmy("army1", {
+  describe('移動指示システム', () => {
+    test('経路指定と移動コマンドの生成', () => {
+      const army = createMockArmy('army1', {
         commander: { moveSpeed: 12 },
         soldiers: [{ moveSpeed: 10 }, { moveSpeed: 12 }, { moveSpeed: 13 }],
       });
@@ -43,8 +37,8 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(command?.mode).toBe(MovementMode.NORMAL);
     });
 
-    test("最大4地点の経路制限", () => {
-      const army = createMockArmy("army1");
+    test('最大4地点の経路制限', () => {
+      const army = createMockArmy('army1');
 
       const waypoints = [
         { x: 100, y: 100 },
@@ -57,13 +51,11 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       commandSystem.setPath(army, waypoints, MovementMode.NORMAL);
 
       const command = commandSystem.getCommand(army.getId());
-      expect(command?.path.waypoints).toHaveLength(
-        MOVEMENT_CONSTRAINTS.maxWaypoints,
-      );
+      expect(command?.path.waypoints).toHaveLength(MOVEMENT_CONSTRAINTS.maxWaypoints);
     });
 
-    test("移動のキャンセル", () => {
-      const army = createMockArmy("army1");
+    test('移動のキャンセル', () => {
+      const army = createMockArmy('army1');
       const waypoints = [{ x: 100, y: 100 }];
 
       commandSystem.setPath(army, waypoints, MovementMode.NORMAL);
@@ -74,9 +66,9 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
     });
   });
 
-  describe("移動速度計算", () => {
-    test("軍団平均速度の計算", () => {
-      const army = createMockArmy("army1", {
+  describe('移動速度計算', () => {
+    test('軍団平均速度の計算', () => {
+      const army = createMockArmy('army1', {
         commander: { moveSpeed: 13 },
         soldiers: [{ moveSpeed: 10 }, { moveSpeed: 12 }, { moveSpeed: 13 }],
       });
@@ -85,8 +77,8 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(avgSpeed).toBe(12); // (13 + 10 + 12 + 13) / 4 = 12
     });
 
-    test("通常移動での速度計算", () => {
-      const army = createMockArmy("army1", {
+    test('通常移動での速度計算', () => {
+      const army = createMockArmy('army1', {
         commander: { moveSpeed: 12 },
         soldiers: [{ moveSpeed: 12 }, { moveSpeed: 12 }, { moveSpeed: 12 }],
       });
@@ -100,8 +92,8 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(timePerTile).toBeCloseTo(3.33, 2); // (40 / 12) × 1.0 × 1.0
     });
 
-    test("戦闘移動での速度計算", () => {
-      const army = createMockArmy("army1", {
+    test('戦闘移動での速度計算', () => {
+      const army = createMockArmy('army1', {
         commander: { moveSpeed: 12 },
         soldiers: [{ moveSpeed: 12 }, { moveSpeed: 12 }, { moveSpeed: 12 }],
       });
@@ -115,8 +107,8 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(timePerTile).toBeCloseTo(5.56, 2); // (40 / 12) × (1 / 0.6) × 1.0
     });
 
-    test("地形効果の適用", () => {
-      const army = createMockArmy("army1", {
+    test('地形効果の適用', () => {
+      const army = createMockArmy('army1', {
         commander: { moveSpeed: 8 },
         soldiers: [{ moveSpeed: 10 }, { moveSpeed: 11 }, { moveSpeed: 12 }],
       });
@@ -132,22 +124,18 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(timePerTile).toBeCloseTo(9.76, 2);
     });
 
-    test("待機モードでの移動速度", () => {
-      const army = createMockArmy("army1");
+    test('待機モードでの移動速度', () => {
+      const army = createMockArmy('army1');
 
-      const pixelSpeed = calculator.calculatePixelSpeed(
-        army,
-        MovementMode.STANDBY,
-        TileType.PLAIN,
-      );
+      const pixelSpeed = calculator.calculatePixelSpeed(army, MovementMode.STANDBY, TileType.PLAIN);
 
       expect(pixelSpeed).toBe(0); // 待機モードでは移動しない
     });
   });
 
-  describe("移動処理", () => {
-    test("目標地点への移動", () => {
-      const army = createMockArmy("army1");
+  describe('移動処理', () => {
+    test('目標地点への移動', () => {
+      const army = createMockArmy('army1');
       const mapManager = createMockMapManager();
 
       // 初期位置を設定
@@ -167,8 +155,8 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(army.y).toBeCloseTo(0, 0);
     });
 
-    test("複数経路点の移動", () => {
-      const army = createMockArmy("army1");
+    test('複数経路点の移動', () => {
+      const army = createMockArmy('army1');
       const mapManager = createMockMapManager();
 
       army.x = 0;
@@ -193,12 +181,12 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(commandSystem.isMoving(army.getId())).toBe(false);
     });
 
-    test("地形による速度変化", () => {
-      const army = createMockArmy("army1");
+    test('地形による速度変化', () => {
+      const army = createMockArmy('army1');
       const mapManager = createMockMapManager();
 
       // 森林地形をモック
-      jest.spyOn(mapManager, "getTileAt").mockReturnValue({
+      jest.spyOn(mapManager, 'getTileAt').mockReturnValue({
         getTileType: () => TileType.FOREST,
         isWalkable: () => true,
       } as any);
@@ -216,9 +204,9 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
     });
   });
 
-  describe("実使用シナリオ", () => {
-    test("軍団の選択から移動完了までの一連の流れ", () => {
-      const army = createMockArmy("army1", {
+  describe('実使用シナリオ', () => {
+    test('軍団の選択から移動完了までの一連の流れ', () => {
+      const army = createMockArmy('army1', {
         commander: { moveSpeed: 13 },
         soldiers: [{ moveSpeed: 10 }, { moveSpeed: 12 }, { moveSpeed: 13 }],
       });
@@ -255,8 +243,8 @@ describe("[エピック4] MovementSystem Integration Tests", () => {
       expect(commandSystem.isMoving(army.getId())).toBe(false);
     });
 
-    test("移動中のモード切り替え", () => {
-      const army = createMockArmy("army1");
+    test('移動中のモード切り替え', () => {
+      const army = createMockArmy('army1');
       const mapManager = createMockMapManager();
 
       army.x = 0;

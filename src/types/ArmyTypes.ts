@@ -1,5 +1,5 @@
-import { Character } from "../character/Character";
-import { Position } from "./CharacterTypes";
+import { Character } from '../character/Character';
+import { Position } from './CharacterTypes';
 
 export interface ArmyConfig {
   id: string;
@@ -14,7 +14,7 @@ export interface SightArea {
   center: Position;
 }
 
-export type FormationType = "standard" | "defensive" | "offensive";
+export type FormationType = 'standard' | 'defensive' | 'offensive';
 
 export interface ArmyMovement {
   targetPosition: Position;

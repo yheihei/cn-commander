@@ -1,4 +1,4 @@
-import * as Phaser from "phaser";
+import * as Phaser from 'phaser';
 
 export class WaypointMarker extends Phaser.GameObjects.Container {
   private crossGraphics: Phaser.GameObjects.Graphics;
@@ -23,9 +23,9 @@ export class WaypointMarker extends Phaser.GameObjects.Container {
 
     // インデックス番号を表示（1から始まる）
     this.indexText = scene.add.text(0, -20, `${index}`, {
-      fontSize: "14px",
-      color: "#ffffff",
-      backgroundColor: "#000000",
+      fontSize: '14px',
+      color: '#ffffff',
+      backgroundColor: '#000000',
       padding: { x: 4, y: 2 },
     });
     this.indexText.setOrigin(0.5);

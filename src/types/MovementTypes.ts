@@ -1,10 +1,10 @@
-import { Position } from "./CharacterTypes";
+import { Position } from './CharacterTypes';
 
 // 移動モード
 export enum MovementMode {
-  NORMAL = "normal", // 通常移動（100%速度、攻撃不可）
-  COMBAT = "combat", // 戦闘移動（60%速度、攻撃可能）
-  STANDBY = "standby", // 待機（0%速度、攻撃可能、視界+1）
+  NORMAL = 'normal', // 通常移動（100%速度、攻撃不可）
+  COMBAT = 'combat', // 戦闘移動（60%速度、攻撃可能）
+  STANDBY = 'standby', // 待機（0%速度、攻撃可能、視界+1）
 }
 
 // 移動モードの設定

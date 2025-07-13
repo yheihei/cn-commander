@@ -1,5 +1,5 @@
-import * as Phaser from "phaser";
-import { MovementMode } from "../types/MovementTypes";
+import * as Phaser from 'phaser';
+import { MovementMode } from '../types/MovementTypes';
 
 export interface MovementModeMenuConfig {
   x: number;
@@ -31,21 +31,11 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     this.add(this.background);
 
     // 通常移動ボタン
-    this.normalMoveButton = this.createButton(
-      "通常移動",
-      0,
-      -27,
-      MovementMode.NORMAL,
-    );
+    this.normalMoveButton = this.createButton('通常移動', 0, -27, MovementMode.NORMAL);
     this.add(this.normalMoveButton);
 
     // 戦闘移動ボタン
-    this.combatMoveButton = this.createButton(
-      "戦闘移動",
-      0,
-      27,
-      MovementMode.COMBAT,
-    );
+    this.combatMoveButton = this.createButton('戦闘移動', 0, 27, MovementMode.COMBAT);
     this.add(this.combatMoveButton);
 
     // Containerを配置
@@ -76,8 +66,8 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
 
     // ボタンのテキスト
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontSize: "14px",
-      color: "#ffffff",
+      fontSize: '14px',
+      color: '#ffffff',
       padding: { x: 2, y: 2 },
     });
     buttonText.setOrigin(0.5);
@@ -85,16 +75,16 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     button.add([buttonBg, buttonText]);
 
     // ホバー効果
-    buttonBg.on("pointerover", () => {
+    buttonBg.on('pointerover', () => {
       buttonBg.setFillStyle(0x777777);
     });
 
-    buttonBg.on("pointerout", () => {
+    buttonBg.on('pointerout', () => {
       buttonBg.setFillStyle(0x555555);
     });
 
     // クリックイベント
-    buttonBg.on("pointerdown", () => {
+    buttonBg.on('pointerdown', () => {
       if (mode === MovementMode.NORMAL && this.onNormalMoveCallback) {
         this.onNormalMoveCallback();
       } else if (mode === MovementMode.COMBAT && this.onCombatMoveCallback) {
@@ -109,7 +99,7 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
   private setupInputHandlers(): void {
     // メニュー自体へのクリックはイベントを停止
     this.background.setInteractive();
-    this.background.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    this.background.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       pointer.event.stopPropagation();
     });
   }
@@ -129,11 +119,11 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
 
     // 次のフレームでイベントリスナーを追加（即座に閉じるのを防ぐ）
     this.scene.time.delayedCall(0, () => {
-      this.scene.input.on("pointerdown", clickHandler);
+      this.scene.input.on('pointerdown', clickHandler);
 
       // メニューが破棄される時にリスナーを削除
-      this.once("destroy", () => {
-        this.scene.input.off("pointerdown", clickHandler);
+      this.once('destroy', () => {
+        this.scene.input.off('pointerdown', clickHandler);
       });
     });
   }

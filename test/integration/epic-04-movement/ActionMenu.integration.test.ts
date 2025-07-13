@@ -1,7 +1,7 @@
-import { UIManager } from "../../../src/ui/UIManager";
-import { createMockScene } from "../../setup";
+import { UIManager } from '../../../src/ui/UIManager';
+import { createMockScene } from '../../setup';
 
-describe("[エピック4] Action Menu Integration Tests", () => {
+describe('[エピック4] Action Menu Integration Tests', () => {
   let scene: any;
   let uiManager: UIManager;
 
@@ -16,14 +16,14 @@ describe("[エピック4] Action Menu Integration Tests", () => {
     }
   });
 
-  describe("基本的なUIマネージャーの動作", () => {
-    test("UIManagerを作成できる", () => {
+  describe('基本的なUIマネージャーの動作', () => {
+    test('UIManagerを作成できる', () => {
       expect(uiManager).toBeDefined();
     });
   });
 
-  describe("UIManager統合テスト", () => {
-    test("UIManagerを通じてアクションメニューを表示できる", () => {
+  describe('UIManager統合テスト', () => {
+    test('UIManagerを通じてアクションメニューを表示できる', () => {
       const mockArmy = {
         getCommander: () => ({
           getCenter: () => ({ x: 100, y: 100 }),
@@ -39,7 +39,7 @@ describe("[エピック4] Action Menu Integration Tests", () => {
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy);
     });
 
-    test("アクションメニューを非表示にできる", () => {
+    test('アクションメニューを非表示にできる', () => {
       const mockArmy = {
         getCommander: () => ({
           getCenter: () => ({ x: 100, y: 100 }),

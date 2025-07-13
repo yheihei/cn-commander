@@ -1,7 +1,7 @@
-import * as Phaser from "phaser";
-import { TileType, TileData, TERRAIN_EFFECTS } from "../types/TileTypes";
-import { GridCoordinate, PixelCoordinate } from "../types/MapTypes";
-import { MAP_CONFIG } from "../config/mapConfig";
+import * as Phaser from 'phaser';
+import { TileType, TileData, TERRAIN_EFFECTS } from '../types/TileTypes';
+import { GridCoordinate, PixelCoordinate } from '../types/MapTypes';
+import { MAP_CONFIG } from '../config/mapConfig';
 
 // テスト環境でPhaser.GameObjects.Spriteがundefinedの場合のフォールバック
 const SpriteBase =
@@ -60,8 +60,8 @@ export class MapTile extends SpriteBase {
     this.setInteractive();
 
     // ホバーイベント
-    this.on("pointerover", this.onHover, this);
-    this.on("pointerout", this.onHoverEnd, this);
+    this.on('pointerover', this.onHover, this);
+    this.on('pointerout', this.onHoverEnd, this);
 
     scene.add.existing(this);
   }

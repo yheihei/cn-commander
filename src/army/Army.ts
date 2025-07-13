@@ -1,21 +1,21 @@
-import * as Phaser from "phaser";
+import * as Phaser from 'phaser';
 import {
   ArmyConfig,
   SightArea,
   FormationType,
   ArmyMovement,
   ARMY_CONSTRAINTS,
-} from "../types/ArmyTypes";
-import { Character } from "../character/Character";
-import { Position } from "../types/CharacterTypes";
-import { MovementMode, MovementState } from "../types/MovementTypes";
+} from '../types/ArmyTypes';
+import { Character } from '../character/Character';
+import { Position } from '../types/CharacterTypes';
+import { MovementMode, MovementState } from '../types/MovementTypes';
 
 export class Army extends Phaser.GameObjects.Container {
   private id: string;
   private armyName: string;
   private commander: Character;
   private soldiers: Character[] = [];
-  private formation: FormationType = "standard";
+  private formation: FormationType = 'standard';
   private movement: ArmyMovement | null = null;
   private movementState: MovementState = {
     isMoving: false,
@@ -140,7 +140,7 @@ export class Army extends Phaser.GameObjects.Container {
     const halfTile = 8;
 
     switch (this.formation) {
-      case "standard":
+      case 'standard': {
         // 正方形に配置（各メンバーをグリッドの中央に配置）
         // Container中心からの相対位置で各グリッドの中央に配置
         const positions = [
@@ -161,8 +161,9 @@ export class Army extends Phaser.GameObjects.Container {
           }
         });
         break;
+      }
 
-      case "defensive":
+      case 'defensive':
         // 防御陣形：指揮官を後方中央、兵士を前方に横一列
         this.commander.setPosition(0, halfTile);
         this.soldiers.forEach((soldier, index) => {
@@ -171,7 +172,7 @@ export class Army extends Phaser.GameObjects.Container {
         });
         break;
 
-      case "offensive":
+      case 'offensive':
         // 攻撃陣形：指揮官を前方中央、兵士を後方に横一列
         this.commander.setPosition(0, -halfTile);
         this.soldiers.forEach((soldier, index) => {

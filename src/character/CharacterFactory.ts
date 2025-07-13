@@ -1,10 +1,6 @@
-import { Character } from "./Character";
-import {
-  CharacterConfig,
-  JobType,
-  CharacterStats,
-} from "../types/CharacterTypes";
-import { JobFactory } from "./jobs/JobFactory";
+import { Character } from './Character';
+import { CharacterConfig, JobType, CharacterStats } from '../types/CharacterTypes';
+import { JobFactory } from './jobs/JobFactory';
 
 export class CharacterFactory {
   private static nextId: number = 1;
@@ -30,9 +26,9 @@ export class CharacterFactory {
     const config: CharacterConfig = {
       id: `char_${this.nextId++}`,
       name: name || `${job.name}${this.nextId}`,
-      jobType: jobType,
+      jobType,
       stats: finalStats,
-      isCommander: isCommander,
+      isCommander,
     };
 
     return new Character(scene, x, y, config);
@@ -42,8 +38,8 @@ export class CharacterFactory {
     scene: Phaser.Scene,
     x: number,
     y: number,
-    jobType: JobType = "wind",
-    name: string = "咲耶",
+    jobType: JobType = 'wind',
+    name: string = '咲耶',
   ): Character {
     const customStats: Partial<CharacterStats> = {
       hp: 80,
@@ -56,27 +52,19 @@ export class CharacterFactory {
     return this.createCharacter(scene, x, y, jobType, name, customStats, true);
   }
 
-  static createRandomCharacter(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-  ): Character {
-    const jobTypes: JobType[] = ["wind", "iron", "shadow", "medicine"];
+  static createRandomCharacter(scene: Phaser.Scene, x: number, y: number): Character {
+    const jobTypes: JobType[] = ['wind', 'iron', 'shadow', 'medicine'];
     const randomJob = jobTypes[Math.floor(Math.random() * jobTypes.length)];
 
     return this.createCharacter(scene, x, y, randomJob);
   }
 
-  static createBalancedArmy(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-  ): Character[] {
+  static createBalancedArmy(scene: Phaser.Scene, x: number, y: number): Character[] {
     const commander = this.createCommander(scene, x, y);
     const soldiers = [
-      this.createCharacter(scene, x, y, "iron"),
-      this.createCharacter(scene, x, y, "shadow"),
-      this.createCharacter(scene, x, y, "medicine"),
+      this.createCharacter(scene, x, y, 'iron'),
+      this.createCharacter(scene, x, y, 'shadow'),
+      this.createCharacter(scene, x, y, 'medicine'),
     ];
 
     return [commander, ...soldiers];
@@ -86,38 +74,28 @@ export class CharacterFactory {
     scene: Phaser.Scene,
     x: number,
     y: number,
-    specialization: "speed" | "defense" | "stealth",
+    specialization: 'speed' | 'defense' | 'stealth',
   ): Character[] {
     let commanderType: JobType;
     let soldierTypes: JobType[];
 
     switch (specialization) {
-      case "speed":
-        commanderType = "wind";
-        soldierTypes = ["wind", "wind", "shadow"];
+      case 'speed':
+        commanderType = 'wind';
+        soldierTypes = ['wind', 'wind', 'shadow'];
         break;
-      case "defense":
-        commanderType = "iron";
-        soldierTypes = ["iron", "iron", "medicine"];
+      case 'defense':
+        commanderType = 'iron';
+        soldierTypes = ['iron', 'iron', 'medicine'];
         break;
-      case "stealth":
-        commanderType = "shadow";
-        soldierTypes = ["shadow", "shadow", "wind"];
+      case 'stealth':
+        commanderType = 'shadow';
+        soldierTypes = ['shadow', 'shadow', 'wind'];
         break;
     }
 
-    const commander = this.createCharacter(
-      scene,
-      x,
-      y,
-      commanderType,
-      undefined,
-      undefined,
-      true,
-    );
-    const soldiers = soldierTypes.map((type) =>
-      this.createCharacter(scene, x, y, type),
-    );
+    const commander = this.createCharacter(scene, x, y, commanderType, undefined, undefined, true);
+    const soldiers = soldierTypes.map((type) => this.createCharacter(scene, x, y, type));
 
     return [commander, ...soldiers];
   }

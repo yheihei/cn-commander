@@ -1,4 +1,4 @@
-import * as Phaser from "phaser";
+import * as Phaser from 'phaser';
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -11,7 +11,7 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    parent: "game-container",
+    parent: 'game-container',
     min: {
       width: 640,
       height: 360,
@@ -22,13 +22,13 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
     },
   },
   physics: {
-    default: "arcade",
+    default: 'arcade',
     arcade: {
       gravity: { x: 0, y: 0 },
       debug: false,
     },
   },
-  backgroundColor: "#2d2d2d",
+  backgroundColor: '#2d2d2d',
   pixelArt: true,
   antialias: false,
   roundPixels: true,

@@ -1,9 +1,9 @@
-import { Army } from "../army/Army";
-import { MapManager } from "../map/MapManager";
-import { Position } from "../types/CharacterTypes";
-import { TileType } from "../types/TileTypes";
-import { MovementCalculator } from "./MovementCalculator";
-import { MovementCommandSystem } from "./MovementCommand";
+import { Army } from '../army/Army';
+import { MapManager } from '../map/MapManager';
+import { Position } from '../types/CharacterTypes';
+import { TileType } from '../types/TileTypes';
+import { MovementCalculator } from './MovementCalculator';
+import { MovementCommandSystem } from './MovementCommand';
 
 export class MovementProcessor {
   private calculator: MovementCalculator;
@@ -17,11 +17,7 @@ export class MovementProcessor {
   /**
    * 軍団の移動を更新
    */
-  public updateMovement(
-    army: Army,
-    deltaTime: number,
-    mapManager: MapManager,
-  ): void {
+  public updateMovement(army: Army, deltaTime: number, mapManager: MapManager): void {
     const command = this.commandSystem.getCommand(army.getId());
     if (!command) {
       army.stopMovement();
@@ -38,11 +34,7 @@ export class MovementProcessor {
     const currentTerrain = this.getCurrentTerrain(army, mapManager);
 
     // 移動速度を計算
-    const pixelSpeed = this.calculator.calculatePixelSpeed(
-      army,
-      command.mode,
-      currentTerrain,
-    );
+    const pixelSpeed = this.calculator.calculatePixelSpeed(army, command.mode, currentTerrain);
 
     // 目標地点への移動
     const reached = this.moveTowardsTarget(army, target, pixelSpeed, deltaTime);
@@ -76,12 +68,7 @@ export class MovementProcessor {
     const currentX = army.x;
     const currentY = army.y;
 
-    const distance = this.calculator.calculateDistance(
-      currentX,
-      currentY,
-      target.x,
-      target.y,
-    );
+    const distance = this.calculator.calculateDistance(currentX, currentY, target.x, target.y);
 
     // 1フレームで移動可能な距離
     const moveDistance = speed * (deltaTime / 1000);

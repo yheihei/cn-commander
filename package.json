@@ -9,7 +9,12 @@
     "serve": "http-server dist -p 8080 -c-1",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\" \"test/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,json,css}\" \"test/**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "phaser3",
@@ -23,14 +28,20 @@
     "phaser": "^3.70.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.31.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
     "copy-webpack-plugin": "^11.0.0",
+    "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.5",
     "html-webpack-plugin": "^5.5.3",
     "http-server": "^14.1.1",
     "jest": "^30.0.4",
     "jest-canvas-mock": "^2.5.2",
     "jest-environment-jsdom": "^30.0.4",
+    "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.2",

@@ -1,18 +1,14 @@
-import { JobClass } from "./JobClass";
-import {
-  CharacterStats,
-  JobType,
-  ClassSkill,
-} from "../../types/CharacterTypes";
+import { JobClass } from './JobClass';
+import { CharacterStats, JobType, ClassSkill } from '../../types/CharacterTypes';
 
 export class ShadowNinja extends JobClass {
-  readonly type: JobType = "shadow";
-  readonly name = "影忍";
-  readonly description = "視界に優れた忍者";
+  readonly type: JobType = 'shadow';
+  readonly name = '影忍';
+  readonly description = '視界に優れた忍者';
 
   readonly classSkill: ClassSkill = {
-    name: "暗視",
-    description: "視界範囲+3",
+    name: '暗視',
+    description: '視界範囲+3',
     apply: (stats: CharacterStats): CharacterStats => {
       return {
         ...stats,

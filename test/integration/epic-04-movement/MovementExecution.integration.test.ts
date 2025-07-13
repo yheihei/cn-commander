@@ -1,14 +1,14 @@
-import { ArmyManager } from "../../../src/army/ArmyManager";
-import { MapManager } from "../../../src/map/MapManager";
-import { MovementManager } from "../../../src/movement/MovementManager";
-import { MovementInputHandler } from "../../../src/input/MovementInputHandler";
-import { UIManager } from "../../../src/ui/UIManager";
-import { MovementCommandSystem } from "../../../src/movement/MovementCommand";
-import { ArmyFactory } from "../../../src/army/ArmyFactory";
-import { MovementMode } from "../../../src/types/MovementTypes";
-import { createMockScene } from "../../setup";
+import { ArmyManager } from '../../../src/army/ArmyManager';
+import { MapManager } from '../../../src/map/MapManager';
+import { MovementManager } from '../../../src/movement/MovementManager';
+import { MovementInputHandler } from '../../../src/input/MovementInputHandler';
+import { UIManager } from '../../../src/ui/UIManager';
+import { MovementCommandSystem } from '../../../src/movement/MovementCommand';
+import { ArmyFactory } from '../../../src/army/ArmyFactory';
+import { MovementMode } from '../../../src/types/MovementTypes';
+import { createMockScene } from '../../setup';
 
-describe("[エピック4] Movement Execution Integration Tests", () => {
+describe('[エピック4] Movement Execution Integration Tests', () => {
   let scene: any;
   let armyManager: ArmyManager;
   let mapManager: MapManager;
@@ -22,12 +22,7 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
     armyManager = new ArmyManager(scene);
     mapManager = new MapManager(scene);
     commandSystem = new MovementCommandSystem();
-    movementManager = new MovementManager(
-      scene,
-      armyManager,
-      mapManager,
-      commandSystem,
-    );
+    movementManager = new MovementManager(scene, armyManager, mapManager, commandSystem);
     uiManager = new UIManager(scene);
     inputHandler = new MovementInputHandler(
       scene,
@@ -39,13 +34,13 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
 
     // テスト用のマップを設定
     const mapData = {
-      name: "testMap",
+      name: 'testMap',
       width: 50,
       height: 50,
       tileSize: 16,
       layers: [
         {
-          name: "terrain",
+          name: 'terrain',
           tiles: Array(50)
             .fill(null)
             .map(() => Array(50).fill(0)),
@@ -66,15 +61,10 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
     uiManager.destroy();
   });
 
-  describe("移動開始処理", () => {
-    test("経路設定後に軍団が移動を開始する", () => {
+  describe('移動開始処理', () => {
+    test('経路設定後に軍団が移動を開始する', () => {
       // 軍団を作成
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       expect(army).not.toBeNull();
       if (!army) return;
 
@@ -91,22 +81,15 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       // 移動が開始されているか確認
       expect(army.isMoving()).toBe(true);
       expect(commandSystem.getCommand(army.getId())).toBeDefined();
-      expect(commandSystem.getCurrentTarget(army.getId())).toEqual(
-        waypoints[0],
-      );
+      expect(commandSystem.getCurrentTarget(army.getId())).toEqual(waypoints[0]);
     });
 
-    test("×マークが経路選択完了後に消去される", () => {
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+    test('×マークが経路選択完了後に消去される', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       if (!army) return;
 
       // 別の方法: 軍団を直接選択する
-      const showActionMenu = jest.spyOn(uiManager, "showActionMenu");
+      const showActionMenu = jest.spyOn(uiManager, 'showActionMenu');
 
       // 直接showActionMenuを呼び出す（統合テストでは内部動作を直接テストする）
       const inputHandler_any = inputHandler as any;
@@ -114,16 +97,12 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       expect(showActionMenu).toHaveBeenCalled();
 
       // 移動プロセスを開始
-      const startMovementProcess = (
-        inputHandler as any
-      ).startMovementProcess.bind(inputHandler);
+      const startMovementProcess = (inputHandler as any).startMovementProcess.bind(inputHandler);
       (inputHandler as any).selectedArmy = army;
       startMovementProcess();
 
       // 経路設定を開始
-      const startPathSetting = (inputHandler as any).startPathSetting.bind(
-        inputHandler,
-      );
+      const startPathSetting = (inputHandler as any).startPathSetting.bind(inputHandler);
       startPathSetting();
 
       // 経路点を追加
@@ -135,9 +114,7 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       expect((inputHandler as any).waypointMarkers.length).toBe(2);
 
       // 移動を確定
-      const confirmMovement = (inputHandler as any).confirmMovement.bind(
-        inputHandler,
-      );
+      const confirmMovement = (inputHandler as any).confirmMovement.bind(inputHandler);
       confirmMovement();
 
       // ×マークが消去されているか確認
@@ -145,13 +122,8 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       expect((inputHandler as any).waypointBuffer.length).toBe(0);
     });
 
-    test("移動システムが軍団を実際に移動させる", () => {
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+    test('移動システムが軍団を実際に移動させる', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       if (!army) return;
       const initialX = army.x;
       const initialY = army.y;
@@ -168,13 +140,8 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       expect(army.x).toBeGreaterThan(initialX);
     });
 
-    test("経路の全地点を順番に通過する", () => {
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+    test('経路の全地点を順番に通過する', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       if (!army) return;
 
       const waypoints = [
@@ -186,9 +153,7 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       commandSystem.setPath(army, waypoints, MovementMode.NORMAL);
 
       // 最初の目標地点を確認
-      expect(commandSystem.getCurrentTarget(army.getId())).toEqual(
-        waypoints[0],
-      );
+      expect(commandSystem.getCurrentTarget(army.getId())).toEqual(waypoints[0]);
 
       // 十分な時間経過させて最初の地点に到達
       for (let i = 0; i < 10; i++) {
@@ -206,13 +171,8 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       }
     });
 
-    test("戦闘移動モードで移動速度が変わる", () => {
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+    test('戦闘移動モードで移動速度が変わる', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       if (!army) return;
       const initialX = army.x;
 
@@ -237,14 +197,9 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
     });
   });
 
-  describe("エラーケース", () => {
-    test("経路点なしで移動開始した場合", () => {
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+  describe('エラーケース', () => {
+    test('経路点なしで移動開始した場合', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       if (!army) return;
 
       // 空の経路で移動コマンドを設定
@@ -255,13 +210,8 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       expect(commandSystem.getCommand(army.getId())).toBeNull();
     });
 
-    test("移動中に新しい経路を設定した場合", () => {
-      const army = ArmyFactory.createPlayerArmyAtGrid(
-        scene,
-        armyManager,
-        10,
-        10,
-      );
+    test('移動中に新しい経路を設定した場合', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       if (!army) return;
 
       // 最初の経路
@@ -273,9 +223,7 @@ describe("[エピック4] Movement Execution Integration Tests", () => {
       commandSystem.setPath(army, secondPath, MovementMode.NORMAL);
 
       // 新しい経路が設定されていることを確認
-      expect(commandSystem.getCurrentTarget(army.getId())).toEqual(
-        secondPath[0],
-      );
+      expect(commandSystem.getCurrentTarget(army.getId())).toEqual(secondPath[0]);
     });
   });
 });

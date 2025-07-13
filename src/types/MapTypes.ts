@@ -1,4 +1,4 @@
-import { TileType } from "./TileTypes";
+import { TileType } from './TileTypes';
 
 export interface MapConfig {
   tileSize: number; // タイルサイズ（ピクセル）
@@ -35,12 +35,12 @@ export interface BaseData {
   y: number; // タイル座標
   hp: number;
   maxHp: number;
-  owner: "player" | "enemy" | "neutral";
+  owner: 'player' | 'enemy' | 'neutral';
 }
 
 export enum BaseType {
-  HEADQUARTERS = "headquarters", // 本拠地
-  NORMAL_BASE = "normal_base", // 通常拠点
+  HEADQUARTERS = 'headquarters', // 本拠地
+  NORMAL_BASE = 'normal_base', // 通常拠点
 }
 
 export interface Coordinate {

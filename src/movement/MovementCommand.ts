@@ -1,10 +1,6 @@
-import { Army } from "../army/Army";
-import { Position } from "../types/CharacterTypes";
-import {
-  MovementMode,
-  MovementCommand,
-  MOVEMENT_CONSTRAINTS,
-} from "../types/MovementTypes";
+import { Army } from '../army/Army';
+import { Position } from '../types/CharacterTypes';
+import { MovementMode, MovementCommand, MOVEMENT_CONSTRAINTS } from '../types/MovementTypes';
 
 export class MovementCommandSystem {
   private commands: Map<string, MovementCommand> = new Map();
@@ -19,14 +15,11 @@ export class MovementCommandSystem {
     }
 
     // 経路点数の制限
-    const limitedWaypoints = waypoints.slice(
-      0,
-      MOVEMENT_CONSTRAINTS.maxWaypoints,
-    );
+    const limitedWaypoints = waypoints.slice(0, MOVEMENT_CONSTRAINTS.maxWaypoints);
 
     const command: MovementCommand = {
       armyId: army.getId(),
-      mode: mode,
+      mode,
       path: {
         waypoints: limitedWaypoints,
         currentIndex: 0,

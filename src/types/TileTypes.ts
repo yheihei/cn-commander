@@ -1,7 +1,7 @@
 export enum TileType {
-  PLAIN = "plain", // 平地
-  FOREST = "forest", // 森林
-  MOUNTAIN = "mountain", // 山地
+  PLAIN = 'plain', // 平地
+  FOREST = 'forest', // 森林
+  MOUNTAIN = 'mountain', // 山地
 }
 
 export interface TerrainEffect {

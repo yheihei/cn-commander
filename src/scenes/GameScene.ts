@@ -1,15 +1,15 @@
-import * as Phaser from "phaser";
-import { MapManager } from "../map/MapManager";
-import { TileType } from "../types/TileTypes";
-import { MapData, BaseType } from "../types/MapTypes";
-import { MAP_CONFIG, DEBUG_CONFIG } from "../config/mapConfig";
-import { ArmyManager } from "../army/ArmyManager";
-import { ArmyFactory } from "../army/ArmyFactory";
-import { Army } from "../army/Army";
-import { MovementManager } from "../movement/MovementManager";
-import { UIManager } from "../ui/UIManager";
-import { MovementInputHandler } from "../input/MovementInputHandler";
-import { MovementCommandSystem } from "../movement/MovementCommand";
+import * as Phaser from 'phaser';
+import { MapManager } from '../map/MapManager';
+import { TileType } from '../types/TileTypes';
+import { MapData, BaseType } from '../types/MapTypes';
+import { MAP_CONFIG, DEBUG_CONFIG } from '../config/mapConfig';
+import { ArmyManager } from '../army/ArmyManager';
+import { ArmyFactory } from '../army/ArmyFactory';
+import { Army } from '../army/Army';
+import { MovementManager } from '../movement/MovementManager';
+import { UIManager } from '../ui/UIManager';
+import { MovementInputHandler } from '../input/MovementInputHandler';
+import { MovementCommandSystem } from '../movement/MovementCommand';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -27,7 +27,7 @@ export class GameScene extends Phaser.Scene {
   private cameraStartY: number = 0;
 
   constructor() {
-    super({ key: "GameScene" });
+    super({ key: 'GameScene' });
   }
 
   create(): void {
@@ -61,7 +61,7 @@ export class GameScene extends Phaser.Scene {
     );
 
     // テストマップを読み込むか、デフォルトマップを作成
-    const testMapData = this.cache.json.get("testMap");
+    const testMapData = this.cache.json.get('testMap');
     if (testMapData) {
       this.mapManager.loadMap(testMapData);
     } else {
@@ -130,14 +130,14 @@ export class GameScene extends Phaser.Scene {
     }
 
     const mapData: MapData = {
-      name: "testMap",
+      name: 'testMap',
       width: mapSize,
       height: mapSize,
       tileSize: MAP_CONFIG.tileSize,
       layers: [
         {
-          name: "terrain",
-          tiles: tiles,
+          name: 'terrain',
+          tiles,
           visible: true,
         },
       ],
@@ -147,24 +147,24 @@ export class GameScene extends Phaser.Scene {
       },
       bases: [
         {
-          id: "player-hq",
-          name: "プレイヤー本拠地",
+          id: 'player-hq',
+          name: 'プレイヤー本拠地',
           type: BaseType.HEADQUARTERS,
           x: 10,
           y: 10,
           hp: 200,
           maxHp: 200,
-          owner: "player",
+          owner: 'player',
         },
         {
-          id: "enemy-hq",
-          name: "敵本拠地",
+          id: 'enemy-hq',
+          name: '敵本拠地',
           type: BaseType.HEADQUARTERS,
           x: mapSize - 10,
           y: mapSize - 10,
           hp: 200,
           maxHp: 200,
-          owner: "enemy",
+          owner: 'enemy',
         },
       ],
     };
@@ -178,7 +178,7 @@ export class GameScene extends Phaser.Scene {
     ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 10, 10);
 
     // 敵軍団を作成（グリッド座標40,40から）
-    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 40, 40, "normal");
+    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 40, 40, 'normal');
 
     // 追加のテスト軍団（4マス分離れた位置）
     ArmyFactory.createTestArmyAtGrid(
@@ -186,7 +186,7 @@ export class GameScene extends Phaser.Scene {
       this.armyManager,
       14, // 10 + 4
       14, // 10 + 4
-      "speed",
+      'speed',
     );
 
     ArmyFactory.createTestArmyAtGrid(
@@ -194,10 +194,10 @@ export class GameScene extends Phaser.Scene {
       this.armyManager,
       36, // 40 - 4
       36, // 40 - 4
-      "defense",
+      'defense',
     );
 
-    console.log(`Created ${this.armyManager.getActiveArmies().length} armies`);
+    // Armies created
   }
 
   private setupCamera(): void {
@@ -221,13 +221,13 @@ export class GameScene extends Phaser.Scene {
       this.cursors = this.input.keyboard.createCursorKeys();
 
       // デバッグモード切り替え
-      this.input.keyboard.on("keydown-D", () => {
+      this.input.keyboard.on('keydown-D', () => {
         DEBUG_CONFIG.showTileInfo = !DEBUG_CONFIG.showTileInfo;
       });
     }
 
     // マウスドラッグでカメラ移動（右ドラッグのみ処理）
-    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown()) {
         this.isDragging = true;
         this.dragStartX = pointer.x;
@@ -238,31 +238,28 @@ export class GameScene extends Phaser.Scene {
       // 左クリックはMovementInputHandlerで処理するため、ここでは何もしない
     });
 
-    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.isDragging) {
         const dragX = pointer.x - this.dragStartX;
         const dragY = pointer.y - this.dragStartY;
-        this.cameras.main.setScroll(
-          this.cameraStartX - dragX,
-          this.cameraStartY - dragY,
-        );
+        this.cameras.main.setScroll(this.cameraStartX - dragX, this.cameraStartY - dragY);
       }
 
       // デバッグ情報の更新
       this.updateDebugInfo(pointer);
     });
 
-    this.input.on("pointerup", () => {
+    this.input.on('pointerup', () => {
       this.isDragging = false;
     });
   }
 
   private setupDebugDisplay(): void {
     // デバッグテキスト
-    this.debugText = this.add.text(10, 10, "", {
-      font: "14px monospace",
-      color: "#ffffff",
-      backgroundColor: "#000000",
+    this.debugText = this.add.text(10, 10, '', {
+      font: '14px monospace',
+      color: '#ffffff',
+      backgroundColor: '#000000',
       padding: { x: 5, y: 5 },
     });
     this.debugText.setScrollFactor(0);
@@ -275,7 +272,7 @@ export class GameScene extends Phaser.Scene {
 
   private updateDebugInfo(pointer: Phaser.Input.Pointer): void {
     if (!DEBUG_CONFIG.showTileInfo) {
-      this.debugText.setText("");
+      this.debugText.setText('');
       return;
     }
 
@@ -296,7 +293,7 @@ export class GameScene extends Phaser.Scene {
       debugInfo += `Move Cost: ${terrain.movementCost}\n`;
       debugInfo += `Def Bonus: ${terrain.defenseBonus}%\n`;
       debugInfo += `Atk Bonus: ${terrain.attackBonus}%\n`;
-      debugInfo += `Vision: ${terrain.visionModifier > 0 ? "+" : ""}${terrain.visionModifier}`;
+      debugInfo += `Vision: ${terrain.visionModifier > 0 ? '+' : ''}${terrain.visionModifier}`;
     }
 
     if (base) {
@@ -314,10 +311,7 @@ export class GameScene extends Phaser.Scene {
       debugInfo += `Alive: ${selectedArmy.getAliveMembers().length}\n`;
       debugInfo += `Avg Speed: ${selectedArmy.getAverageMovementSpeed().toFixed(1)}\n`;
       // 軍団の中心位置をグリッド座標で表示
-      const armyGrid = this.mapManager.pixelToGrid(
-        selectedArmy.x,
-        selectedArmy.y,
-      );
+      const armyGrid = this.mapManager.pixelToGrid(selectedArmy.x, selectedArmy.y);
       debugInfo += `Grid Pos: ${armyGrid.x}, ${armyGrid.y}`;
     }
 

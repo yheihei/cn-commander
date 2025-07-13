@@ -1,10 +1,5 @@
-import * as Phaser from "phaser";
-import {
-  CharacterStats,
-  CharacterConfig,
-  Position,
-  STAT_RANGES,
-} from "../types/CharacterTypes";
+import * as Phaser from 'phaser';
+import { CharacterStats, CharacterConfig, Position, STAT_RANGES } from '../types/CharacterTypes';
 
 export class Character extends Phaser.GameObjects.Sprite {
   private id: string;
@@ -14,13 +9,8 @@ export class Character extends Phaser.GameObjects.Sprite {
   private isCommander: boolean;
   private commanderMarker?: Phaser.GameObjects.Graphics;
 
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    config: CharacterConfig,
-  ) {
-    super(scene, x, y, "sakuya", 0);
+  constructor(scene: Phaser.Scene, x: number, y: number, config: CharacterConfig) {
+    super(scene, x, y, 'sakuya', 0);
 
     this.id = config.id;
     this.characterName = config.name;
@@ -45,7 +35,7 @@ export class Character extends Phaser.GameObjects.Sprite {
 
   private validateStats(): void {
     for (const [key, value] of Object.entries(this.stats)) {
-      if (key === "maxHp") continue;
+      if (key === 'maxHp') continue;
       const range = STAT_RANGES[key as keyof typeof STAT_RANGES];
       if (range) {
         this.stats[key as keyof CharacterStats] = Math.max(
@@ -105,12 +95,8 @@ export class Character extends Phaser.GameObjects.Sprite {
    */
   getBounds<O extends Phaser.Geom.Rectangle>(output?: O): O {
     // 親コンテナがある場合は、その座標を考慮
-    const worldX = this.parentContainer
-      ? (this.parentContainer as any).x + this.x
-      : this.x;
-    const worldY = this.parentContainer
-      ? (this.parentContainer as any).y + this.y
-      : this.y;
+    const worldX = this.parentContainer ? (this.parentContainer as Phaser.GameObjects.Container).x + this.x : this.x;
+    const worldY = this.parentContainer ? (this.parentContainer as Phaser.GameObjects.Container).y + this.y : this.y;
 
     const halfWidth = this.displayWidth / 2;
     const halfHeight = this.displayHeight / 2;
@@ -137,8 +123,7 @@ export class Character extends Phaser.GameObjects.Sprite {
     this.commanderMarker.setPosition(0, -10); // キャラクターの上部に配置（相対位置）
     this.commanderMarker.setDepth(this.depth + 1); // キャラクターより前面に表示
 
-    // デバッグ用ログ
-    console.log(`Commander marker created for ${this.characterName}`);
+    // Commander marker created
   }
 
   getIsCommander(): boolean {

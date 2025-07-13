@@ -1,8 +1,4 @@
-import {
-  CharacterStats,
-  JobType,
-  ClassSkill,
-} from "../../types/CharacterTypes";
+import { CharacterStats, JobType, ClassSkill } from '../../types/CharacterTypes';
 
 export abstract class JobClass {
   abstract readonly type: JobType;

@@ -1,8 +1,8 @@
-import * as Phaser from "phaser";
-import { ArmyManager } from "../army/ArmyManager";
-import { MapManager } from "../map/MapManager";
-import { MovementCommandSystem } from "./MovementCommand";
-import { MovementMode } from "../types/MovementTypes";
+import * as Phaser from 'phaser';
+import { ArmyManager } from '../army/ArmyManager';
+import { MapManager } from '../map/MapManager';
+import { MovementCommandSystem } from './MovementCommand';
+import { MovementMode } from '../types/MovementTypes';
 
 export class MovementManager {
   private armyManager: ArmyManager;
@@ -43,15 +43,11 @@ export class MovementManager {
 
           if (distance <= arrivalThreshold) {
             // 現在の経路点に到達した
-            const hasNextWaypoint = this.commandSystem.advanceToNextWaypoint(
-              army.getId(),
-            );
+            const hasNextWaypoint = this.commandSystem.advanceToNextWaypoint(army.getId());
 
             if (hasNextWaypoint) {
               // 次の経路点へ移動開始
-              const nextTarget = this.commandSystem.getCurrentTarget(
-                army.getId(),
-              );
+              const nextTarget = this.commandSystem.getCurrentTarget(army.getId());
               if (nextTarget) {
                 army.startMovement(nextTarget, command.mode);
               }

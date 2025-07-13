@@ -1,0 +1,30 @@
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Generated files
+*.min.js
+*.bundle.js
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Others
+*.map
+package-lock.json

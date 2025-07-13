@@ -16,7 +16,7 @@ export interface CharacterConfig {
   isCommander?: boolean;
 }
 
-export type JobType = "wind" | "iron" | "shadow" | "medicine";
+export type JobType = 'wind' | 'iron' | 'shadow' | 'medicine';
 
 export interface Position {
   x: number;
