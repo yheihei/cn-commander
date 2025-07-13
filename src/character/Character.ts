@@ -38,6 +38,8 @@ export class Character extends Phaser.GameObjects.Sprite {
     // 指揮官マークの作成
     if (this.isCommander) {
       this.createCommanderMarker();
+      // 指揮官はクリック可能にする
+      this.setInteractive({ useHandCursor: true });
     }
   }
 
