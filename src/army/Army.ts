@@ -26,6 +26,7 @@ export class Army extends Phaser.GameObjects.Container {
     targetPosition: null,
   };
   private owner: FactionType;
+  private discovered: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
     super(scene, x, y);
@@ -49,6 +50,9 @@ export class Army extends Phaser.GameObjects.Container {
     }
 
     this.arrangeFormation();
+
+    // 所属に応じた視覚的識別
+    this.applyFactionVisuals();
 
     scene.add.existing(this);
   }
@@ -108,6 +112,16 @@ export class Army extends Phaser.GameObjects.Container {
     return this.owner === other.owner;
   }
 
+  setDiscovered(discovered: boolean): void {
+    this.discovered = discovered;
+    // プレイヤー軍団は常に表示、それ以外は発見状態に応じて表示/非表示
+    this.setVisible(discovered || this.isPlayerArmy());
+  }
+
+  isDiscovered(): boolean {
+    return this.discovered;
+  }
+
   getAliveMembers(): Character[] {
     return this.getAllMembers().filter((member) => member.isAlive());
   }
@@ -148,6 +162,9 @@ export class Army extends Phaser.GameObjects.Container {
       this.add(marker);
     }
 
+    // 所属に応じたビジュアルを適用
+    this.applyFactionVisuals();
+
     this.arrangeFormation();
     return true;
   }
@@ -164,6 +181,44 @@ export class Army extends Phaser.GameObjects.Container {
   setFormation(formation: FormationType): void {
     this.formation = formation;
     this.arrangeFormation();
+  }
+
+  private applyFactionVisuals(): void {
+    // 所属に応じて色を設定
+    let tintColor: number | undefined;
+    let markerColor: number | undefined;
+
+    switch (this.owner) {
+      case 'enemy':
+        tintColor = 0xff8888; // 赤色
+        markerColor = 0xff0000; // 赤色
+        break;
+      case 'neutral':
+        tintColor = 0x88ff88; // 緑色
+        markerColor = 0x00ff00; // 緑色
+        break;
+      case 'player':
+      default:
+        // プレイヤー軍団は元の色のまま
+        tintColor = undefined;
+        markerColor = 0x0088ff; // 青色
+        break;
+    }
+
+    // 全メンバーにtintを適用
+    if (tintColor !== undefined) {
+      this.getAllMembers().forEach((member) => {
+        member.setTint(tintColor);
+      });
+    }
+
+    // 指揮官マーカーの色を変更
+    const commanderMarker = this.commander.getCommanderMarker();
+    if (commanderMarker && markerColor !== undefined) {
+      commanderMarker.clear();
+      commanderMarker.fillStyle(markerColor, 1);
+      commanderMarker.fillCircle(0, 0, 5);
+    }
   }
 
   private arrangeFormation(): void {
