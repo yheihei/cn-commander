@@ -98,6 +98,30 @@ export class Character extends Phaser.GameObjects.Sprite {
     return this.stats.hp > 0;
   }
 
+  /**
+   * ワールド座標でのバウンディングボックスを取得
+   */
+  getBounds<O extends Phaser.Geom.Rectangle>(output?: O): O {
+    // 親コンテナがある場合は、その座標を考慮
+    const worldX = this.parentContainer
+      ? (this.parentContainer as any).x + this.x
+      : this.x;
+    const worldY = this.parentContainer
+      ? (this.parentContainer as any).y + this.y
+      : this.y;
+
+    const halfWidth = this.displayWidth / 2;
+    const halfHeight = this.displayHeight / 2;
+
+    const rect = output || new Phaser.Geom.Rectangle();
+    rect.x = worldX - halfWidth;
+    rect.y = worldY - halfHeight;
+    rect.width = this.displayWidth;
+    rect.height = this.displayHeight;
+
+    return rect as O;
+  }
+
   updateStats(newStats: Partial<CharacterStats>): void {
     this.stats = { ...this.stats, ...newStats };
     this.validateStats();
@@ -110,7 +134,7 @@ export class Character extends Phaser.GameObjects.Sprite {
     this.commanderMarker.fillCircle(0, 0, 5); // 半径5ピクセルの円（直径10px）
     this.commanderMarker.setPosition(0, -10); // キャラクターの上部に配置（相対位置）
     this.commanderMarker.setDepth(this.depth + 1); // キャラクターより前面に表示
-    
+
     // デバッグ用ログ
     console.log(`Commander marker created for ${this.characterName}`);
   }
