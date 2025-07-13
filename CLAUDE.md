@@ -18,11 +18,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - YAGNI（You Aren't Gonna Need It）：今必要じゃない機能は作らない
 - KISS: 複雑な解決策より単純な解決策を優先
 
-## 実装作業の場合
-
-- **MUST** 最後に`npm test`を行い、テストエラーが無いか確認する
-- エラーがある場合、テストが悪いのか、実装が悪いのか判断し、どちらかを修正すること
-
 ## タスクの遂行方法
 
 適用条件: 実装を依頼された時。単なる質問事項の場合適用されない。
@@ -63,3 +58,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 基本設計書に修正があれば修正する
 - やり取りの結果、@docs/prd/requirements.md に修正が必要であれば修正する
 - ユーザーからのフィードバックを待つ。フィードバックがあれば適宜前のフェーズに戻ること
+
+## **重要** 実装タスクの最後にやること
+
+適用条件: 1行でも実装を修正した場合**MUST**
+
+- 最後に`npm test`を行い、テストエラーが無いか確認する
+- エラーがある場合、テストが悪いのか、実装が悪いのか判断し、どちらかを修正すること
