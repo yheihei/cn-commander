@@ -34,7 +34,7 @@ export class Army extends Phaser.GameObjects.Container {
 
     this.add(this.commander);
     this.commander.setPosition(0, 0);
-    
+
     // 指揮官マークをコンテナに追加
     const marker = this.commander.getCommanderMarker();
     if (marker) {
@@ -111,13 +111,13 @@ export class Army extends Phaser.GameObjects.Container {
 
     this.soldiers.push(soldier);
     this.add(soldier);
-    
+
     // 兵士が指揮官の場合、マークも追加
     const marker = soldier.getCommanderMarker();
     if (marker) {
       this.add(marker);
     }
-    
+
     this.arrangeFormation();
     return true;
   }
@@ -193,7 +193,15 @@ export class Army extends Phaser.GameObjects.Container {
 
   update(_time: number, delta: number): void {
     if (this.movement && this.movement.isMoving) {
-      const speed = this.getAverageMovementSpeed();
+      const baseSpeed = this.getAverageMovementSpeed();
+
+      // 移動モードによる速度補正
+      let speedModifier = 1.0;
+      if (this.movementState.mode === MovementMode.COMBAT) {
+        speedModifier = 0.6;
+      }
+
+      const speed = baseSpeed * speedModifier;
       const moveDistance = (speed * delta) / 1000;
 
       const target = this.movement.targetPosition;
@@ -227,7 +235,7 @@ export class Army extends Phaser.GameObjects.Container {
     this.movementState.isMoving = true;
     this.movementState.targetPosition = target;
     this.movementState.mode = mode;
-    
+
     // update メソッドで使用される movement プロパティも設定
     this.movement = {
       targetPosition: target,
@@ -242,7 +250,7 @@ export class Army extends Phaser.GameObjects.Container {
     this.movementState.targetPosition = null;
     this.movementState.currentPath = null;
     this.movementState.currentSpeed = 0;
-    
+
     // movement プロパティもクリア
     this.movement = null;
   }
