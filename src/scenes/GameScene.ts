@@ -12,6 +12,7 @@ import { MovementInputHandler } from '../input/MovementInputHandler';
 import { MovementCommandSystem } from '../movement/MovementCommand';
 import { VisionSystem } from '../vision/VisionSystem';
 import { DiscoverySystem } from '../vision/DiscoverySystem';
+import { WeaponFactory } from '../item/WeaponFactory';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -57,8 +58,9 @@ export class GameScene extends Phaser.Scene {
 
     // 発見システムの初期化
     this.discoverySystem = new DiscoverySystem(this.visionSystem);
-    this.discoverySystem.onArmyDiscovered = (army, event) => {
-      console.log(`敵軍団を発見: ${army.getName()} at (${event.position.x}, ${event.position.y})`);
+    this.discoverySystem.onArmyDiscovered = (_army, _event) => {
+      // 敵軍団発見時のイベント処理（デバッグ表示で確認可能）
+      // console.log(`敵軍団を発見: ${_army.getName()} at (${_event.position.x}, ${_event.position.y})`);
     };
 
     // UIマネージャーの初期化
@@ -188,12 +190,43 @@ export class GameScene extends Phaser.Scene {
   private createTestArmies(): void {
     // 軍団をグリッド座標で配置（各軍団は2x2マスを占有）
     // プレイヤー軍団を作成（グリッド座標10,10から）
-    ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 10, 10);
+    const playerArmy = ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 10, 10);
+
+    // プレイヤー軍団の全メンバーに武器を持たせる
+    if (playerArmy) {
+      const allMembers = [playerArmy.getCommander(), ...playerArmy.getSoldiers()];
+      allMembers.forEach((member, index) => {
+        const itemHolder = member.getItemHolder();
+
+        // 手裏剣を追加
+        const shuriken = WeaponFactory.createWeapon('shuriken');
+        itemHolder.addItem(shuriken);
+
+        // 指揮官（咲耶）と薬忍には忍者刀も追加
+        if (index === 0 || member.getJobType() === 'medicine') {
+          const sword = WeaponFactory.createWeapon('ninja_sword');
+          itemHolder.addItem(sword);
+          // 忍者刀の方が攻撃力が高いので自動装備される
+        }
+      });
+
+      // デバッグ用：装備状況はデバッグ表示（Dキー）で確認可能
+      // allMembers.forEach((member) => {
+      //   const itemHolder = member.getItemHolder();
+      //   const equipped = itemHolder.getEquippedWeapon();
+      //   const allWeapons = itemHolder.getWeapons();
+      //   console.log(`  ${member.getName()} (${member.getJobType()}):`);
+      //   console.log(
+      //     `    装備中: ${equipped ? `${equipped.name} (攻撃力+${equipped.attackBonus})` : '装備なし'}`,
+      //   );
+      //   console.log(`    所持武器: ${allWeapons.map((w: IWeapon) => w.name).join(', ')}`);
+      // });
+    }
 
     // 敵軍団を視界外に配置（視界テスト用）
     // 咲耶軍団の視界は約8マス程度なので、18,10に配置（8マス離れた位置）
     ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 18, 10, 'normal');
-    
+
     // 追加の敵軍団（さらに離れた位置）
     ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 25, 10, 'hard');
 
@@ -203,7 +236,7 @@ export class GameScene extends Phaser.Scene {
       this.discoverySystem.initializeArmyVisibility(army);
     });
 
-    console.log('テストシナリオ: 咲耶軍団を東（右）に移動させて敵軍団を発見してください');
+    // テストシナリオ: 咲耶軍団を東（右）に移動させて敵軍団を発見してください
   }
 
   private setupCamera(): void {
@@ -317,7 +350,7 @@ export class GameScene extends Phaser.Scene {
       debugInfo += `Members: ${selectedArmy.getMemberCount()}\n`;
       debugInfo += `Alive: ${selectedArmy.getAliveMembers().length}\n`;
       debugInfo += `Avg Speed: ${selectedArmy.getAverageMovementSpeed().toFixed(1)}\n`;
-      
+
       // 視界情報
       const visionAreas = this.visionSystem.calculateVision(selectedArmy);
       if (visionAreas.length > 0) {
@@ -326,10 +359,20 @@ export class GameScene extends Phaser.Scene {
           debugInfo += `  Member ${index + 1}: ${area.effectiveRange} マス\n`;
         });
       }
-      
+
       // 軍団の中心位置をグリッド座標で表示
       const armyGrid = this.mapManager.pixelToGrid(selectedArmy.x, selectedArmy.y);
-      debugInfo += `Grid Pos: ${armyGrid.x}, ${armyGrid.y}`;
+      debugInfo += `Grid Pos: ${armyGrid.x}, ${armyGrid.y}\n`;
+
+      // 装備情報
+      debugInfo += `\nEquipment:\n`;
+      const allMembers = [selectedArmy.getCommander(), ...selectedArmy.getSoldiers()];
+      allMembers.forEach((member) => {
+        const equipped = member.getItemHolder().getEquippedWeapon();
+        if (equipped) {
+          debugInfo += `  ${member.getName()}: ${equipped.name} (耐久${equipped.durability}/${equipped.maxDurability})\n`;
+        }
+      });
     }
 
     this.debugText.setText(debugInfo);
@@ -365,7 +408,7 @@ export class GameScene extends Phaser.Scene {
   private updateVisionAndDiscovery(): void {
     // 全軍団を取得
     const allArmies = this.armyManager.getAllArmies();
-    
+
     // プレイヤー軍団と敵軍団を分離
     const playerArmies = allArmies.filter((army) => army.isPlayerArmy());
     const enemyArmies = allArmies.filter((army) => army.isEnemyArmy());

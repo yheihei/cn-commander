@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
 import { CharacterStats, CharacterConfig, Position, STAT_RANGES } from '../types/CharacterTypes';
+import { ItemHolder } from '../item/ItemHolder';
+import { IItemHolder } from '../types/ItemTypes';
 
 export class Character extends Phaser.GameObjects.Sprite {
   private id: string;
@@ -8,6 +10,7 @@ export class Character extends Phaser.GameObjects.Sprite {
   private jobType: string;
   private isCommander: boolean;
   private commanderMarker?: Phaser.GameObjects.Graphics;
+  private itemHolder: IItemHolder;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: CharacterConfig) {
     super(scene, x, y, 'sakuya', 0);
@@ -17,6 +20,7 @@ export class Character extends Phaser.GameObjects.Sprite {
     this.jobType = config.jobType;
     this.stats = { ...config.stats };
     this.isCommander = config.isCommander ?? false;
+    this.itemHolder = new ItemHolder();
 
     this.validateStats();
 
@@ -95,8 +99,12 @@ export class Character extends Phaser.GameObjects.Sprite {
    */
   getBounds<O extends Phaser.Geom.Rectangle>(output?: O): O {
     // 親コンテナがある場合は、その座標を考慮
-    const worldX = this.parentContainer ? (this.parentContainer as Phaser.GameObjects.Container).x + this.x : this.x;
-    const worldY = this.parentContainer ? (this.parentContainer as Phaser.GameObjects.Container).y + this.y : this.y;
+    const worldX = this.parentContainer
+      ? (this.parentContainer as Phaser.GameObjects.Container).x + this.x
+      : this.x;
+    const worldY = this.parentContainer
+      ? (this.parentContainer as Phaser.GameObjects.Container).y + this.y
+      : this.y;
 
     const halfWidth = this.displayWidth / 2;
     const halfHeight = this.displayHeight / 2;
@@ -132,6 +140,10 @@ export class Character extends Phaser.GameObjects.Sprite {
 
   getCommanderMarker(): Phaser.GameObjects.Graphics | undefined {
     return this.commanderMarker;
+  }
+
+  getItemHolder(): IItemHolder {
+    return this.itemHolder;
   }
 
   destroy(): void {
