@@ -15,6 +15,13 @@ if (typeof window !== "undefined") {
   (window as any).game = game;
 }
 
+// ブラウザのコンテキストメニューを無効化
+// ゲームキャンバスでの右クリックメニューを防ぐ
+game.canvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  return false;
+});
+
 console.log("クリプト忍者咲耶コマンダー - Game Started");
 console.log(`Resolution: ${gameConfig.width}x${gameConfig.height}`);
 console.log(`Target FPS: ${gameConfig.fps?.target}`);
