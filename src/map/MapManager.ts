@@ -157,6 +157,10 @@ export class MapManager {
     };
   }
 
+  public isValidGrid(gridX: number, gridY: number): boolean {
+    return gridX >= 0 && gridX < this.mapData.width && gridY >= 0 && gridY < this.mapData.height;
+  }
+
   private drawDebugGrid(): void {
     if (this.debugGraphics) {
       this.debugGraphics.destroy();
