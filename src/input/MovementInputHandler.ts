@@ -101,15 +101,15 @@ export class MovementInputHandler {
 
   private showActionMenu(army: Army): void {
     this.isSelectingAction = true;
-    
+
     // 前の選択を解除
     if (this.selectedArmy) {
       this.unhighlightCommander(this.selectedArmy);
     }
-    
+
     this.selectedArmy = army;
     this.highlightCommander(army);
-    
+
     // アクションメニューを表示
     this.uiManager.showActionMenu(
       army,
@@ -122,14 +122,13 @@ export class MovementInputHandler {
         // キャンセルされた
         this.isSelectingAction = false;
         this.deselectArmy();
-      }
+      },
     );
   }
 
-
   private startMovementProcess(): void {
     if (!this.selectedArmy) return;
-    
+
     // 移動モード選択UIを表示
     this.uiManager.showMovementModeMenu(
       this.selectedArmy,
@@ -146,7 +145,7 @@ export class MovementInputHandler {
       () => {
         // キャンセルされた
         this.deselectArmy();
-      }
+      },
     );
   }
 
@@ -194,11 +193,15 @@ export class MovementInputHandler {
 
     // 経路の妥当性を検証
     const gridPos = this._mapManager.pixelToGrid(x, y);
-    if (gridPos.x < 0 || gridPos.x >= this._mapManager.getMapWidth() ||
-        gridPos.y < 0 || gridPos.y >= this._mapManager.getMapHeight()) {
+    if (
+      gridPos.x < 0 ||
+      gridPos.x >= this._mapManager.getMapWidth() ||
+      gridPos.y < 0 ||
+      gridPos.y >= this._mapManager.getMapHeight()
+    ) {
       return; // マップ外の座標は無視
     }
-    
+
     this.waypointBuffer.push({ x, y });
 
     // 経路点の視覚的フィードバック（実装は別途必要）
@@ -208,7 +211,7 @@ export class MovementInputHandler {
     if (this.waypointBuffer.length === 4) {
       // 経路設定モードを無効化（これ以上のクリックを防ぐ）
       this.isSettingPath = false;
-      
+
       // 2秒後に移動を開始
       this.scene.time.delayedCall(2000, () => {
         this.confirmMovement();
@@ -275,7 +278,7 @@ export class MovementInputHandler {
     // 経路点マーカーを表示
     const marker = new WaypointMarker(this.scene, x, y, index);
     this.waypointMarkers.push(marker);
-    
+
     // 経路の線を描画
     this.drawPathLines();
   }
@@ -287,30 +290,30 @@ export class MovementInputHandler {
       this.pathLines.setDepth(99); // マーカーより手前
     }
     this.pathLines.clear();
-    
+
     // 経路点が2つ以上ある場合のみ線を描画
     if (this.waypointBuffer.length >= 2) {
       this.pathLines.lineStyle(2, 0xff0000, 0.7);
-      
+
       // 最初の点から始める
       const startPos = this.waypointBuffer[0];
       this.pathLines.moveTo(startPos.x, startPos.y);
-      
+
       // 各点を結ぶ
       for (let i = 1; i < this.waypointBuffer.length; i++) {
         const pos = this.waypointBuffer[i];
         this.pathLines.lineTo(pos.x, pos.y);
       }
-      
+
       this.pathLines.strokePath();
     }
   }
 
   private clearWaypointMarkers(): void {
     // 全ての経路点マーカーを削除
-    this.waypointMarkers.forEach(marker => marker.destroy());
+    this.waypointMarkers.forEach((marker) => marker.destroy());
     this.waypointMarkers = [];
-    
+
     // 経路の線も削除
     if (this.pathLines) {
       this.pathLines.clear();

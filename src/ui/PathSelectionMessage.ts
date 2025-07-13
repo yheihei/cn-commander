@@ -17,20 +17,25 @@ export class PathSelectionMessage extends Phaser.GameObjects.Container {
     this.add(this.background);
 
     // メッセージテキスト
-    this.messageText = scene.add.text(0, 0, "移動経路を4地点まで選択してください", {
-      fontSize: "16px",
-      color: "#ffffff",
-      padding: { x: 4, y: 2 }
-    });
+    this.messageText = scene.add.text(
+      0,
+      0,
+      "移動経路を4地点まで選択してください",
+      {
+        fontSize: "16px",
+        color: "#ffffff",
+        padding: { x: 4, y: 2 },
+      },
+    );
     this.messageText.setOrigin(0.5);
     this.add(this.messageText);
 
     // Containerを配置
     scene.add.existing(this);
-    
+
     // UIレイヤーの最前面に表示
     this.setDepth(1000);
-    
+
     // 初期状態は非表示
     this.setVisible(false);
 
@@ -46,9 +51,9 @@ export class PathSelectionMessage extends Phaser.GameObjects.Container {
           this.onClickCallback();
         }
       };
-      
+
       this.scene.input.on("pointerdown", clickHandler);
-      
+
       // メッセージが破棄される時にリスナーを削除
       this.once("destroy", () => {
         this.scene.input.off("pointerdown", clickHandler);
@@ -62,17 +67,17 @@ export class PathSelectionMessage extends Phaser.GameObjects.Container {
 
   public show(): void {
     this.setVisible(true);
-    
+
     // カメラの現在のビューポートを取得
     const camera = this.scene.cameras.main;
-    
+
     // カメラの表示範囲の中央下部に配置
     const centerX = camera.worldView.centerX;
     const bottomY = camera.worldView.bottom - 50;
-    
+
     this.setPosition(centerX, bottomY);
-    
-    console.log('PathSelectionMessage positioned at:', {
+
+    console.log("PathSelectionMessage positioned at:", {
       x: centerX,
       y: bottomY,
       worldView: {
@@ -81,8 +86,8 @@ export class PathSelectionMessage extends Phaser.GameObjects.Container {
         top: camera.worldView.top,
         bottom: camera.worldView.bottom,
         centerX: camera.worldView.centerX,
-        centerY: camera.worldView.centerY
-      }
+        centerY: camera.worldView.centerY,
+      },
     });
   }
 

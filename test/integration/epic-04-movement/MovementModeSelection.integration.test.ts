@@ -29,10 +29,10 @@ describe("[エピック4] Movement Mode Selection Integration Tests", () => {
       const onCancel = jest.fn();
 
       uiManager.showMovementModeMenu(
-        mockArmy as any, 
-        onNormalMove, 
-        onCombatMove, 
-        onCancel
+        mockArmy as any,
+        onNormalMove,
+        onCombatMove,
+        onCancel,
       );
 
       expect(uiManager.isMovementModeMenuVisible()).toBe(true);
@@ -49,7 +49,7 @@ describe("[エピック4] Movement Mode Selection Integration Tests", () => {
         mockArmy as any,
         jest.fn(),
         jest.fn(),
-        jest.fn()
+        jest.fn(),
       );
       expect(uiManager.isMovementModeMenuVisible()).toBe(true);
 
@@ -99,7 +99,7 @@ describe("[エピック4] Movement Mode Selection Integration Tests", () => {
         mockArmy as any,
         jest.fn(),
         jest.fn(),
-        jest.fn()
+        jest.fn(),
       );
       expect(uiManager.isMovementModeMenuVisible()).toBe(true);
     });

@@ -31,7 +31,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
 
     // Containerを配置
     config.scene.add.existing(this);
-    
+
     // UIレイヤーの最前面に表示
     this.setDepth(999);
 
@@ -42,7 +42,11 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.setupOutsideClickHandler();
   }
 
-  private createButton(text: string, x: number, y: number): Phaser.GameObjects.Container {
+  private createButton(
+    text: string,
+    x: number,
+    y: number,
+  ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     // ボタンの背景
@@ -54,7 +58,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     const buttonText = this.scene.add.text(0, 0, text, {
       fontSize: "14px",
       color: "#ffffff",
-      padding: { x: 2, y: 2 }
+      padding: { x: 2, y: 2 },
     });
     buttonText.setOrigin(0.5);
 
@@ -104,7 +108,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     // 次のフレームでイベントリスナーを追加（即座に閉じるのを防ぐ）
     this.scene.time.delayedCall(0, () => {
       this.scene.input.on("pointerdown", clickHandler);
-      
+
       // メニューが破棄される時にリスナーを削除
       this.once("destroy", () => {
         this.scene.input.off("pointerdown", clickHandler);

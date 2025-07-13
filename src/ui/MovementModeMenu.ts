@@ -31,16 +31,26 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     this.add(this.background);
 
     // 通常移動ボタン
-    this.normalMoveButton = this.createButton("通常移動", 0, -27, MovementMode.NORMAL);
+    this.normalMoveButton = this.createButton(
+      "通常移動",
+      0,
+      -27,
+      MovementMode.NORMAL,
+    );
     this.add(this.normalMoveButton);
 
     // 戦闘移動ボタン
-    this.combatMoveButton = this.createButton("戦闘移動", 0, 27, MovementMode.COMBAT);
+    this.combatMoveButton = this.createButton(
+      "戦闘移動",
+      0,
+      27,
+      MovementMode.COMBAT,
+    );
     this.add(this.combatMoveButton);
 
     // Containerを配置
     config.scene.add.existing(this);
-    
+
     // UIレイヤーの最前面に表示
     this.setDepth(999);
 
@@ -52,10 +62,10 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
   }
 
   private createButton(
-    text: string, 
-    x: number, 
-    y: number, 
-    mode: MovementMode
+    text: string,
+    x: number,
+    y: number,
+    mode: MovementMode,
   ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
@@ -68,7 +78,7 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     const buttonText = this.scene.add.text(0, 0, text, {
       fontSize: "14px",
       color: "#ffffff",
-      padding: { x: 2, y: 2 }
+      padding: { x: 2, y: 2 },
     });
     buttonText.setOrigin(0.5);
 
@@ -120,7 +130,7 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     // 次のフレームでイベントリスナーを追加（即座に閉じるのを防ぐ）
     this.scene.time.delayedCall(0, () => {
       this.scene.input.on("pointerdown", clickHandler);
-      
+
       // メニューが破棄される時にリスナーを削除
       this.once("destroy", () => {
         this.scene.input.off("pointerdown", clickHandler);

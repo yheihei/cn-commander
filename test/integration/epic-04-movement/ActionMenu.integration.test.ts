@@ -54,5 +54,4 @@ describe("[エピック4] Action Menu Integration Tests", () => {
       expect(uiManager.getCurrentSelectedArmy()).toBeNull();
     });
   });
-
 });

@@ -106,7 +106,15 @@ export class CharacterFactory {
         break;
     }
 
-    const commander = this.createCharacter(scene, x, y, commanderType, undefined, undefined, true);
+    const commander = this.createCharacter(
+      scene,
+      x,
+      y,
+      commanderType,
+      undefined,
+      undefined,
+      true,
+    );
     const soldiers = soldierTypes.map((type) =>
       this.createCharacter(scene, x, y, type),
     );

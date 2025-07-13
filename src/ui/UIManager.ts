@@ -18,7 +18,7 @@ export class UIManager {
   public showActionMenu(
     army: Army,
     onMove: () => void,
-    onCancel: () => void
+    onCancel: () => void,
   ): void {
     // 既存のメニューがあれば削除
     this.hideActionMenu();
@@ -46,7 +46,7 @@ export class UIManager {
         onCancel();
         this.actionMenu = null;
         this.currentSelectedArmy = null;
-      }
+      },
     });
   }
 
@@ -54,7 +54,7 @@ export class UIManager {
     army: Army,
     onNormalMove: () => void,
     onCombatMove: () => void,
-    onCancel: () => void
+    onCancel: () => void,
   ): void {
     // 既存のメニューがあれば削除
     this.hideMovementModeMenu();
@@ -82,7 +82,7 @@ export class UIManager {
       onCancel: () => {
         onCancel();
         this.movementModeMenu = null;
-      }
+      },
     });
   }
 
