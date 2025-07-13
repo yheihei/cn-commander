@@ -5,6 +5,7 @@ import {
   FormationType,
   ArmyMovement,
   ARMY_CONSTRAINTS,
+  FactionType,
 } from '../types/ArmyTypes';
 import { Character } from '../character/Character';
 import { Position } from '../types/CharacterTypes';
@@ -24,6 +25,7 @@ export class Army extends Phaser.GameObjects.Container {
     mode: MovementMode.NORMAL,
     targetPosition: null,
   };
+  private owner: FactionType;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
     super(scene, x, y);
@@ -31,6 +33,7 @@ export class Army extends Phaser.GameObjects.Container {
     this.id = config.id;
     this.armyName = config.name;
     this.commander = config.commander;
+    this.owner = config.owner;
 
     this.add(this.commander);
     this.commander.setPosition(0, 0);
@@ -76,6 +79,33 @@ export class Army extends Phaser.GameObjects.Container {
 
   getMemberCount(): number {
     return 1 + this.soldiers.length;
+  }
+
+  getOwner(): FactionType {
+    return this.owner;
+  }
+
+  isPlayerArmy(): boolean {
+    return this.owner === 'player';
+  }
+
+  isEnemyArmy(): boolean {
+    return this.owner === 'enemy';
+  }
+
+  isNeutralArmy(): boolean {
+    return this.owner === 'neutral';
+  }
+
+  isHostileTo(other: Army): boolean {
+    if (this.owner === 'neutral' || other.owner === 'neutral') {
+      return false;
+    }
+    return this.owner !== other.owner;
+  }
+
+  isAlliedWith(other: Army): boolean {
+    return this.owner === other.owner;
   }
 
   getAliveMembers(): Character[] {

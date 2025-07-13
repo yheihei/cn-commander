@@ -23,7 +23,7 @@ export class ArmyFactory {
     }
 
     const [commander, ...soldiers] = characters;
-    const army = armyManager.createArmyAtGrid(commander, gridX, gridY);
+    const army = armyManager.createArmyAtGrid(commander, gridX, gridY, 'neutral');
 
     if (army) {
       soldiers.forEach((soldier) => army.addSoldier(soldier));
@@ -48,7 +48,7 @@ export class ArmyFactory {
     }
 
     const [commander, ...soldiers] = characters;
-    const army = armyManager.createArmy(commander, x, y);
+    const army = armyManager.createArmy(commander, x, y, 'neutral');
 
     if (army) {
       soldiers.forEach((soldier) => army.addSoldier(soldier));
@@ -74,7 +74,7 @@ export class ArmyFactory {
       undefined,
       true,
     );
-    const army = armyManager.createArmy(commander, x, y);
+    const army = armyManager.createArmy(commander, x, y, 'neutral');
 
     if (army) {
       soldierTypes.slice(0, 3).forEach((type) => {
@@ -96,7 +96,7 @@ export class ArmyFactory {
     gridY: number,
   ): Army | null {
     const commander = CharacterFactory.createCommander(scene, 0, 0, 'wind', '咲耶');
-    const army = armyManager.createArmyAtGrid(commander, gridX, gridY);
+    const army = armyManager.createArmyAtGrid(commander, gridX, gridY, 'player');
 
     if (army) {
       const soldiers = [
@@ -118,7 +118,7 @@ export class ArmyFactory {
     y: number,
   ): Army | null {
     const commander = CharacterFactory.createCommander(scene, x, y, 'wind', '咲耶');
-    const army = armyManager.createArmy(commander, x, y);
+    const army = armyManager.createArmy(commander, x, y, 'player');
 
     if (army) {
       const soldiers = [
@@ -170,7 +170,7 @@ export class ArmyFactory {
       undefined,
       true,
     );
-    const army = armyManager.createArmyAtGrid(commander, gridX, gridY);
+    const army = armyManager.createArmyAtGrid(commander, gridX, gridY, 'enemy');
 
     if (army) {
       soldierTypes.forEach((type, index) => {
@@ -216,7 +216,7 @@ export class ArmyFactory {
       undefined,
       true,
     );
-    const army = armyManager.createArmy(commander, x, y);
+    const army = armyManager.createArmy(commander, x, y, 'enemy');
 
     if (army) {
       soldierTypes.forEach((type, index) => {

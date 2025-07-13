@@ -1,11 +1,14 @@
 import { Character } from '../character/Character';
 import { Position } from './CharacterTypes';
 
+export type FactionType = 'player' | 'enemy' | 'neutral';
+
 export interface ArmyConfig {
   id: string;
   name: string;
   commander: Character;
   soldiers?: Character[];
+  owner: FactionType;
 }
 
 export interface SightArea {
