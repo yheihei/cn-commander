@@ -450,6 +450,42 @@ export const createMockScene = () => {
       delayedCall: jest.fn((delay, callback) => {
         setTimeout(callback, delay);
       }),
+      addEvent: jest.fn((config) => {
+        const event = {
+          destroy: jest.fn(),
+          callback: config.callback || jest.fn(),
+          delay: config.delay || 1000,
+          loop: config.loop || false,
+        };
+        if (config.callback && config.loop) {
+          // テスト用にループは実行しない
+        }
+        return event;
+      }),
+      now: Date.now(),
+    },
+    anims: {
+      exists: jest.fn(() => false),
+      create: jest.fn((config) => {
+        return {
+          key: config.key,
+          frames: config.frames,
+          frameRate: config.frameRate,
+          repeat: config.repeat,
+        };
+      }),
+    },
+    tweens: {
+      add: jest.fn((config) => {
+        // 即座にonCompleteを呼ぶ
+        if (config.onComplete) {
+          setTimeout(() => config.onComplete(), 0);
+        }
+        return {
+          stop: jest.fn(),
+          destroy: jest.fn(),
+        };
+      }),
     },
   };
 
