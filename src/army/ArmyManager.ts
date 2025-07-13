@@ -95,6 +95,20 @@ export class ArmyManager {
     return null;
   }
 
+  getEnemyArmies(): Army[] {
+    return Array.from(this.armies.values()).filter((army) => army.getOwner() !== 'player');
+  }
+
+  getArmyByMember(character: Character): Army | null {
+    for (const army of this.armies.values()) {
+      const allMembers = [army.getCommander(), ...army.getSoldiers()];
+      if (allMembers.includes(character)) {
+        return army;
+      }
+    }
+    return null;
+  }
+
   destroy(): void {
     this.armies.forEach((army) => army.destroy());
     this.armies.clear();

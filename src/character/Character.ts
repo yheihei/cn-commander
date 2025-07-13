@@ -86,6 +86,10 @@ export class Character extends Phaser.GameObjects.Sprite {
     this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + amount);
   }
 
+  setStats(updates: Partial<CharacterStats>): void {
+    this.stats = { ...this.stats, ...updates };
+  }
+
   getAttackInterval(): number {
     return 90 / this.stats.speed;
   }

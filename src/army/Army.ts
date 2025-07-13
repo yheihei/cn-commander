@@ -365,6 +365,27 @@ export class Army extends Phaser.GameObjects.Container {
     this.movementState.currentSpeed = pixelsPerSecond;
   }
 
+  removeMember(character: Character): void {
+    // 指揮官の場合
+    if (this.commander === character) {
+      this.remove(this.commander);
+      // 指揮官が撃破されたら軍団は機能しなくなる
+      // 実際のゲームロジックに応じて処理を追加
+    } else {
+      // 兵士の場合
+      const index = this.soldiers.indexOf(character);
+      if (index !== -1) {
+        this.soldiers.splice(index, 1);
+        this.remove(character);
+      }
+    }
+
+    // 軍団のメンバーが0になったら軍団を削除
+    if (this.getMemberCount() === 0) {
+      this.destroy();
+    }
+  }
+
   destroy(): void {
     this.getAllMembers().forEach((member) => member.destroy());
     super.destroy();
