@@ -150,15 +150,8 @@ export class MovementInputHandler {
   }
 
   private showPathMessageAndStartSetting(): void {
-    // 移動経路選択のメッセージを表示
-    this.uiManager.showPathSelectionMessage(() => {
-      // メッセージがクリックで非表示になった
-      console.log("パス選択メッセージがクリックされました");
-    });
-
-    // 2秒待ってから経路選択モードを開始（仕様通り）
-    this.scene.time.delayedCall(2000, () => {
-      // まだ選択中の軍団がある場合のみ経路設定を開始
+    // 1秒待ってから経路選択モードを開始（誤クリック防止）
+    this.scene.time.delayedCall(1000, () => {
       if (this.selectedArmy && !this.isSettingPath) {
         this.startPathSetting();
       }
@@ -176,13 +169,11 @@ export class MovementInputHandler {
     this.waypointBuffer = [];
     this.uiManager.hideActionMenu();
     this.uiManager.hideMovementModeMenu();
-    this.uiManager.hidePathSelectionMessage();
   }
 
   private startPathSetting(): void {
     this.isSettingPath = true;
     this.waypointBuffer = [];
-    // メッセージは自動的に非表示にしない（ユーザーがクリックするまで表示）
   }
 
   private addWaypoint(x: number, y: number): void {
@@ -233,14 +224,12 @@ export class MovementInputHandler {
     this.isSettingPath = false;
     this.waypointBuffer = [];
     this.clearWaypointMarkers();
-    this.uiManager.hidePathSelectionMessage();
   }
 
   private cancelPathSetting(): void {
     this.isSettingPath = false;
     this.waypointBuffer = [];
     this.clearWaypointMarkers();
-    this.uiManager.hidePathSelectionMessage();
   }
 
   // 移動モードの切り替え

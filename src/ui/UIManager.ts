@@ -1,14 +1,12 @@
 import * as Phaser from "phaser";
 import { ActionMenu } from "./ActionMenu";
 import { MovementModeMenu } from "./MovementModeMenu";
-import { PathSelectionMessage } from "./PathSelectionMessage";
 import { Army } from "../army/Army";
 
 export class UIManager {
   private scene: Phaser.Scene;
   private actionMenu: ActionMenu | null = null;
   private movementModeMenu: MovementModeMenu | null = null;
-  private pathMessage: PathSelectionMessage | null = null;
   private currentSelectedArmy: Army | null = null;
 
   constructor(scene: Phaser.Scene) {
@@ -113,29 +111,6 @@ export class UIManager {
     return this.isActionMenuVisible() || this.isMovementModeMenuVisible();
   }
 
-  public showPathSelectionMessage(onHide?: () => void): void {
-    if (!this.pathMessage) {
-      this.pathMessage = new PathSelectionMessage(this.scene, () => {
-        this.hidePathSelectionMessage();
-        if (onHide) {
-          onHide();
-        }
-      });
-    }
-    this.pathMessage.show();
-  }
-
-  public hidePathSelectionMessage(): void {
-    if (this.pathMessage) {
-      this.pathMessage.hide();
-    }
-  }
-
-  public updatePathSelectionMessage(text: string): void {
-    if (this.pathMessage) {
-      this.pathMessage.updateMessage(text);
-    }
-  }
 
   public getCurrentSelectedArmy(): Army | null {
     return this.currentSelectedArmy;
@@ -144,9 +119,5 @@ export class UIManager {
   public destroy(): void {
     this.hideActionMenu();
     this.hideMovementModeMenu();
-    if (this.pathMessage) {
-      this.pathMessage.destroy();
-      this.pathMessage = null;
-    }
   }
 }

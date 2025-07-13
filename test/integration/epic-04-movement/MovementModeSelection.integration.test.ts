@@ -58,29 +58,6 @@ describe("[エピック4] Movement Mode Selection Integration Tests", () => {
     });
   });
 
-  describe("パス選択メッセージの動作", () => {
-    test("パス選択メッセージを表示できる", () => {
-      uiManager.showPathSelectionMessage();
-      // PathSelectionMessageが作成されることを確認
-      expect(scene.add.existing).toHaveBeenCalled();
-    });
-
-    test("パス選択メッセージを非表示にできる", () => {
-      uiManager.showPathSelectionMessage();
-      uiManager.hidePathSelectionMessage();
-      // hideが呼ばれることを確認
-      expect(true).toBe(true); // メッセージの非表示を確認
-    });
-
-    test("パス選択メッセージのテキストを更新できる", () => {
-      uiManager.showPathSelectionMessage();
-      const newText = "新しいメッセージ";
-      uiManager.updatePathSelectionMessage(newText);
-      // updateMessageが呼ばれることを確認
-      expect(true).toBe(true); // テキスト更新を確認
-    });
-  });
-
   describe("メニューの連携動作", () => {
     test("複数のメニューが同時に表示されないことを確認", () => {
       const mockArmy = {
