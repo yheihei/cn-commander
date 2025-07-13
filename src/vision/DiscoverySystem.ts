@@ -5,7 +5,7 @@ import { DiscoveryEvent } from '../types/VisionTypes';
 export class DiscoverySystem {
   private discoveredArmies: Set<string> = new Set();
   private discoveryHistory: DiscoveryEvent[] = [];
-  
+
   // 軍団発見時のコールバック
   public onArmyDiscovered?: (army: Army, event: DiscoveryEvent) => void;
 
@@ -17,7 +17,7 @@ export class DiscoverySystem {
   checkDiscovery(observers: Army[], targets: Army[]): void {
     // プレイヤー側の軍団のみを観測者として使用
     const playerObservers = observers.filter((army) => army.isPlayerArmy());
-    
+
     // 敵軍団のみを対象として使用
     const enemyTargets = targets.filter((army) => army.isEnemyArmy());
 
@@ -42,7 +42,7 @@ export class DiscoverySystem {
    */
   private discoverArmy(discoveredArmy: Army, discovererArmy: Army): void {
     const armyId = discoveredArmy.getId();
-    
+
     // 既に発見済みなら何もしない
     if (this.discoveredArmies.has(armyId)) {
       return;
@@ -50,7 +50,7 @@ export class DiscoverySystem {
 
     // 発見済みとしてマーク
     this.discoveredArmies.add(armyId);
-    
+
     // 軍団の表示状態を更新
     discoveredArmy.setDiscovered(true);
 
@@ -61,7 +61,7 @@ export class DiscoverySystem {
       position: discoveredArmy.getPosition(),
       timestamp: Date.now(),
     };
-    
+
     this.discoveryHistory.push(event);
 
     // コールバックを呼び出し
@@ -69,7 +69,9 @@ export class DiscoverySystem {
       this.onArmyDiscovered(discoveredArmy, event);
     }
 
-    console.log(`Army ${discovererArmy.getName()} discovered enemy army ${discoveredArmy.getName()}`);
+    console.log(
+      `Army ${discovererArmy.getName()} discovered enemy army ${discoveredArmy.getName()}`,
+    );
   }
 
   /**

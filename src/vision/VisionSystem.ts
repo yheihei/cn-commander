@@ -30,7 +30,12 @@ export class VisionSystem {
       const terrain = tile ? tile.getTerrainEffect() : null;
 
       // 実効視界を計算
-      const effectiveRange = this.getEffectiveSight(character, characterPosition, movementMode, terrain);
+      const effectiveRange = this.getEffectiveSight(
+        character,
+        characterPosition,
+        movementMode,
+        terrain,
+      );
 
       visionAreas.push({
         character,

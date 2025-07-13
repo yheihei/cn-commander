@@ -37,13 +37,7 @@ describe('[エピック3] FactionSystem Integration Tests', () => {
     });
 
     test('テスト軍団（中立）の所属が正しく設定される', () => {
-      const neutralArmy = ArmyFactory.createTestArmyAtGrid(
-        scene,
-        armyManager,
-        15,
-        15,
-        'balanced',
-      );
+      const neutralArmy = ArmyFactory.createTestArmyAtGrid(scene, armyManager, 15, 15, 'balanced');
 
       expect(neutralArmy).toBeTruthy();
       expect(neutralArmy!.getOwner()).toBe('neutral');
@@ -89,13 +83,7 @@ describe('[エピック3] FactionSystem Integration Tests', () => {
     test('中立軍団は誰とも敵対しない', () => {
       const playerArmy = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       const enemyArmy = ArmyFactory.createEnemyArmyAtGrid(scene, armyManager, 20, 20, 'normal');
-      const neutralArmy = ArmyFactory.createTestArmyAtGrid(
-        scene,
-        armyManager,
-        15,
-        15,
-        'balanced',
-      );
+      const neutralArmy = ArmyFactory.createTestArmyAtGrid(scene, armyManager, 15, 15, 'balanced');
 
       expect(playerArmy).toBeTruthy();
       expect(enemyArmy).toBeTruthy();

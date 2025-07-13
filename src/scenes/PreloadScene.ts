@@ -51,14 +51,14 @@ export class PreloadScene extends Phaser.Scene {
 
     // ローディングイベント
     this.load.on('progress', (value: number) => {
-      percentText.setText(`${parseInt((value * 100).toString())  }%`);
+      percentText.setText(`${parseInt((value * 100).toString())}%`);
       progressBar.clear();
       progressBar.fillStyle(0xffffff, 1);
       progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * value, 30);
     });
 
     this.load.on('fileprogress', (file: { key: string }) => {
-      assetText.setText(`Loading asset: ${  file.key}`);
+      assetText.setText(`Loading asset: ${file.key}`);
     });
 
     this.load.on('complete', () => {
@@ -87,56 +87,51 @@ export class PreloadScene extends Phaser.Scene {
     // 16x16のタイルセットとして読み込む
     const tileSize = 16;
 
-    this.load.spritesheet(
-      'tilemap-base',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.base  }.png`,
-      { frameWidth: tileSize, frameHeight: tileSize },
-    );
+    this.load.spritesheet('tilemap-base', `assets/images/tilemaps/${TILEMAP_ASSETS.base}.png`, {
+      frameWidth: tileSize,
+      frameHeight: tileSize,
+    });
 
-    this.load.spritesheet(
-      'tilemap-road',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.road  }.png`,
-      { frameWidth: tileSize, frameHeight: tileSize },
-    );
+    this.load.spritesheet('tilemap-road', `assets/images/tilemaps/${TILEMAP_ASSETS.road}.png`, {
+      frameWidth: tileSize,
+      frameHeight: tileSize,
+    });
 
-    this.load.spritesheet(
-      'tilemap-forest',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.forest  }.png`,
-      { frameWidth: tileSize, frameHeight: tileSize },
-    );
+    this.load.spritesheet('tilemap-forest', `assets/images/tilemaps/${TILEMAP_ASSETS.forest}.png`, {
+      frameWidth: tileSize,
+      frameHeight: tileSize,
+    });
 
-    this.load.spritesheet(
-      'tilemap-desert',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.desert  }.png`,
-      { frameWidth: tileSize, frameHeight: tileSize },
-    );
+    this.load.spritesheet('tilemap-desert', `assets/images/tilemaps/${TILEMAP_ASSETS.desert}.png`, {
+      frameWidth: tileSize,
+      frameHeight: tileSize,
+    });
 
-    this.load.spritesheet(
-      'tilemap-soil',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.soil  }.png`,
-      { frameWidth: tileSize, frameHeight: tileSize },
-    );
+    this.load.spritesheet('tilemap-soil', `assets/images/tilemaps/${TILEMAP_ASSETS.soil}.png`, {
+      frameWidth: tileSize,
+      frameHeight: tileSize,
+    });
 
-    this.load.spritesheet('tilemap-sea', `assets/images/tilemaps/${  TILEMAP_ASSETS.sea  }.png`, {
+    this.load.spritesheet('tilemap-sea', `assets/images/tilemaps/${TILEMAP_ASSETS.sea}.png`, {
       frameWidth: tileSize,
       frameHeight: tileSize,
     });
 
     this.load.spritesheet(
       'tilemap-mountain1',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.mountain1  }.png`,
+      `assets/images/tilemaps/${TILEMAP_ASSETS.mountain1}.png`,
       { frameWidth: tileSize, frameHeight: tileSize },
     );
 
     this.load.spritesheet(
       'tilemap-mountain2',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.mountain2  }.png`,
+      `assets/images/tilemaps/${TILEMAP_ASSETS.mountain2}.png`,
       { frameWidth: tileSize, frameHeight: tileSize },
     );
 
     this.load.spritesheet(
       'tilemap-mountain3',
-      `assets/images/tilemaps/${  TILEMAP_ASSETS.mountain3  }.png`,
+      `assets/images/tilemaps/${TILEMAP_ASSETS.mountain3}.png`,
       { frameWidth: tileSize, frameHeight: tileSize },
     );
   }
