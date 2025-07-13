@@ -20,11 +20,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## タスクの遂行方法
 
-適用条件: 実装を依頼された時。単なる質問事項の場合適用されない。
+適用条件: 実装を依頼された時。
 
 ### 基本フロー
 
-- PRDや与えられたドキュメントを見て、「Plan → Imp → Debug → Review → Doc」サイクルで処理する
+- PRDや与えられた情報を見て、「Plan → Imp → Debug → Review → Doc」サイクルで処理する
 
 #### Phase1 Plan
 
