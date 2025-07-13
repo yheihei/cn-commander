@@ -64,6 +64,7 @@ export class CombatSystem {
       return;
     }
 
+    
     // 戦闘移動または待機モードの場合のみ攻撃開始
     this.combatArmies.add(army);
     this.attackTimerManager.startArmyAttackTimers(army, (attacker) => {
@@ -85,28 +86,44 @@ export class CombatSystem {
     // 敵軍団を取得
     const enemyArmies = this.getEnemyArmies(attackerArmy);
 
-    // 射程内の敵を探す
-    const targets: Character[] = [];
+    // 全ての発見済み敵を収集
+    const allEnemies: Character[] = [];
     enemyArmies.forEach((enemyArmy) => {
       if (enemyArmy.isDiscovered()) {
         const enemyMembers = [enemyArmy.getCommander(), ...enemyArmy.getSoldiers()];
         const validTargets = enemyMembers.filter((enemy) => enemy.isAlive());
-        targets.push(...this.rangeCalculator.getTargetsInRange(attacker, validTargets));
+        allEnemies.push(...validTargets);
       }
     });
 
-    if (targets.length === 0) return;
+    if (allEnemies.length === 0) return;
 
-    // 最も近い敵を選択
-    const target = this.rangeCalculator.getNearestTarget(attacker, targets);
-    if (!target) return;
+    // 距離順にソート（近い順）
+    const sortedEnemies = this.rangeCalculator.sortByDistance(attacker, allEnemies);
+
+    // 最も近い敵から順に射程内かチェック
+    let target: Character | null = null;
+    for (const enemy of sortedEnemies) {
+      if (this.rangeCalculator.isInRange(attacker, enemy)) {
+        target = enemy;
+        break;
+      }
+    }
+
+    if (!target) {
+      return;
+    }
 
     // 攻撃エフェクトを表示
     const weapon = attacker.getItemHolder().getEquippedWeapon();
     if (weapon) {
       this.effectManager.createAttackEffect(attacker, target, weapon.weaponType, () => {
-        // エフェクト完了後に攻撃を実行
-        this.combatCalculator.performAttack(attacker, target);
+        // エフェクト完了後、再度射程をチェック
+        const stillInRange = this.rangeCalculator.isInRange(attacker, target);
+        
+        if (attacker.isAlive() && target.isAlive() && stillInRange) {
+          this.combatCalculator.performAttack(attacker, target);
+        }
       });
     }
   }
@@ -117,6 +134,32 @@ export class CombatSystem {
     });
   }
 
+  private hasEnemiesInRange(army: Army): boolean {
+    const enemyArmies = this.getEnemyArmies(army);
+    const allMembers = [army.getCommander(), ...army.getSoldiers()];
+    
+    // 軍団の各メンバーについて、射程内に敵がいるかチェック
+    for (const member of allMembers) {
+      if (!member.isAlive() || !this.combatCalculator.canAttack(member)) {
+        continue;
+      }
+      
+      // 全ての敵について射程内かチェック
+      for (const enemyArmy of enemyArmies) {
+        if (!enemyArmy.isDiscovered()) continue;
+        
+        const enemyMembers = [enemyArmy.getCommander(), ...enemyArmy.getSoldiers()];
+        for (const enemy of enemyMembers) {
+          if (enemy.isAlive() && this.rangeCalculator.isInRange(member, enemy)) {
+            return true; // 射程内に敵が見つかった
+          }
+        }
+      }
+    }
+    
+    return false; // 誰も射程内に敵を持っていない
+  }
+
   update(_time: number, _delta: number): void {
     // 全軍団の戦闘状態を更新
     const allArmies = this.armyManager.getAllArmies();
@@ -124,8 +167,14 @@ export class CombatSystem {
       // 移動モードに応じて戦闘開始/停止
       const mode = army.getMovementMode();
       if (mode === MovementMode.COMBAT || mode === MovementMode.STANDBY) {
-        // 既に戦闘中でなければ開始
-        this.startCombat(army);
+        // 射程内に敵がいるかチェック
+        if (this.hasEnemiesInRange(army)) {
+          // 既に戦闘中でなければ開始
+          this.startCombat(army);
+        } else {
+          // 射程内に敵がいなければ戦闘停止
+          this.stopCombat(army);
+        }
       } else {
         // 通常移動モードなら停止
         this.stopCombat(army);
