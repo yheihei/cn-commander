@@ -10,6 +10,8 @@ import { MovementManager } from '../movement/MovementManager';
 import { UIManager } from '../ui/UIManager';
 import { MovementInputHandler } from '../input/MovementInputHandler';
 import { MovementCommandSystem } from '../movement/MovementCommand';
+import { VisionSystem } from '../vision/VisionSystem';
+import { DiscoverySystem } from '../vision/DiscoverySystem';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -18,6 +20,8 @@ export class GameScene extends Phaser.Scene {
   private uiManager!: UIManager;
   private inputHandler!: MovementInputHandler;
   private commandSystem!: MovementCommandSystem;
+  private visionSystem!: VisionSystem;
+  private discoverySystem!: DiscoverySystem;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private debugText!: Phaser.GameObjects.Text;
   private isDragging: boolean = false;
@@ -47,6 +51,15 @@ export class GameScene extends Phaser.Scene {
       this.mapManager,
       this.commandSystem,
     );
+
+    // 視界システムの初期化
+    this.visionSystem = new VisionSystem(this.mapManager);
+
+    // 発見システムの初期化
+    this.discoverySystem = new DiscoverySystem(this.visionSystem);
+    this.discoverySystem.onArmyDiscovered = (army, event) => {
+      console.log(`敵軍団を発見: ${army.getName()} at (${event.position.x}, ${event.position.y})`);
+    };
 
     // UIマネージャーの初期化
     this.uiManager = new UIManager(this);
@@ -177,27 +190,20 @@ export class GameScene extends Phaser.Scene {
     // プレイヤー軍団を作成（グリッド座標10,10から）
     ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 10, 10);
 
-    // 敵軍団を作成（グリッド座標40,40から）
-    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 40, 40, 'normal');
+    // 敵軍団を視界外に配置（視界テスト用）
+    // 咲耶軍団の視界は約8マス程度なので、18,10に配置（8マス離れた位置）
+    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 18, 10, 'normal');
+    
+    // 追加の敵軍団（さらに離れた位置）
+    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 25, 10, 'hard');
 
-    // 追加のテスト軍団（4マス分離れた位置）
-    ArmyFactory.createTestArmyAtGrid(
-      this,
-      this.armyManager,
-      14, // 10 + 4
-      14, // 10 + 4
-      'speed',
-    );
+    // 全軍団を取得して初期表示状態を設定
+    const allArmies = this.armyManager.getAllArmies();
+    allArmies.forEach((army) => {
+      this.discoverySystem.initializeArmyVisibility(army);
+    });
 
-    ArmyFactory.createTestArmyAtGrid(
-      this,
-      this.armyManager,
-      36, // 40 - 4
-      36, // 40 - 4
-      'defense',
-    );
-
-    // Armies created
+    console.log('テストシナリオ: 咲耶軍団を東（右）に移動させて敵軍団を発見してください');
   }
 
   private setupCamera(): void {
@@ -307,9 +313,20 @@ export class GameScene extends Phaser.Scene {
     if (selectedArmy) {
       debugInfo += `\n\n[Selected Army]\n`;
       debugInfo += `Name: ${selectedArmy.getName()}\n`;
+      debugInfo += `Owner: ${selectedArmy.getOwner()}\n`;
       debugInfo += `Members: ${selectedArmy.getMemberCount()}\n`;
       debugInfo += `Alive: ${selectedArmy.getAliveMembers().length}\n`;
       debugInfo += `Avg Speed: ${selectedArmy.getAverageMovementSpeed().toFixed(1)}\n`;
+      
+      // 視界情報
+      const visionAreas = this.visionSystem.calculateVision(selectedArmy);
+      if (visionAreas.length > 0) {
+        debugInfo += `\nVision Ranges:\n`;
+        visionAreas.forEach((area, index) => {
+          debugInfo += `  Member ${index + 1}: ${area.effectiveRange} マス\n`;
+        });
+      }
+      
       // 軍団の中心位置をグリッド座標で表示
       const armyGrid = this.mapManager.pixelToGrid(selectedArmy.x, selectedArmy.y);
       debugInfo += `Grid Pos: ${armyGrid.x}, ${armyGrid.y}`;
@@ -340,5 +357,20 @@ export class GameScene extends Phaser.Scene {
 
     // 移動システムの更新
     this.movementManager.update(time, delta);
+
+    // 視界・発見システムの更新
+    this.updateVisionAndDiscovery();
+  }
+
+  private updateVisionAndDiscovery(): void {
+    // 全軍団を取得
+    const allArmies = this.armyManager.getAllArmies();
+    
+    // プレイヤー軍団と敵軍団を分離
+    const playerArmies = allArmies.filter((army) => army.isPlayerArmy());
+    const enemyArmies = allArmies.filter((army) => army.isEnemyArmy());
+
+    // 発見チェック
+    this.discoverySystem.checkDiscovery(playerArmies, enemyArmies);
   }
 }
