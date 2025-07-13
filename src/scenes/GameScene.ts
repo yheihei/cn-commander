@@ -195,7 +195,7 @@ export class GameScene extends Phaser.Scene {
   private createTestArmies(): void {
     // 軍団をグリッド座標で配置（各軍団は2x2マスを占有）
     // プレイヤー軍団を作成（グリッド座標10,10から）
-    const playerArmy = ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 10, 10);
+    const playerArmy = ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 5, 10);
 
     // プレイヤー軍団の全メンバーに武器を持たせる
     if (playerArmy) {
@@ -230,7 +230,7 @@ export class GameScene extends Phaser.Scene {
 
     // 敵軍団を視界外に配置（視界テスト用）
     // 咲耶軍団の視界は約8マス程度なので、18,10に配置（8マス離れた位置）
-    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 18, 10, 'normal');
+    ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 20, 10, 'normal');
 
     // 追加の敵軍団（さらに離れた位置）
     ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 25, 10, 'hard');

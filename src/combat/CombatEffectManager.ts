@@ -22,14 +22,13 @@ export class CombatEffectManager {
     shuriken: {
       texture: 'shuriken',
       duration: 1000,
-      rotation: true,
-      scale: 1.0,
+      scale: 0.8,
     },
     hit: {
       texture: 'explode',
       frames: [1, 2, 3, 4, 5, 6, 7],
       duration: 300,
-      scale: 1.5,
+      scale: 0.8,
     },
   };
 
