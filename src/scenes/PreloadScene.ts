@@ -80,6 +80,9 @@ export class PreloadScene extends Phaser.Scene {
 
     // マップデータの読み込み
     this.loadMapData();
+
+    // 戦闘エフェクトの読み込み
+    this.loadCombatEffects();
   }
 
   private loadTilemapAssets(): void {
@@ -148,6 +151,16 @@ export class PreloadScene extends Phaser.Scene {
   private loadMapData(): void {
     // テスト用マップデータを読み込み
     this.load.json('testMap', 'assets/data/maps/testMap.json');
+  }
+
+  private loadCombatEffects(): void {
+    // 手裏剣画像を読み込み
+    this.load.image('shuriken', 'assets/images/weapons/shuriken.png');
+
+    // 爆発エフェクトを個別に読み込み
+    for (let i = 1; i <= 7; i++) {
+      this.load.image(`explode-${i}`, `assets/images/effects/explode-${i}.png`);
+    }
   }
 
   create(): void {

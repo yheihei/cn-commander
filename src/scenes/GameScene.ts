@@ -13,6 +13,7 @@ import { MovementCommandSystem } from '../movement/MovementCommand';
 import { VisionSystem } from '../vision/VisionSystem';
 import { DiscoverySystem } from '../vision/DiscoverySystem';
 import { WeaponFactory } from '../item/WeaponFactory';
+import { CombatSystem } from '../combat/CombatSystem';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -23,6 +24,7 @@ export class GameScene extends Phaser.Scene {
   private commandSystem!: MovementCommandSystem;
   private visionSystem!: VisionSystem;
   private discoverySystem!: DiscoverySystem;
+  private combatSystem!: CombatSystem;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private debugText!: Phaser.GameObjects.Text;
   private isDragging: boolean = false;
@@ -62,6 +64,9 @@ export class GameScene extends Phaser.Scene {
       // 敵軍団発見時のイベント処理（デバッグ表示で確認可能）
       // console.log(`敵軍団を発見: ${_army.getName()} at (${_event.position.x}, ${_event.position.y})`);
     };
+
+    // 戦闘システムの初期化
+    this.combatSystem = new CombatSystem(this, this.armyManager, this.mapManager);
 
     // UIマネージャーの初期化
     this.uiManager = new UIManager(this);
@@ -403,6 +408,9 @@ export class GameScene extends Phaser.Scene {
 
     // 視界・発見システムの更新
     this.updateVisionAndDiscovery();
+
+    // 戦闘システムの更新
+    this.combatSystem.update(time, delta);
   }
 
   private updateVisionAndDiscovery(): void {
