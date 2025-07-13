@@ -20,13 +20,7 @@
    - 背景色: 0x333333（透明度0.9）、サイズ: 140x118
    - ボタンホバー効果実装
 
-3. **経路選択メッセージ** (PathSelectionMessage)
-   - モード選択後に表示
-   - 「移動経路を4地点まで選択してください」
-   - カメラの表示範囲下部に配置（bottom - 50px）
-   - 3秒後にクリックで非表示可能
-
-4. **経路点マーカー** (WaypointMarker)
+3. **経路点マーカー** (WaypointMarker)
    - 地点選択時に表示される×マーク（赤色、lineWidth: 3）
    - 番号付き（1〜4）、白文字で黒背景
    - サイズ: 20x20の×マーク
@@ -34,8 +28,8 @@
 ### 操作フロー
 1. 指揮官クリック → 行動選択メニュー表示
 2. 「移動」選択 → 移動モード選択メニュー表示
-3. モード選択 → 経路選択メッセージ表示
-4. 2秒待機 → 経路選択モード開始
+3. モード選択 → 1秒待機（誤クリック防止）
+4. 経路選択モード開始
 5. マップクリック → 経路点設定（最大4地点）
 6. 4つ目の経路点設定後2秒経過 → ×マーク消去、移動開始
 
@@ -46,11 +40,8 @@
 interface UIManager {
   showActionMenu(army: Army, onMove: () => void, onCancel: () => void): void;
   showMovementModeMenu(army: Army, onNormalMove: () => void, onCombatMove: () => void, onCancel: () => void): void;
-  showPathSelectionMessage(onHide?: () => void): void;
   hideActionMenu(): void;
   hideMovementModeMenu(): void;
-  hidePathSelectionMessage(): void;
-  updatePathSelectionMessage(text: string): void;
   isActionMenuVisible(): boolean;
   isMovementModeMenuVisible(): boolean;
   isAnyMenuVisible(): boolean;
@@ -67,7 +58,7 @@ interface UIManager {
 
 ### MovementInputHandler
 - UIManagerと連携して移動指示の全体フローを制御
-- 2秒の遅延処理を含む経路選択開始
+- 1秒の遅延処理を含む経路選択開始（誤クリック防止）
 - 経路点の視覚的フィードバック（マーカーと線）
 - 4つ目の経路点選択後、2秒で自動的に移動開始
 
@@ -75,7 +66,7 @@ interface UIManager {
 - 各UIコンポーネントの表示/非表示
 - クリックイベントのハンドリング
 - メニュー間の連携動作（複数メニューが同時表示されない）
-- タイミング処理（2秒遅延、3秒後のメッセージクリック可能）
+- タイミング処理（1秒の誤クリック防止遅延、4つ目経路点後の2秒遅延）
 - メモリリークの防止（イベントリスナーの適切な削除）
 
 ## 未解決事項
