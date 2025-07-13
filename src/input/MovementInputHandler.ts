@@ -223,9 +223,14 @@ export class MovementInputHandler {
   }
 
   private cancelPathSetting(): void {
-    this.isSettingPath = false;
-    this.waypointBuffer = [];
-    this.clearWaypointMarkers();
+    if (this.waypointBuffer.length > 0) {
+      // 1箇所でも地点が選択されていれば、現在指定した経路で移動を開始する
+      this.confirmMovement();
+    } else {
+      // まだ1箇所も地点が選択されていなければ、移動指定のキャンセルとみなし、今の行動を継続する
+      this.isSettingPath = false;
+      this.deselectArmy();
+    }
   }
 
   // 移動モードの切り替え

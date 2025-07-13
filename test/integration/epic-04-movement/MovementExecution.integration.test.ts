@@ -226,4 +226,82 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
       expect(commandSystem.getCurrentTarget(army.getId())).toEqual(secondPath[0]);
     });
   });
+
+  describe('経路指定中のキャンセル処理', () => {
+    test('経路点が1つ以上設定されている状態でキャンセルした場合、移動が開始される', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
+      if (!army) return;
+
+      // 軍団を選択して経路設定モードにする
+      const inputHandler_any = inputHandler as any;
+      inputHandler_any.selectedArmy = army;
+      inputHandler_any.isSettingPath = true;
+      inputHandler_any.currentMode = MovementMode.NORMAL;
+
+      // 経路点を追加
+      const addWaypoint = inputHandler_any.addWaypoint.bind(inputHandler);
+      addWaypoint(176, 160); // 1マス右
+      addWaypoint(192, 160); // 2マス右
+
+      // waypointBufferに経路点が追加されていることを確認
+      expect(inputHandler_any.waypointBuffer.length).toBe(2);
+
+      // キャンセル処理を実行
+      const cancelPathSetting = inputHandler_any.cancelPathSetting.bind(inputHandler);
+      cancelPathSetting();
+
+      // 移動が開始されたことを確認
+      expect(army.isMoving()).toBe(true);
+      expect(commandSystem.getCommand(army.getId())).toBeDefined();
+      expect(inputHandler_any.waypointBuffer.length).toBe(0);
+      expect(inputHandler_any.waypointMarkers.length).toBe(0);
+    });
+
+    test('経路点が設定されていない状態でキャンセルした場合、軍団の選択が解除される', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
+      if (!army) return;
+
+      // 軍団を選択して経路設定モードにする
+      const inputHandler_any = inputHandler as any;
+      inputHandler_any.selectedArmy = army;
+      inputHandler_any.isSettingPath = true;
+      inputHandler_any.currentMode = MovementMode.NORMAL;
+
+      // 経路点を追加せずにキャンセル
+      expect(inputHandler_any.waypointBuffer.length).toBe(0);
+
+      // キャンセル処理を実行
+      const cancelPathSetting = inputHandler_any.cancelPathSetting.bind(inputHandler);
+      cancelPathSetting();
+
+      // 軍団の選択が解除されたことを確認
+      expect(inputHandler_any.selectedArmy).toBeNull();
+      expect(inputHandler_any.isSettingPath).toBe(false);
+      expect(army.isMoving()).toBe(false);
+      expect(commandSystem.getCommand(army.getId())).toBeNull();
+    });
+
+    test('右クリックで経路指定がキャンセルされる', () => {
+      const army = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
+      if (!army) return;
+
+      // 軍団を選択して経路設定モードにする
+      const inputHandler_any = inputHandler as any;
+      inputHandler_any.selectedArmy = army;
+      inputHandler_any.isSettingPath = true;
+      inputHandler_any.currentMode = MovementMode.NORMAL;
+
+      // 経路点を1つ追加
+      const addWaypoint = inputHandler_any.addWaypoint.bind(inputHandler);
+      addWaypoint(176, 160);
+
+      // 右クリックをシミュレート
+      const handleRightClick = inputHandler_any.handleRightClick.bind(inputHandler);
+      handleRightClick();
+
+      // 経路点が1つあるので移動が開始されたことを確認
+      expect(army.isMoving()).toBe(true);
+      expect(commandSystem.getCommand(army.getId())).toBeDefined();
+    });
+  });
 });
