@@ -1,8 +1,8 @@
-import { Army } from '../../src/army/Army';
-import { Character } from '../../src/character/Character';
-import { MapManager } from '../../src/map/MapManager';
-import { MovementMode, MovementState } from '../../src/types/MovementTypes';
-import { CharacterStats } from '../../src/types/CharacterTypes';
+import { Army } from "../../src/army/Army";
+import { Character } from "../../src/character/Character";
+import { MapManager } from "../../src/map/MapManager";
+import { MovementMode, MovementState } from "../../src/types/MovementTypes";
+import { CharacterStats } from "../../src/types/CharacterTypes";
 
 // モック軍団の作成
 export function createMockArmy(
@@ -10,13 +10,14 @@ export function createMockArmy(
   config?: {
     commander?: Partial<CharacterStats>;
     soldiers?: Partial<CharacterStats>[];
-  }
+  },
 ): Army {
-  const mockCommander = createMockCharacter('commander', config?.commander);
-  const mockSoldiers = config?.soldiers?.map((stats, i) => 
-    createMockCharacter(`soldier${i}`, stats)
-  ) || [];
-  
+  const mockCommander = createMockCharacter("commander", config?.commander);
+  const mockSoldiers =
+    config?.soldiers?.map((stats, i) =>
+      createMockCharacter(`soldier${i}`, stats),
+    ) || [];
+
   const army = {
     getId: jest.fn(() => id),
     getName: jest.fn(() => `Army ${id}`),
@@ -26,8 +27,9 @@ export function createMockArmy(
     getAliveMembers: jest.fn(() => [mockCommander, ...mockSoldiers]),
     getAverageMovementSpeed: jest.fn(() => {
       const allMembers = [mockCommander, ...mockSoldiers];
-      const totalSpeed = allMembers.reduce((sum, member) => 
-        sum + member.getStats().moveSpeed, 0
+      const totalSpeed = allMembers.reduce(
+        (sum, member) => sum + member.getStats().moveSpeed,
+        0,
       );
       return totalSpeed / allMembers.length;
     }),
@@ -41,24 +43,27 @@ export function createMockArmy(
     }),
     startMovement: jest.fn(),
     stopMovement: jest.fn(),
-    getMovementState: jest.fn(() => ({
-      isMoving: false,
-      currentPath: null,
-      currentSpeed: 0,
-      mode: MovementMode.NORMAL,
-      targetPosition: null
-    } as MovementState)),
+    getMovementState: jest.fn(
+      () =>
+        ({
+          isMoving: false,
+          currentPath: null,
+          currentSpeed: 0,
+          mode: MovementMode.NORMAL,
+          targetPosition: null,
+        }) as MovementState,
+    ),
     setMovementMode: jest.fn(),
-    setMovementSpeed: jest.fn()
+    setMovementSpeed: jest.fn(),
   } as unknown as Army;
-  
+
   return army;
 }
 
 // モックキャラクターの作成
 export function createMockCharacter(
   id: string,
-  stats?: Partial<CharacterStats>
+  stats?: Partial<CharacterStats>,
 ): Character {
   const defaultStats: CharacterStats = {
     hp: 50,
@@ -68,9 +73,9 @@ export function createMockCharacter(
     speed: 15,
     moveSpeed: 10,
     sight: 8,
-    ...stats
+    ...stats,
   };
-  
+
   return {
     getId: jest.fn(() => id),
     getName: jest.fn(() => `Character ${id}`),
@@ -80,10 +85,10 @@ export function createMockCharacter(
     y: 0,
     setPosition: jest.fn(),
     getBounds: jest.fn(() => ({
-      contains: jest.fn(() => false)
+      contains: jest.fn(() => false),
     })),
     setTint: jest.fn(),
-    clearTint: jest.fn()
+    clearTint: jest.fn(),
   } as unknown as Character;
 }
 
@@ -92,18 +97,18 @@ export function createMockMapManager(): MapManager {
   return {
     pixelToGrid: jest.fn((x: number, y: number) => ({
       x: Math.floor(x / 16),
-      y: Math.floor(y / 16)
+      y: Math.floor(y / 16),
     })),
     gridToPixel: jest.fn((x: number, y: number) => ({
       x: x * 16 + 8,
-      y: y * 16 + 8
+      y: y * 16 + 8,
     })),
     getTileAt: jest.fn(() => ({
-      getTileType: jest.fn(() => 'plain'),
-      isWalkable: jest.fn(() => true)
+      getTileType: jest.fn(() => "plain"),
+      isWalkable: jest.fn(() => true),
     })),
     getMapWidth: jest.fn(() => 512),
-    getMapHeight: jest.fn(() => 512)
+    getMapHeight: jest.fn(() => 512),
   } as unknown as MapManager;
 }
 
@@ -111,11 +116,11 @@ export function createMockMapManager(): MapManager {
 export function createMockScene(): Phaser.Scene {
   return {
     add: {
-      existing: jest.fn()
+      existing: jest.fn(),
     },
     input: {
       on: jest.fn(),
-      off: jest.fn()
-    }
+      off: jest.fn(),
+    },
   } as unknown as Phaser.Scene;
 }
