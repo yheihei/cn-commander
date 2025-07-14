@@ -95,7 +95,7 @@ describe('[エピック5] CombatSystem Integration Tests', () => {
         // 射程範囲を確認
         const rangeCalculator = (combatSystem as any).rangeCalculator;
         const range = rangeCalculator.getWeaponRange(shuriken);
-        
+
         expect(range.min).toBe(1); // 最小射程が1
         expect(range.max).toBe(6); // 最大射程が6
       }
@@ -351,7 +351,6 @@ describe('[エピック5] CombatSystem Integration Tests', () => {
         expect(selectionCount.enemy3).toBeGreaterThan(0);
       }
     });
-
 
     test('未発見の敵は攻撃対象にならない', () => {
       // プレイヤー軍団を配置

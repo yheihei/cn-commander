@@ -83,7 +83,7 @@ export class RangeCalculator {
 
   private calculateDistance(char1: Character, char2: Character): number {
     let x1: number, y1: number, x2: number, y2: number;
-    
+
     // ワールド座標を取得（本番環境）
     if (typeof char1.getWorldTransformMatrix === 'function') {
       const worldPos1 = char1.getWorldTransformMatrix();
@@ -99,10 +99,10 @@ export class RangeCalculator {
       x2 = char2.x;
       y2 = char2.y;
     }
-    
+
     const pos1 = this.mapManager.pixelToGrid(x1, y1);
     const pos2 = this.mapManager.pixelToGrid(x2, y2);
-    
+
     const distance = Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
     return distance;
   }

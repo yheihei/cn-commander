@@ -83,6 +83,9 @@ export class PreloadScene extends Phaser.Scene {
 
     // 戦闘エフェクトの読み込み
     this.loadCombatEffects();
+
+    // 効果音の読み込み
+    this.loadSoundAssets();
   }
 
   private loadTilemapAssets(): void {
@@ -161,6 +164,11 @@ export class PreloadScene extends Phaser.Scene {
     for (let i = 1; i <= 7; i++) {
       this.load.image(`explode-${i}`, `assets/images/effects/explode-${i}.png`);
     }
+  }
+
+  private loadSoundAssets(): void {
+    // 敵発見時の効果音を読み込み
+    this.load.audio('enemyFound', 'assets/sounds/EnemyFound.mp3');
   }
 
   create(): void {

@@ -64,7 +64,6 @@ export class CombatSystem {
       return;
     }
 
-    
     // 戦闘移動または待機モードの場合のみ攻撃開始
     this.combatArmies.add(army);
     this.attackTimerManager.startArmyAttackTimers(army, (attacker) => {
@@ -120,7 +119,7 @@ export class CombatSystem {
       this.effectManager.createAttackEffect(attacker, target, weapon.weaponType, () => {
         // エフェクト完了後、再度射程をチェック
         const stillInRange = this.rangeCalculator.isInRange(attacker, target);
-        
+
         if (attacker.isAlive() && target.isAlive() && stillInRange) {
           this.combatCalculator.performAttack(attacker, target);
         }
@@ -137,17 +136,17 @@ export class CombatSystem {
   private hasEnemiesInRange(army: Army): boolean {
     const enemyArmies = this.getEnemyArmies(army);
     const allMembers = [army.getCommander(), ...army.getSoldiers()];
-    
+
     // 軍団の各メンバーについて、射程内に敵がいるかチェック
     for (const member of allMembers) {
       if (!member.isAlive() || !this.combatCalculator.canAttack(member)) {
         continue;
       }
-      
+
       // 全ての敵について射程内かチェック
       for (const enemyArmy of enemyArmies) {
         if (!enemyArmy.isDiscovered()) continue;
-        
+
         const enemyMembers = [enemyArmy.getCommander(), ...enemyArmy.getSoldiers()];
         for (const enemy of enemyMembers) {
           if (enemy.isAlive() && this.rangeCalculator.isInRange(member, enemy)) {
@@ -156,7 +155,7 @@ export class CombatSystem {
         }
       }
     }
-    
+
     return false; // 誰も射程内に敵を持っていない
   }
 

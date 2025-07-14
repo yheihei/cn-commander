@@ -60,9 +60,12 @@ export class GameScene extends Phaser.Scene {
 
     // 発見システムの初期化
     this.discoverySystem = new DiscoverySystem(this.visionSystem);
-    this.discoverySystem.onArmyDiscovered = (_army, _event) => {
-      // 敵軍団発見時のイベント処理（デバッグ表示で確認可能）
-      // console.log(`敵軍団を発見: ${_army.getName()} at (${_event.position.x}, ${_event.position.y})`);
+    this.discoverySystem.onArmyDiscovered = (army, _event) => {
+      // 効果音を再生
+      this.sound.play('enemyFound', { volume: 0.25 });
+
+      // 点滅フェードイン演出
+      this.playDiscoveryAnimation(army);
     };
 
     // 戦闘システムの初期化
@@ -423,5 +426,44 @@ export class GameScene extends Phaser.Scene {
 
     // 発見チェック
     this.discoverySystem.checkDiscovery(playerArmies, enemyArmies);
+  }
+
+  /**
+   * 敵軍団発見時の点滅フェードイン演出を再生
+   */
+  private playDiscoveryAnimation(army: Army): void {
+    // 軍団を表示（演出のため初期透明度0）
+    army.setAlpha(0);
+    army.setVisible(true);
+
+    // 点滅しながらフェードインする演出
+    const blinkCount = 3;
+    const blinkDuration = 150; // 各点滅の時間（ミリ秒）
+    const fadeInDuration = 300; // 最終フェードインの時間
+
+    // 点滅アニメーション
+    let currentBlink = 0;
+    const blinkTimer = this.time.addEvent({
+      delay: blinkDuration,
+      callback: () => {
+        // 偶数回は表示、奇数回は非表示
+        army.setAlpha(currentBlink % 2 === 0 ? 0.6 : 0);
+        currentBlink++;
+
+        // 点滅が終了したら最終フェードイン
+        if (currentBlink >= blinkCount * 2) {
+          blinkTimer.remove();
+
+          // 最終的なフェードイン
+          this.tweens.add({
+            targets: army,
+            alpha: 1,
+            duration: fadeInDuration,
+            ease: 'Power2',
+          });
+        }
+      },
+      repeat: blinkCount * 2 - 1,
+    });
   }
 }
