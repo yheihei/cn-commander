@@ -18,6 +18,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - YAGNI（You Aren't Gonna Need It）：今必要じゃない機能は作らない
 - KISS: 複雑な解決策より単純な解決策を優先
 
+## git操作をするとき
+
+`gh` コマンドを使うこと
+
 ## タスクの遂行方法
 
 適用条件: 実装を依頼された時。
