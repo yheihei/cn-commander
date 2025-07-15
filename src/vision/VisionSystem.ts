@@ -2,11 +2,14 @@ import { Army } from '../army/Army';
 import { Character } from '../character/Character';
 import { MapManager } from '../map/MapManager';
 import { Position } from '../types/CharacterTypes';
-import { VisionArea, VisionCalculation } from '../types/VisionTypes';
+import { VisionArea, VisionCalculation, SharedVisionData } from '../types/VisionTypes';
 import { MovementMode, MOVEMENT_MODE_CONFIGS } from '../types/MovementTypes';
 import { TerrainEffect } from '../types/TileTypes';
+import { FactionType } from '../types/ArmyTypes';
 
 export class VisionSystem {
+  private factionVisionCache: Map<FactionType, SharedVisionData> = new Map();
+
   constructor(private mapManager: MapManager) {}
 
   /**
@@ -149,5 +152,83 @@ export class VisionSystem {
     });
 
     return visibleArmyIds;
+  }
+
+  /**
+   * 特定の勢力の共有視界データを取得
+   */
+  getSharedVisionForFaction(faction: FactionType, factionArmies: Army[]): SharedVisionData {
+    const visibleArmies = new Set<Army>();
+    const visibleTiles = new Set<string>();
+
+    // 全味方軍団の視界を統合
+    factionArmies.forEach((army) => {
+      const visionAreas = this.calculateVision(army);
+      
+      // 各メンバーの視界タイルを追加
+      visionAreas.forEach((visionArea) => {
+        const tiles = this.getVisibleTiles(visionArea.center, visionArea.effectiveRange);
+        tiles.forEach((tile) => {
+          const gridPos = this.mapManager.pixelToGrid(tile.x, tile.y);
+          visibleTiles.add(`${gridPos.x},${gridPos.y}`);
+        });
+      });
+    });
+
+    const sharedVision: SharedVisionData = {
+      visibleArmies,
+      visibleTiles,
+      lastUpdated: Date.now(),
+    };
+
+    // キャッシュを更新
+    this.factionVisionCache.set(faction, sharedVision);
+
+    return sharedVision;
+  }
+
+  /**
+   * 勢力から特定の軍団が見えるかチェック（共有視界を使用）
+   */
+  isVisibleByFaction(targetArmy: Army, viewerFaction: FactionType, factionArmies: Army[]): boolean {
+    // 同じ勢力の場合は常に見える
+    if (targetArmy.getOwner() === viewerFaction) {
+      return true;
+    }
+
+    // 共有視界データを取得（キャッシュも利用）
+    const cachedData = this.factionVisionCache.get(viewerFaction);
+    const sharedVision = cachedData && (Date.now() - cachedData.lastUpdated < 100) 
+      ? cachedData 
+      : this.getSharedVisionForFaction(viewerFaction, factionArmies);
+
+    // 対象軍団の位置が視界内にあるかチェック
+    const targetPos = targetArmy.getPosition();
+    const gridPos = this.mapManager.pixelToGrid(targetPos.x, targetPos.y);
+    const tileKey = `${gridPos.x},${gridPos.y}`;
+
+    return sharedVision.visibleTiles.has(tileKey);
+  }
+
+  /**
+   * 勢力から見える敵軍団のリストを取得
+   */
+  getVisibleEnemyArmies(viewerFaction: FactionType, factionArmies: Army[], enemyArmies: Army[]): Army[] {
+    const visibleEnemies: Army[] = [];
+
+    enemyArmies.forEach((enemy) => {
+      if (this.isVisibleByFaction(enemy, viewerFaction, factionArmies)) {
+        visibleEnemies.push(enemy);
+      }
+    });
+
+    return visibleEnemies;
+  }
+
+  /**
+   * 視界キャッシュをクリア
+   */
+  clearVisionCache(): void {
+    this.factionVisionCache.clear();
   }
 }

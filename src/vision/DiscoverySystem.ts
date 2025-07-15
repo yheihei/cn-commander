@@ -1,6 +1,7 @@
 import { Army } from '../army/Army';
 import { VisionSystem } from './VisionSystem';
 import { DiscoveryEvent } from '../types/VisionTypes';
+import { FactionType } from '../types/ArmyTypes';
 
 export class DiscoverySystem {
   private discoveredArmies: Set<string> = new Set();
@@ -12,7 +13,7 @@ export class DiscoverySystem {
   constructor(private visionSystem: VisionSystem) {}
 
   /**
-   * 全観測軍団から見える敵軍団をチェックして発見状態を更新
+   * 全観測軍団から見える敵軍団をチェックして発見状態を更新（視界共有版）
    */
   checkDiscovery(observers: Army[], targets: Army[]): void {
     // プレイヤー側の軍団のみを観測者として使用
@@ -21,20 +22,57 @@ export class DiscoverySystem {
     // 敵軍団のみを対象として使用
     const enemyTargets = targets.filter((army) => army.isEnemyArmy());
 
-    enemyTargets.forEach((target) => {
+    // プレイヤー勢力の視界共有チェック
+    if (playerObservers.length > 0) {
+      const playerFaction = playerObservers[0].getOwner();
+      this.checkFactionDiscovery(playerFaction, playerObservers, enemyTargets);
+    }
+  }
+
+  /**
+   * 勢力単位での発見チェック（視界共有を考慮）
+   */
+  checkFactionDiscovery(faction: FactionType, factionArmies: Army[], targetArmies: Army[]): void {
+    targetArmies.forEach((target) => {
       // 既に発見済みならスキップ
       if (this.isDiscovered(target.getId())) {
         return;
       }
 
-      // 各観測軍団から見えるかチェック
-      for (const observer of playerObservers) {
-        if (this.visionSystem.canSeeArmy(observer, target)) {
-          this.discoverArmy(target, observer);
-          break; // 一つの観測者から見えれば十分
+      // 勢力の共有視界から見えるかチェック
+      if (this.visionSystem.isVisibleByFaction(target, faction, factionArmies)) {
+        // 最も近い観測者を発見者とする
+        const discoverer = this.findClosestObserver(target, factionArmies);
+        if (discoverer) {
+          this.discoverArmy(target, discoverer);
         }
       }
     });
+  }
+
+  /**
+   * 対象に最も近い観測者を見つける
+   */
+  private findClosestObserver(target: Army, observers: Army[]): Army | null {
+    let closestObserver: Army | null = null;
+    let minDistance = Infinity;
+
+    const targetPos = target.getPosition();
+
+    observers.forEach((observer) => {
+      const observerPos = observer.getPosition();
+      const distance = Math.sqrt(
+        Math.pow(targetPos.x - observerPos.x, 2) +
+        Math.pow(targetPos.y - observerPos.y, 2)
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestObserver = observer;
+      }
+    });
+
+    return closestObserver;
   }
 
   /**
