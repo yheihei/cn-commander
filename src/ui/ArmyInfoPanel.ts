@@ -102,14 +102,14 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     container.add(bg);
 
     // 顔画像を追加（左側に配置）
-    const faceImage = this.scene.add.image(4, 7.5, 'characterFace');
+    const faceImage = this.scene.add.image(4, 4, 'characterFace');
     faceImage.setOrigin(0, 0);
-    faceImage.setDisplaySize(40, 40);
+    faceImage.setDisplaySize(47, 47);
     container.add(faceImage);
 
     // 名前と職業（顔画像の右側に配置）
-    const textStartX = 52; // 4 + 40 + 8 (画像位置 + 画像幅 + 余白)
-    
+    const textStartX = 59; // 4 + 47 + 8 (画像位置 + 画像幅 + 余白)
+
     const nameText = this.scene.add.text(
       textStartX,
       4,
