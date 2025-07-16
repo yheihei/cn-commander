@@ -43,18 +43,19 @@ export class UIManager {
     // 既存のメニューがあれば削除
     this.hideActionMenu();
 
-    // 指揮官の位置を取得
-    const commander = army.getCommander();
-    const commanderPos = commander.getCenter();
-
-    // メニューを指揮官の右側に表示
-    const menuX = commanderPos.x + 50;
-    const menuY = commanderPos.y;
-
     this.currentSelectedArmy = army;
 
     // 軍団情報パネルを表示
     this.showArmyInfo(army);
+
+    // カメラの現在の表示範囲を取得
+    const cam = this.scene.cameras.main;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+
+    // 画面左側の固定位置に配置
+    const menuX = viewLeft + 80; // 左端から80px
+    const menuY = viewTop + 100; // 上端から100px
 
     this.actionMenu = new ActionMenu({
       scene: this.scene,
@@ -77,7 +78,6 @@ export class UIManager {
   }
 
   public showMovementModeMenu(
-    army: Army,
     onNormalMove: () => void,
     onCombatMove: () => void,
     onCancel: () => void,
@@ -85,13 +85,14 @@ export class UIManager {
     // 既存のメニューがあれば削除
     this.hideMovementModeMenu();
 
-    // 指揮官の位置を取得
-    const commander = army.getCommander();
-    const commanderPos = commander.getCenter();
+    // カメラの現在の表示範囲を取得
+    const cam = this.scene.cameras.main;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
 
-    // メニューを指揮官の右側に表示
-    const menuX = commanderPos.x + 50;
-    const menuY = commanderPos.y;
+    // 画面左側の固定位置に配置（ActionMenuより下に）
+    const menuX = viewLeft + 90; // 左端から90px
+    const menuY = viewTop + 180; // 上端から180px
 
     this.movementModeMenu = new MovementModeMenu({
       scene: this.scene,
@@ -178,6 +179,28 @@ export class UIManager {
 
       this.armyInfoPanel.setPosition(panelX, panelY);
       this.armyInfoPanel.updateArmyInfo(army);
+    }
+
+    // ActionMenuの位置も更新
+    if (this.actionMenu) {
+      this.updateActionMenuPosition();
+    }
+
+    // MovementModeMenuの位置も更新
+    if (this.movementModeMenu) {
+      this.updateMovementModeMenuPosition();
+    }
+  }
+
+  private updateActionMenuPosition(): void {
+    if (this.actionMenu) {
+      this.actionMenu.updateFixedPosition(80, 100); // 左端から80px、上端から100px
+    }
+  }
+
+  private updateMovementModeMenuPosition(): void {
+    if (this.movementModeMenu) {
+      this.movementModeMenu.updateFixedPosition(90, 180); // 左端から90px、上端から180px
     }
   }
 

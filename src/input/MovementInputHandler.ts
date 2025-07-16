@@ -131,7 +131,6 @@ export class MovementInputHandler {
 
     // 移動モード選択UIを表示
     this.uiManager.showMovementModeMenu(
-      this.selectedArmy,
       () => {
         // 通常移動が選択された
         this.currentMode = MovementMode.NORMAL;

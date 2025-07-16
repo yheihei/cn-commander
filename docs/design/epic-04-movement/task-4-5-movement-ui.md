@@ -44,21 +44,28 @@
 ```typescript
 interface UIManager {
   showActionMenu(army: Army, onMove: () => void, onCancel: () => void): void;
-  showMovementModeMenu(army: Army, onNormalMove: () => void, onCombatMove: () => void, onCancel: () => void): void;
+  showMovementModeMenu(onNormalMove: () => void, onCombatMove: () => void, onCancel: () => void): void;
   hideActionMenu(): void;
   hideMovementModeMenu(): void;
   isActionMenuVisible(): boolean;
   isMovementModeMenuVisible(): boolean;
   isAnyMenuVisible(): boolean;
   getCurrentSelectedArmy(): Army | null;
+  showArmyInfo(army: Army): void;
+  hideArmyInfo(): void;
+  updateArmyInfo(army: Army): void;
   destroy(): void;
 }
 ```
 
 ### UIコンポーネントの特徴
-- **メニュー位置**: 指揮官の右側+50pxに表示
-- **Depth管理**: UIレイヤー最前面（depth: 999-1000）
-- **画面外クリック処理**: nextFrameでイベントリスナー追加（即座閉じ防止）
+- **メニュー位置**: 
+  - ActionMenu: 画面左側固定（左端から80px、上端から100px）
+  - MovementModeMenu: 画面左側固定（左端から90px、上端から180px）
+  - ArmyInfoPanel: 画面右側固定（右端から10px、上端から20px）
+- **固定位置UI**: カメラのworldViewを基準に配置し、カメラ移動時に位置を更新
+- **Depth管理**: UIレイヤー最前面（depth: 998-999）
+- **画面外クリック処理**: 画面座標で範囲外クリックを判定
 - **メモリ管理**: destroy時にイベントリスナーを確実に削除
 
 ### MovementInputHandler

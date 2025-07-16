@@ -18,29 +18,17 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
 
   describe('移動モード選択の基本動作', () => {
     test('移動モード選択メニューを表示できる', () => {
-      const mockArmy = {
-        getCommander: () => ({
-          getCenter: () => ({ x: 100, y: 100 }),
-        }),
-      };
-
       const onNormalMove = jest.fn();
       const onCombatMove = jest.fn();
       const onCancel = jest.fn();
 
-      uiManager.showMovementModeMenu(mockArmy as any, onNormalMove, onCombatMove, onCancel);
+      uiManager.showMovementModeMenu(onNormalMove, onCombatMove, onCancel);
 
       expect(uiManager.isMovementModeMenuVisible()).toBe(true);
     });
 
     test('移動モード選択メニューを非表示にできる', () => {
-      const mockArmy = {
-        getCommander: () => ({
-          getCenter: () => ({ x: 100, y: 100 }),
-        }),
-      };
-
-      uiManager.showMovementModeMenu(mockArmy as any, jest.fn(), jest.fn(), jest.fn());
+      uiManager.showMovementModeMenu(jest.fn(), jest.fn(), jest.fn());
       expect(uiManager.isMovementModeMenuVisible()).toBe(true);
 
       uiManager.hideMovementModeMenu();
@@ -72,7 +60,7 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
       expect(uiManager.isAnyMenuVisible()).toBe(true);
 
       // 移動モードメニューを表示（アクションメニューは消える想定）
-      uiManager.showMovementModeMenu(mockArmy as any, jest.fn(), jest.fn(), jest.fn());
+      uiManager.showMovementModeMenu(jest.fn(), jest.fn(), jest.fn());
       expect(uiManager.isMovementModeMenuVisible()).toBe(true);
     });
 

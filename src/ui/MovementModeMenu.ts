@@ -107,9 +107,25 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
   private setupOutsideClickHandler(): void {
     // 画面全体のクリックイベントを監視
     const clickHandler = (pointer: Phaser.Input.Pointer) => {
-      // メニューの範囲外をクリックした場合
-      const bounds = this.getBounds();
-      if (!bounds.contains(pointer.worldX, pointer.worldY)) {
+      // sceneが破棄されている場合は処理をスキップ
+      if (!this.scene || !this.scene.cameras) {
+        return;
+      }
+
+      // メニューの画面座標での範囲を計算
+      const cam = this.scene.cameras.main;
+      const menuScreenX = this.x - cam.worldView.x;
+      const menuScreenY = this.y - cam.worldView.y;
+      const halfWidth = 70;
+      const halfHeight = 59;
+
+      // メニューの範囲外をクリックした場合（画面座標で判定）
+      if (
+        pointer.x < menuScreenX - halfWidth ||
+        pointer.x > menuScreenX + halfWidth ||
+        pointer.y < menuScreenY - halfHeight ||
+        pointer.y > menuScreenY + halfHeight
+      ) {
         if (this.onCancelCallback) {
           this.onCancelCallback();
         }
@@ -138,31 +154,15 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
   }
 
   public setPosition(x: number, y: number): this {
-    // 画面内に収まるように位置を調整
-    const cam = this.scene.cameras.main;
-    const menuWidth = 140;
-    const menuHeight = 118;
-
-    // 右端チェック
-    if (x + menuWidth / 2 > cam.worldView.right) {
-      x = cam.worldView.right - menuWidth / 2;
-    }
-
-    // 左端チェック
-    if (x - menuWidth / 2 < cam.worldView.left) {
-      x = cam.worldView.left + menuWidth / 2;
-    }
-
-    // 下端チェック
-    if (y + menuHeight / 2 > cam.worldView.bottom) {
-      y = cam.worldView.bottom - menuHeight / 2;
-    }
-
-    // 上端チェック
-    if (y - menuHeight / 2 < cam.worldView.top) {
-      y = cam.worldView.top + menuHeight / 2;
-    }
-
+    // 固定位置UIとして設定（引数のx,yはワールド座標として受け取る）
     return super.setPosition(x, y);
+  }
+
+  public updateFixedPosition(screenX: number, screenY: number): void {
+    // 画面座標からワールド座標に変換して配置
+    const cam = this.scene.cameras.main;
+    const worldX = cam.worldView.x + screenX;
+    const worldY = cam.worldView.y + screenY;
+    this.setPosition(worldX, worldY);
   }
 }
