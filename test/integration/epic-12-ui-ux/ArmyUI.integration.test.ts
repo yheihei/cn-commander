@@ -236,7 +236,7 @@ function createMockArmy(name: string = '第一軍団'): Army {
 
   return new Army(scene, 100, 100, {
     id: 'army1',
-    name: name,
+    name,
     commander: mockCommander,
     soldiers: [],
     owner: 'player',

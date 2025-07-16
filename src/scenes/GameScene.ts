@@ -71,7 +71,19 @@ export class GameScene extends Phaser.Scene {
     // 戦闘システムの初期化
     this.combatSystem = new CombatSystem(this, this.armyManager, this.mapManager);
 
-    // UIマネージャーの初期化
+    // テストマップを読み込むか、デフォルトマップを作成
+    const testMapData = this.cache.json.get('testMap');
+    if (testMapData) {
+      this.mapManager.loadMap(testMapData);
+    } else {
+      // テストマップがない場合は、小さめのデフォルトマップを作成
+      this.createDefaultMap();
+    }
+
+    // カメラの設定（UIManagerより先に実行）
+    this.setupCamera();
+
+    // UIマネージャーの初期化（カメラ設定後）
     this.uiManager = new UIManager(this);
 
     // 入力ハンドラーの初期化
@@ -82,18 +94,6 @@ export class GameScene extends Phaser.Scene {
       this.commandSystem,
       this.uiManager,
     );
-
-    // テストマップを読み込むか、デフォルトマップを作成
-    const testMapData = this.cache.json.get('testMap');
-    if (testMapData) {
-      this.mapManager.loadMap(testMapData);
-    } else {
-      // テストマップがない場合は、小さめのデフォルトマップを作成
-      this.createDefaultMap();
-    }
-
-    // カメラの設定
-    this.setupCamera();
 
     // 入力の設定
     this.setupInput();
@@ -260,6 +260,9 @@ export class GameScene extends Phaser.Scene {
     // 画面サイズ1280x720で、20マス×16px=320pxを表示
     // zoom = min(1280/320, 720/320) = 2.25
     this.cameras.main.setZoom(2.25);
+
+    // ピクセルパーフェクトレンダリング
+    this.cameras.main.roundPixels = true;
   }
 
   private setupInput(): void {

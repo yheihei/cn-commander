@@ -17,11 +17,18 @@ export class UIManager {
   }
 
   private initializeInfoPanel(): void {
-    // 画面右側に情報パネルを配置
-    const panelWidth = 250;
-    const panelHeight = 400;
-    const panelX = this.scene.cameras.main.width - panelWidth - 10;
-    const panelY = 10;
+    // カメラのズームを考慮したパネルサイズ
+    const zoom = this.scene.cameras.main.zoom || 2.25;
+    const viewWidth = 1280 / zoom; // 実際の表示幅
+    const viewHeight = 720 / zoom; // 実際の表示高さ
+
+    // 画面の右半分のサイズ
+    const panelWidth = viewWidth / 2 - 20; // 右半分から余白を引く
+    const panelHeight = viewHeight - 40; // 上下の余白を引く
+
+    // 初期位置は画面外に配置（showArmyInfoで正しい位置に移動）
+    const panelX = -1000;
+    const panelY = -1000;
 
     this.armyInfoPanel = new ArmyInfoPanel({
       scene: this.scene,
@@ -56,7 +63,8 @@ export class UIManager {
       onMove: () => {
         onMove();
         this.actionMenu = null;
-        // onMoveの時は軍団選択状態を維持（移動モード選択に進むため）
+        // 移動を選択したら情報パネルを非表示
+        this.hideArmyInfo();
       },
       onCancel: () => {
         onCancel();
@@ -137,6 +145,16 @@ export class UIManager {
 
   public showArmyInfo(army: Army): void {
     if (this.armyInfoPanel) {
+      // カメラの現在の表示範囲を取得
+      const cam = this.scene.cameras.main;
+      const viewTop = cam.worldView.y;
+      const viewRight = cam.worldView.right;
+
+      // パネルを画面の右端に配置
+      const panelX = viewRight - this.armyInfoPanel.getWidth() - 10;
+      const panelY = viewTop + 20;
+
+      this.armyInfoPanel.setPosition(panelX, panelY);
       this.armyInfoPanel.updateArmyInfo(army);
       this.armyInfoPanel.show();
     }
@@ -150,6 +168,15 @@ export class UIManager {
 
   public updateArmyInfo(army: Army): void {
     if (this.armyInfoPanel && this.armyInfoPanel.visible) {
+      // カメラの移動に合わせて位置を更新
+      const cam = this.scene.cameras.main;
+      const viewTop = cam.worldView.y;
+      const viewRight = cam.worldView.right;
+
+      const panelX = viewRight - this.armyInfoPanel.getWidth() - 10;
+      const panelY = viewTop + 20;
+
+      this.armyInfoPanel.setPosition(panelX, panelY);
       this.armyInfoPanel.updateArmyInfo(army);
     }
   }

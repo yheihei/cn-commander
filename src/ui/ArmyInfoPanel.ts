@@ -17,7 +17,6 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
   private titleText: Phaser.GameObjects.Text;
   private memberContainers: Phaser.GameObjects.Container[] = [];
   private statusText: Phaser.GameObjects.Text;
-  private positionText: Phaser.GameObjects.Text;
 
   private panelWidth: number;
 
@@ -32,27 +31,26 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     this.background.setOrigin(0, 0);
     this.add(this.background);
 
+    // フォントサイズ
+    const baseFontSize = 12; // 基本フォントサイズ
+    const smallFontSize = 10; // 小さいフォントサイズ
+
     // タイトル
-    this.titleText = config.scene.add.text(10, 10, '軍団情報', {
-      fontSize: '16px',
+    this.titleText = config.scene.add.text(8, 8, '軍団情報', {
+      fontSize: `${baseFontSize}px`,
       color: '#ffffff',
       fontStyle: 'bold',
+      resolution: 2, // 高解像度で描画
     });
     this.add(this.titleText);
 
     // 状態テキスト
-    this.statusText = config.scene.add.text(10, 40, '', {
-      fontSize: '12px',
+    this.statusText = config.scene.add.text(8, 24, '', {
+      fontSize: `${smallFontSize}px`,
       color: '#ffffff',
+      resolution: 2,
     });
     this.add(this.statusText);
-
-    // 位置テキスト
-    this.positionText = config.scene.add.text(10, config.height - 25, '', {
-      fontSize: '12px',
-      color: '#aaaaaa',
-    });
-    this.add(this.positionText);
 
     // コンテナをシーンに追加
     config.scene.add.existing(this);
@@ -76,21 +74,15 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const statusText = this.getStatusText(movementState.mode, movementState.isMoving);
     this.statusText.setText(`状態: ${statusText}`);
 
-    // 位置を更新
-    const position = army.getPosition();
-    const gridX = Math.floor(position.x / 16);
-    const gridY = Math.floor(position.y / 16);
-    this.positionText.setText(`位置: (${gridX}, ${gridY})`);
-
     // メンバー情報を表示
     const members = army.getAllMembers();
-    let yOffset = 70;
+    let yOffset = 40;
 
     members.forEach((member, index) => {
       const memberContainer = this.createMemberInfo(member, yOffset, index === 0);
       this.memberContainers.push(memberContainer);
       this.add(memberContainer);
-      yOffset += 80;
+      yOffset += 60;
     });
   }
 
@@ -99,29 +91,31 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     yOffset: number,
     isCommander: boolean,
   ): Phaser.GameObjects.Container {
-    const container = this.scene.add.container(10, yOffset);
+    const container = this.scene.add.container(8, yOffset);
 
     // 背景
-    const bg = this.scene.add.rectangle(0, 0, this.panelWidth - 20, 70, 0x333333, 0.5);
+    const bg = this.scene.add.rectangle(0, 0, this.panelWidth - 16, 55, 0x333333, 0.5);
     bg.setOrigin(0, 0);
     bg.setStrokeStyle(1, isCommander ? 0xff8888 : 0x666666);
     container.add(bg);
 
     // 名前と職業
     const nameText = this.scene.add.text(
-      5,
-      5,
+      4,
+      4,
       `${isCommander ? '[指揮官] ' : ''}${character.getName()}`,
       {
-        fontSize: '12px',
+        fontSize: '10px',
         color: isCommander ? '#ffaa00' : '#ffffff',
+        resolution: 2,
       },
     );
     container.add(nameText);
 
-    const jobText = this.scene.add.text(5, 20, `職業: ${character.getJobType()}`, {
-      fontSize: '11px',
+    const jobText = this.scene.add.text(4, 18, `職業: ${character.getJobType()}`, {
+      fontSize: '9px',
       color: '#cccccc',
+      resolution: 2,
     });
     container.add(jobText);
 
@@ -130,20 +124,21 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const hpRatio = stats.hp / stats.maxHp;
 
     // HPバーの背景
-    const hpBarBg = this.scene.add.rectangle(5, 40, 100, 8, 0x444444);
+    const hpBarBg = this.scene.add.rectangle(4, 32, 80, 6, 0x444444);
     hpBarBg.setOrigin(0, 0);
     container.add(hpBarBg);
 
     // HPバー
     const hpBarColor = hpRatio > 0.5 ? 0x00ff00 : hpRatio > 0.25 ? 0xffff00 : 0xff0000;
-    const hpBar = this.scene.add.rectangle(5, 40, 100 * hpRatio, 8, hpBarColor);
+    const hpBar = this.scene.add.rectangle(4, 32, 80 * hpRatio, 6, hpBarColor);
     hpBar.setOrigin(0, 0);
     container.add(hpBar);
 
     // HP数値
-    const hpText = this.scene.add.text(110, 37, `${stats.hp}/${stats.maxHp}`, {
-      fontSize: '10px',
+    const hpText = this.scene.add.text(88, 30, `${stats.hp}/${stats.maxHp}`, {
+      fontSize: '8px',
       color: '#ffffff',
+      resolution: 2,
     });
     container.add(hpText);
 
@@ -152,12 +147,13 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const items = itemHolder.items;
     if (items.length > 0) {
       const itemText = this.scene.add.text(
-        5,
-        52,
+        4,
+        42,
         `装備: ${items.map((item: IItem) => item.name).join(', ')}`,
         {
-          fontSize: '10px',
+          fontSize: '8px',
           color: '#aaaaaa',
+          resolution: 2,
         },
       );
       container.add(itemText);
@@ -197,6 +193,10 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     this.setVisible(false);
     this.setActive(false);
     this.clearMemberContainers();
+  }
+
+  public getWidth(): number {
+    return this.panelWidth;
   }
 
   public destroy(): void {
