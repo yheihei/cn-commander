@@ -24,7 +24,7 @@ export class UIManager {
 
     // 画面の右半分のサイズ
     const panelWidth = viewWidth / 2 - 20; // 右半分から余白を引く
-    const panelHeight = viewHeight - 40; // 上下の余白を引く
+    const panelHeight = viewHeight - 36; // 上下の余白を引く
 
     // 初期位置は画面外に配置（showArmyInfoで正しい位置に移動）
     const panelX = -1000;

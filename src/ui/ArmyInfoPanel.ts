@@ -36,19 +36,21 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const smallFontSize = 10; // 小さいフォントサイズ
 
     // タイトル
-    this.titleText = config.scene.add.text(8, 8, '軍団情報', {
+    this.titleText = config.scene.add.text(8, 10, '軍団情報', {
       fontSize: `${baseFontSize}px`,
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2, // 高解像度で描画
+      padding: { x: 0, y: 2 },
     });
     this.add(this.titleText);
 
     // 状態テキスト
-    this.statusText = config.scene.add.text(8, 24, '', {
+    this.statusText = config.scene.add.text(8, 26, '', {
       fontSize: `${smallFontSize}px`,
       color: '#ffffff',
       resolution: 2,
+      padding: { x: 0, y: 2 },
     });
     this.add(this.statusText);
 
@@ -116,6 +118,7 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
       fontSize: '9px',
       color: '#cccccc',
       resolution: 2,
+      padding: { x: 0, y: 4 },
     });
     container.add(jobText);
 
@@ -148,12 +151,13 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     if (items.length > 0) {
       const itemText = this.scene.add.text(
         4,
-        42,
+        44,
         `装備: ${items.map((item: IItem) => item.name).join(', ')}`,
         {
           fontSize: '8px',
           color: '#aaaaaa',
           resolution: 2,
+          padding: { x: 0, y: 2 },
         },
       );
       container.add(itemText);
