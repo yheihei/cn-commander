@@ -54,6 +54,16 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         getCommander: () => ({
           getCenter: () => ({ x: 100, y: 100 }),
         }),
+        getName: () => 'テスト軍団',
+        getMovementState: () => ({
+          isMoving: false,
+          currentPath: null,
+          currentSpeed: 0,
+          mode: 'normal',
+          targetPosition: null,
+        }),
+        getPosition: () => ({ x: 100, y: 100 }),
+        getAllMembers: () => [],
       };
 
       // アクションメニューを表示
@@ -73,6 +83,16 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         getCommander: () => ({
           getCenter: () => ({ x: 100, y: 100 }),
         }),
+        getName: () => 'テスト軍団',
+        getMovementState: () => ({
+          isMoving: false,
+          currentPath: null,
+          currentSpeed: 0,
+          mode: 'normal',
+          targetPosition: null,
+        }),
+        getPosition: () => ({ x: 100, y: 100 }),
+        getAllMembers: () => [],
       };
 
       uiManager.showActionMenu(mockArmy as any, jest.fn(), jest.fn());

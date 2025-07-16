@@ -119,6 +119,7 @@ jest.mock('phaser', () => ({
         fillAlpha,
         setStrokeStyle: jest.fn().mockReturnThis(),
         setInteractive: jest.fn().mockReturnThis(),
+        setOrigin: jest.fn().mockReturnThis(),
         on: jest.fn().mockReturnThis(),
         emit: jest.fn().mockReturnThis(),
         destroy: jest.fn(),
@@ -245,6 +246,7 @@ jest.mock('phaser', () => ({
       ) {}
       setStrokeStyle = jest.fn().mockReturnThis();
       setInteractive = jest.fn().mockReturnThis();
+      setOrigin = jest.fn().mockReturnThis();
       on = jest.fn().mockReturnThis();
       emit = jest.fn().mockReturnThis();
       destroy = jest.fn();
@@ -406,6 +408,7 @@ export const createMockScene = () => {
           fillAlpha,
           setStrokeStyle: jest.fn().mockReturnThis(),
           setInteractive: jest.fn().mockReturnThis(),
+          setOrigin: jest.fn().mockReturnThis(),
           on: jest.fn().mockReturnThis(),
           emit: jest.fn().mockReturnThis(),
           destroy: jest.fn(),

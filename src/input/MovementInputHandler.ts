@@ -169,6 +169,7 @@ export class MovementInputHandler {
     this.waypointBuffer = [];
     this.uiManager.hideActionMenu();
     this.uiManager.hideMovementModeMenu();
+    this.uiManager.hideArmyInfo();
   }
 
   private startPathSetting(): void {
