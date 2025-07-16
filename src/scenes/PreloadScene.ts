@@ -149,6 +149,10 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 16,
       frameHeight: 16,
     });
+
+    // キャラクター顔画像を読み込み
+    // 一時的に全キャラクターで咲耶の顔画像を使用
+    this.load.image('characterFace', 'assets/images/characters/SakuyaFace.jpg');
   }
 
   private loadMapData(): void {

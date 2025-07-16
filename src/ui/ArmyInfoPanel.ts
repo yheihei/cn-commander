@@ -101,9 +101,17 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     bg.setStrokeStyle(1, isCommander ? 0xff8888 : 0x666666);
     container.add(bg);
 
-    // 名前と職業
+    // 顔画像を追加（左側に配置）
+    const faceImage = this.scene.add.image(4, 7.5, 'characterFace');
+    faceImage.setOrigin(0, 0);
+    faceImage.setDisplaySize(40, 40);
+    container.add(faceImage);
+
+    // 名前と職業（顔画像の右側に配置）
+    const textStartX = 52; // 4 + 40 + 8 (画像位置 + 画像幅 + 余白)
+    
     const nameText = this.scene.add.text(
-      4,
+      textStartX,
       4,
       `${isCommander ? '[指揮官] ' : ''}${character.getName()}`,
       {
@@ -114,7 +122,7 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     );
     container.add(nameText);
 
-    const jobText = this.scene.add.text(4, 18, `職業: ${character.getJobType()}`, {
+    const jobText = this.scene.add.text(textStartX, 18, `職業: ${character.getJobType()}`, {
       fontSize: '9px',
       color: '#cccccc',
       resolution: 2,
@@ -127,18 +135,18 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const hpRatio = stats.hp / stats.maxHp;
 
     // HPバーの背景
-    const hpBarBg = this.scene.add.rectangle(4, 32, 80, 6, 0x444444);
+    const hpBarBg = this.scene.add.rectangle(textStartX, 32, 80, 6, 0x444444);
     hpBarBg.setOrigin(0, 0);
     container.add(hpBarBg);
 
     // HPバー
     const hpBarColor = hpRatio > 0.5 ? 0x00ff00 : hpRatio > 0.25 ? 0xffff00 : 0xff0000;
-    const hpBar = this.scene.add.rectangle(4, 32, 80 * hpRatio, 6, hpBarColor);
+    const hpBar = this.scene.add.rectangle(textStartX, 32, 80 * hpRatio, 6, hpBarColor);
     hpBar.setOrigin(0, 0);
     container.add(hpBar);
 
     // HP数値
-    const hpText = this.scene.add.text(88, 30, `${stats.hp}/${stats.maxHp}`, {
+    const hpText = this.scene.add.text(textStartX + 84, 30, `${stats.hp}/${stats.maxHp}`, {
       fontSize: '8px',
       color: '#ffffff',
       resolution: 2,
@@ -150,7 +158,7 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const items = itemHolder.items;
     if (items.length > 0) {
       const itemText = this.scene.add.text(
-        4,
+        textStartX,
         44,
         `装備: ${items.map((item: IItem) => item.name).join(', ')}`,
         {

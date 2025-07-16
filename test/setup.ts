@@ -125,6 +125,16 @@ jest.mock('phaser', () => ({
         destroy: jest.fn(),
       })),
       existing: jest.fn(),
+      image: jest.fn((x, y, texture) => ({
+        x,
+        y,
+        texture,
+        setOrigin: jest.fn().mockReturnThis(),
+        setDisplaySize: jest.fn().mockReturnThis(),
+        setPosition: jest.fn().mockReturnThis(),
+        setDepth: jest.fn().mockReturnThis(),
+        destroy: jest.fn(),
+      })),
     };
     load = {
       on: jest.fn(),
@@ -206,6 +216,19 @@ jest.mock('phaser', () => ({
         center.y = this.y || 0;
         return center;
       });
+      destroy = jest.fn();
+    },
+    Image: class MockImage {
+      constructor(
+        public scene: any,
+        public x: number,
+        public y: number,
+        public texture: string,
+      ) {}
+      setOrigin = jest.fn().mockReturnThis();
+      setDisplaySize = jest.fn().mockReturnThis();
+      setPosition = jest.fn().mockReturnThis();
+      setDepth = jest.fn().mockReturnThis();
       destroy = jest.fn();
     },
     Graphics: class MockGraphics {
@@ -325,6 +348,16 @@ export const createMockScene = () => {
         lineTo: jest.fn().mockReturnThis(),
         strokePath: jest.fn().mockReturnThis(),
         clear: jest.fn().mockReturnThis(),
+        setPosition: jest.fn().mockReturnThis(),
+        setDepth: jest.fn().mockReturnThis(),
+        destroy: jest.fn(),
+      })),
+      image: jest.fn((x: number, y: number, texture: string) => ({
+        x,
+        y,
+        texture,
+        setOrigin: jest.fn().mockReturnThis(),
+        setDisplaySize: jest.fn().mockReturnThis(),
         setPosition: jest.fn().mockReturnThis(),
         setDepth: jest.fn().mockReturnThis(),
         destroy: jest.fn(),
