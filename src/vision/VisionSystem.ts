@@ -164,7 +164,7 @@ export class VisionSystem {
     // 全味方軍団の視界を統合
     factionArmies.forEach((army) => {
       const visionAreas = this.calculateVision(army);
-      
+
       // 各メンバーの視界タイルを追加
       visionAreas.forEach((visionArea) => {
         const tiles = this.getVisibleTiles(visionArea.center, visionArea.effectiveRange);
@@ -198,9 +198,10 @@ export class VisionSystem {
 
     // 共有視界データを取得（キャッシュも利用）
     const cachedData = this.factionVisionCache.get(viewerFaction);
-    const sharedVision = cachedData && (Date.now() - cachedData.lastUpdated < 100) 
-      ? cachedData 
-      : this.getSharedVisionForFaction(viewerFaction, factionArmies);
+    const sharedVision =
+      cachedData && Date.now() - cachedData.lastUpdated < 100
+        ? cachedData
+        : this.getSharedVisionForFaction(viewerFaction, factionArmies);
 
     // 対象軍団の位置が視界内にあるかチェック
     const targetPos = targetArmy.getPosition();
@@ -213,7 +214,11 @@ export class VisionSystem {
   /**
    * 勢力から見える敵軍団のリストを取得
    */
-  getVisibleEnemyArmies(viewerFaction: FactionType, factionArmies: Army[], enemyArmies: Army[]): Army[] {
+  getVisibleEnemyArmies(
+    viewerFaction: FactionType,
+    factionArmies: Army[],
+    enemyArmies: Army[],
+  ): Army[] {
     const visibleEnemies: Army[] = [];
 
     enemyArmies.forEach((enemy) => {

@@ -62,8 +62,7 @@ export class DiscoverySystem {
     observers.forEach((observer) => {
       const observerPos = observer.getPosition();
       const distance = Math.sqrt(
-        Math.pow(targetPos.x - observerPos.x, 2) +
-        Math.pow(targetPos.y - observerPos.y, 2)
+        Math.pow(targetPos.x - observerPos.x, 2) + Math.pow(targetPos.y - observerPos.y, 2),
       );
 
       if (distance < minDistance) {
