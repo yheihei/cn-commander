@@ -45,7 +45,7 @@ export class UIManager {
     const menuY = commanderPos.y;
 
     this.currentSelectedArmy = army;
-    
+
     // 軍団情報パネルを表示
     this.showArmyInfo(army);
 

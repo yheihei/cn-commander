@@ -78,17 +78,17 @@ describe('[エピック12] Army UI System Integration Tests', () => {
 
     test('軍団選択解除時に情報パネルが非表示になる', () => {
       const mockArmy = createMockArmy();
-      
+
       // 軍団を選択
       uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn());
-      
+
       // hideArmyInfoが呼ばれることを確認
       const hideArmyInfoSpy = jest.spyOn(uiManager, 'hideArmyInfo');
-      
+
       // アクションメニューをキャンセル（内部でhideArmyInfoが呼ばれる）
       const onCancel = jest.fn();
       uiManager.showActionMenu(mockArmy, jest.fn(), onCancel);
-      
+
       // onCancelコールバックを実行（実際のUIでキャンセルボタンをクリックした場合の動作）
       const actionMenu = (uiManager as any).actionMenu;
       if (actionMenu) {
@@ -97,7 +97,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
           cancelCallback();
         }
       }
-      
+
       expect(hideArmyInfoSpy).toHaveBeenCalled();
     });
   });
@@ -105,36 +105,36 @@ describe('[エピック12] Army UI System Integration Tests', () => {
   describe('軍団状態の更新', () => {
     test('移動状態の変化が情報パネルに反映される', () => {
       const mockArmy = createMockArmy();
-      
+
       // 軍団を選択して情報パネルを表示
       uiManager.showArmyInfo(mockArmy);
-      
+
       // updateArmyInfoが正しく動作することを確認
       const updateArmyInfoSpy = jest.spyOn(uiManager, 'updateArmyInfo');
-      
+
       // 移動状態を変更
       mockArmy.setMovementMode(MovementMode.COMBAT);
       mockArmy.startMovement({ x: 200, y: 200 }, MovementMode.COMBAT);
-      
+
       // 情報を更新
       uiManager.updateArmyInfo(mockArmy);
-      
+
       expect(updateArmyInfoSpy).toHaveBeenCalledWith(mockArmy);
     });
 
     test('メンバーのHP変化が情報パネルに反映される', () => {
       const mockArmy = createMockArmy();
-      
+
       // 軍団を選択して情報パネルを表示
       uiManager.showArmyInfo(mockArmy);
-      
+
       // メンバーのHPを変更
       const commander = mockArmy.getCommander();
       commander.takeDamage(20);
-      
+
       // 情報を更新
       uiManager.updateArmyInfo(mockArmy);
-      
+
       // HPが更新されていることを確認（実際のパネル内容は内部実装による）
       expect(commander.getStats().hp).toBe(80); // 100 - 20
     });
@@ -143,7 +143,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
   describe('装備アイテムの表示', () => {
     test('メンバーの装備アイテムが表示される', () => {
       const mockArmy = createMockArmy();
-      
+
       // 武器を装備
       const weapon = new Weapon({
         id: 'weapon1',
@@ -156,14 +156,14 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         price: 300,
         description: '忍者刀',
       });
-      
+
       const commander = mockArmy.getCommander();
       commander.getItemHolder().addItem(weapon);
       commander.getItemHolder().equipWeapon(weapon);
-      
+
       // 軍団を選択して情報パネルを表示
       uiManager.showArmyInfo(mockArmy);
-      
+
       // アイテムが装備されていることを確認
       const equipped = commander.getItemHolder().getEquippedWeapon();
       expect(equipped).toBe(weapon);
@@ -171,7 +171,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
 
     test('消耗品アイテムも表示される', () => {
       const mockArmy = createMockArmy();
-      
+
       // 消耗品を所持
       const consumable = new Consumable({
         id: 'consumable1',
@@ -181,13 +181,13 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         price: 50,
         description: 'HP全回復',
       });
-      
+
       const commander = mockArmy.getCommander();
       commander.getItemHolder().addItem(consumable);
-      
+
       // 軍団を選択して情報パネルを表示
       uiManager.showArmyInfo(mockArmy);
-      
+
       // アイテムが所持されていることを確認
       const items = commander.getItemHolder().items;
       expect(items).toContain(consumable);
@@ -198,11 +198,11 @@ describe('[エピック12] Army UI System Integration Tests', () => {
     test('別の軍団を選択すると情報が切り替わる', () => {
       const mockArmy1 = createMockArmy('第一軍団');
       const mockArmy2 = createMockArmy('第二軍団');
-      
+
       // 最初の軍団を選択
       uiManager.showActionMenu(mockArmy1, jest.fn(), jest.fn());
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy1);
-      
+
       // 別の軍団を選択
       uiManager.hideActionMenu();
       uiManager.showActionMenu(mockArmy2, jest.fn(), jest.fn());
