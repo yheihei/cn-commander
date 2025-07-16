@@ -29,7 +29,6 @@ Thumbs.db
 .env.production.local
 
 # Package lock files (keep only one)
-package-lock.json
 yarn.lock
 
 # Temporary files
