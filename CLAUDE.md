@@ -22,6 +22,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `gh` コマンドを使うこと
 
+### 具体的なgit操作例
+- `gh pr create`: プルリクエスト作成
+- `gh pr list`: PRの一覧表示
+- `gh issue create`: イシュー作成
+- `gh repo view --web`: リポジトリをブラウザで開く
+
 ## タスクの遂行方法
 
 適用条件: 実装を依頼された時。
@@ -155,3 +161,13 @@ TypeScript型定義：
 - モックベースの統合テストを採用（Phaser HEADLESSモードは不安定なため）
 - エピック単位でテストを構成（`test/integration/epic-XX-name/`）
 - ビジネスロジックに焦点を当て、描画処理はモック化
+
+### UIの表示方式
+- **固定位置UI**: 画面に固定されたUI要素
+  - カメラの表示範囲（worldView）を基準に配置
+  - カメラのスクロールに追従して位置を更新
+  - 例：ArmyInfoPanel（右側）、ActionMenu（左側）、MovementModeMenu（左側）
+- **ワールド座標UI**: ゲーム世界に配置されるUI要素
+  - ゲームオブジェクトの位置に相対的に配置
+  - カメラのスクロールとズームの影響を受ける
+  - 例：WaypointMarker（経路マーカー）
