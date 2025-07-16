@@ -1,5 +1,12 @@
 import { Position } from './CharacterTypes';
 import { Character } from '../character/Character';
+import { Army } from '../army/Army';
+
+export interface SharedVisionData {
+  visibleArmies: Set<Army>;
+  visibleTiles: Set<string>; // "x,y"形式のキー
+  lastUpdated: number;
+}
 
 export interface VisionArea {
   character: Character;

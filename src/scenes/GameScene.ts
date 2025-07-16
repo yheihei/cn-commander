@@ -417,6 +417,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateVisionAndDiscovery(): void {
+    // 視界キャッシュをクリア（フレームごとに最新の視界を計算）
+    this.visionSystem.clearVisionCache();
+
     // 全軍団を取得
     const allArmies = this.armyManager.getAllArmies();
 
@@ -424,7 +427,7 @@ export class GameScene extends Phaser.Scene {
     const playerArmies = allArmies.filter((army) => army.isPlayerArmy());
     const enemyArmies = allArmies.filter((army) => army.isEnemyArmy());
 
-    // 発見チェック
+    // 発見チェック（視界共有を考慮）
     this.discoverySystem.checkDiscovery(playerArmies, enemyArmies);
   }
 
