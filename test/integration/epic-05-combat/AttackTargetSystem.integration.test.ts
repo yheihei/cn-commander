@@ -12,25 +12,29 @@ describe('[エピック5] 攻撃目標指定システム統合テスト', () => 
 
   beforeEach(() => {
     scene = createMockScene();
-    
+
     // 簡易的なマップデータを作成
     const mapData: MapData = {
       name: 'testMap',
       width: 50,
       height: 50,
       tileSize: 16,
-      layers: [{
-        name: 'terrain',
-        tiles: Array(50).fill(null).map(() => Array(50).fill(TileType.PLAIN)),
-        visible: true,
-      }],
+      layers: [
+        {
+          name: 'terrain',
+          tiles: Array(50)
+            .fill(null)
+            .map(() => Array(50).fill(TileType.PLAIN)),
+          visible: true,
+        },
+      ],
       startPositions: {
         player: { x: 10, y: 10 },
         enemy: { x: 40, y: 40 },
       },
       bases: [],
     };
-    
+
     mapManager = new MapManager(scene);
     mapManager.loadMap(mapData);
     armyManager = new ArmyManager(scene);
@@ -43,7 +47,7 @@ describe('[エピック5] 攻撃目標指定システム統合テスト', () => 
 
       // 敵軍団を作成
       const enemyArmy = ArmyFactory.createEnemyArmyAtGrid(scene, armyManager, 20, 20);
-      
+
       if (!playerArmy || !enemyArmy) {
         throw new Error('Failed to create armies');
       }
@@ -59,7 +63,7 @@ describe('[エピック5] 攻撃目標指定システム統合テスト', () => 
     test('攻撃目標を解除できる', () => {
       const playerArmy = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       const enemyArmy = ArmyFactory.createEnemyArmyAtGrid(scene, armyManager, 20, 20);
-      
+
       if (!playerArmy || !enemyArmy) {
         throw new Error('Failed to create armies');
       }
@@ -76,7 +80,7 @@ describe('[エピック5] 攻撃目標指定システム統合テスト', () => 
     test('攻撃目標が撃破された場合、自動的に解除される', () => {
       const playerArmy = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
       const enemyArmy = ArmyFactory.createEnemyArmyAtGrid(scene, armyManager, 20, 20);
-      
+
       if (!playerArmy || !enemyArmy) {
         throw new Error('Failed to create armies');
       }
@@ -87,11 +91,11 @@ describe('[エピック5] 攻撃目標指定システム統合テスト', () => 
 
       // 敵軍団の全メンバーを撃破（軍団が非アクティブになる）
       const enemyMembers = enemyArmy.getAllMembers();
-      enemyMembers.forEach(member => {
+      enemyMembers.forEach((member) => {
         const stats = member.getStats();
         member.takeDamage(stats.hp);
       });
-      
+
       // 敵軍団が非アクティブになったことを確認
       expect(enemyArmy.isActive()).toBe(false);
 

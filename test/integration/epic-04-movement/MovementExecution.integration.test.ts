@@ -7,6 +7,7 @@ import { MovementCommandSystem } from '../../../src/movement/MovementCommand';
 import { ArmyFactory } from '../../../src/army/ArmyFactory';
 import { MovementMode } from '../../../src/types/MovementTypes';
 import { createMockScene } from '../../setup';
+import { VisionSystem } from '../../../src/vision/VisionSystem';
 
 describe('[エピック4] Movement Execution Integration Tests', () => {
   let scene: any;
@@ -16,6 +17,7 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
   let commandSystem: MovementCommandSystem;
   let inputHandler: MovementInputHandler;
   let uiManager: UIManager;
+  let visionSystem: VisionSystem;
 
   beforeEach(() => {
     scene = createMockScene();
@@ -24,12 +26,14 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
     commandSystem = new MovementCommandSystem();
     movementManager = new MovementManager(scene, armyManager, mapManager, commandSystem);
     uiManager = new UIManager(scene);
+    visionSystem = new VisionSystem(mapManager);
     inputHandler = new MovementInputHandler(
       scene,
       armyManager,
       mapManager,
       commandSystem,
       uiManager,
+      visionSystem,
     );
 
     // テスト用のマップを設定

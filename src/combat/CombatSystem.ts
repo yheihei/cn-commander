@@ -82,6 +82,39 @@ export class CombatSystem {
       return;
     }
 
+    // 攻撃目標が設定されている場合の処理
+    const attackTarget = attackerArmy.getAttackTarget();
+    if (attackTarget && attackTarget.isActive() && attackTarget.isDiscovered()) {
+      console.log(`CombatSystem: ${attackerArmy.getName()} は攻撃目標 ${attackTarget.getName()} を優先攻撃します`);
+      // 攻撃目標の軍団メンバーのみを対象にする
+      const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
+      const validTargets = targetMembers.filter((enemy) => enemy.isAlive());
+
+      if (validTargets.length === 0) return;
+
+      // 距離順にソート（近い順）
+      const sortedTargets = this.rangeCalculator.sortByDistance(attacker, validTargets);
+
+      // 最も近い敵から順に射程内かチェック
+      let target: Character | null = null;
+      for (const enemy of sortedTargets) {
+        if (this.rangeCalculator.isInRange(attacker, enemy)) {
+          target = enemy;
+          break;
+        }
+      }
+
+      if (!target) {
+        // 攻撃目標が射程外の場合は攻撃しない
+        return;
+      }
+
+      // 攻撃を実行
+      this.executeAttack(attacker, target);
+      return;
+    }
+
+    // 攻撃目標が設定されていない場合は通常の処理
     // 敵軍団を取得
     const enemyArmies = this.getEnemyArmies(attackerArmy);
 
@@ -113,6 +146,11 @@ export class CombatSystem {
       return;
     }
 
+    // 攻撃を実行
+    this.executeAttack(attacker, target);
+  }
+
+  private executeAttack(attacker: Character, target: Character): void {
     // 攻撃エフェクトを表示
     const weapon = attacker.getItemHolder().getEquippedWeapon();
     if (weapon) {
@@ -134,8 +172,29 @@ export class CombatSystem {
   }
 
   private hasEnemiesInRange(army: Army): boolean {
-    const enemyArmies = this.getEnemyArmies(army);
     const allMembers = [army.getCommander(), ...army.getSoldiers()];
+
+    // 攻撃目標が設定されている場合
+    const attackTarget = army.getAttackTarget();
+    if (attackTarget && attackTarget.isActive() && attackTarget.isDiscovered()) {
+      // 軍団の各メンバーについて、攻撃目標が射程内にいるかチェック
+      for (const member of allMembers) {
+        if (!member.isAlive() || !this.combatCalculator.canAttack(member)) {
+          continue;
+        }
+
+        const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
+        for (const enemy of targetMembers) {
+          if (enemy.isAlive() && this.rangeCalculator.isInRange(member, enemy)) {
+            return true; // 攻撃目標が射程内にいる
+          }
+        }
+      }
+      return false; // 攻撃目標が射程外
+    }
+
+    // 攻撃目標が設定されていない場合は通常の処理
+    const enemyArmies = this.getEnemyArmies(army);
 
     // 軍団の各メンバーについて、射程内に敵がいるかチェック
     for (const member of allMembers) {

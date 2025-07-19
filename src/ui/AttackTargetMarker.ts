@@ -60,7 +60,7 @@ export class AttackTargetMarker extends Phaser.GameObjects.Container {
     // 赤い十字マーカーを描画
     const size = 20 * scale;
     this.targetMarker.lineStyle(2, 0xff0000, 0.8);
-    
+
     // 十字を描画
     this.targetMarker.beginPath();
     this.targetMarker.moveTo(-size, 0);
@@ -72,7 +72,7 @@ export class AttackTargetMarker extends Phaser.GameObjects.Container {
     // 四隅の角を描画
     const cornerSize = size * 0.3;
     const cornerOffset = size * 0.7;
-    
+
     // 左上
     this.targetMarker.beginPath();
     this.targetMarker.moveTo(-cornerOffset, -cornerOffset);

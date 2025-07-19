@@ -25,6 +25,7 @@ export class MovementInputHandler {
   private pathLines: Phaser.GameObjects.Graphics | null = null;
   private isSettingPath: boolean = false;
   private isSelectingAction: boolean = false;
+  private isAttackTargetMode: boolean = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -61,6 +62,12 @@ export class MovementInputHandler {
   }
 
   private handleLeftClick(x: number, y: number): void {
+    // 攻撃目標指定モード中は何もしない
+    if (this.isAttackTargetMode) {
+      console.log('MovementInputHandler: 攻撃目標指定モード中なのでクリックを無視');
+      return;
+    }
+
     // UIが表示されている場合は何もしない
     if (this.uiManager.isAnyMenuVisible()) {
       return;
@@ -80,7 +87,12 @@ export class MovementInputHandler {
   }
 
   private handleRightClick(): void {
-    if (this.isSettingPath) {
+    if (this.isAttackTargetMode) {
+      // 攻撃目標指定モードをキャンセル
+      this.isAttackTargetMode = false;
+      this.uiManager.hideGuideMessage();
+      console.log('MovementInputHandler: 右クリックで攻撃目標指定モードをキャンセル');
+    } else if (this.isSettingPath) {
       // 経路設定をキャンセル
       this.cancelPathSetting();
     } else {
@@ -115,6 +127,9 @@ export class MovementInputHandler {
     this.selectedArmy = army;
     this.highlightCommander(army);
 
+    // 攻撃目標の有無を確認
+    const hasAttackTarget = army.hasAttackTarget();
+
     // アクションメニューを表示
     this.uiManager.showActionMenu(
       army,
@@ -134,10 +149,16 @@ export class MovementInputHandler {
         this.startAttackTargetSelection();
       },
       () => {
+        // 攻撃目標解除が選択された
+        this.isSelectingAction = false;
+        this.clearAttackTarget();
+      },
+      () => {
         // キャンセルされた
         this.isSelectingAction = false;
         this.deselectArmy();
       },
+      hasAttackTarget,
     );
   }
 
@@ -347,23 +368,58 @@ export class MovementInputHandler {
     // 攻撃目標選択モード開始時に軍団情報パネルを非表示にする
     this.uiManager.hideArmyInfo();
 
-    // 攻撃目標選択モードを開始
-    new AttackTargetInputHandler(
-      this.scene,
-      this.armyManager,
-      this.visionSystem,
-      this.selectedArmy,
-      (target: Army) => {
-        // 目標が選択された
-        if (this.selectedArmy) {
-          this.selectedArmy.setAttackTarget(target);
-          console.log(`${this.selectedArmy.getName()} の攻撃目標を ${target.getName()} に設定しました`);
-        }
-      },
-      () => {
-        // キャンセルされた
-      },
-    );
+    // 攻撃目標指定モードフラグを設定
+    this.isAttackTargetMode = true;
+    console.log('MovementInputHandler: 攻撃目標指定モード開始');
+
+    // ガイドメッセージを先に表示
+    this.uiManager.showGuideMessage('攻撃目標を選択してください');
+
+    // 1秒待ってから攻撃目標選択モードを開始（誤クリック防止）
+    this.scene.time.delayedCall(1000, () => {
+      if (!this.selectedArmy || !this.isAttackTargetMode) {
+        // 既にキャンセルされている場合は何もしない
+        this.uiManager.hideGuideMessage();
+        return;
+      }
+
+      // 攻撃目標選択モードを開始
+      new AttackTargetInputHandler(
+        this.scene,
+        this.armyManager,
+        this.visionSystem,
+        this.selectedArmy,
+        (target: Army) => {
+          // 目標が選択された
+          if (this.selectedArmy) {
+            this.selectedArmy.setAttackTarget(target);
+            console.log(
+              `${this.selectedArmy.getName()} の攻撃目標を ${target.getName()} に設定しました`,
+            );
+          }
+          // モードを解除
+          this.isAttackTargetMode = false;
+          console.log('MovementInputHandler: 攻撃目標指定モード終了');
+        },
+        () => {
+          // キャンセルされた
+          this.isAttackTargetMode = false;
+          console.log('MovementInputHandler: 攻撃目標指定モードキャンセル');
+        },
+        this.uiManager,
+      );
+    });
+  }
+
+  private clearAttackTarget(): void {
+    if (!this.selectedArmy) return;
+
+    // 攻撃目標を解除
+    this.selectedArmy.clearAttackTarget();
+    console.log(`${this.selectedArmy.getName()} の攻撃目標を解除しました`);
+
+    // 軍団情報パネルを更新
+    this.uiManager.updateArmyInfo(this.selectedArmy);
   }
 
   public destroy(): void {

@@ -74,7 +74,7 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     // 状態を更新
     const movementState = army.getMovementState();
     const statusText = this.getStatusText(movementState.mode, movementState.isMoving);
-    
+
     // 攻撃目標を含めて状態テキストを更新
     const attackTarget = army.getAttackTarget();
     let fullStatusText = `状態: ${statusText}`;

@@ -14,25 +14,29 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
 
   beforeEach(() => {
     scene = createMockScene();
-    
+
     // 簡易的なマップデータを作成
     const mapData: MapData = {
       name: 'testMap',
       width: 50,
       height: 50,
       tileSize: 16,
-      layers: [{
-        name: 'terrain',
-        tiles: Array(50).fill(null).map(() => Array(50).fill(TileType.PLAIN)),
-        visible: true,
-      }],
+      layers: [
+        {
+          name: 'terrain',
+          tiles: Array(50)
+            .fill(null)
+            .map(() => Array(50).fill(TileType.PLAIN)),
+          visible: true,
+        },
+      ],
       startPositions: {
         player: { x: 10, y: 10 },
         enemy: { x: 40, y: 40 },
       },
       bases: [],
     };
-    
+
     mapManager = new MapManager(scene);
     mapManager.loadMap(mapData);
     armyManager = new ArmyManager(scene);
@@ -46,7 +50,7 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       const onCancel = jest.fn();
 
       new ActionMenu({
-        scene: scene,
+        scene,
         x: 100,
         y: 100,
         onMove,
@@ -57,10 +61,10 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
 
       // 3つのボタンが作成されることを確認（移動、攻撃目標指定、待機）
       const rectangleCalls = scene.add.rectangle.mock.calls;
-      
+
       // 背景と3つのボタンの背景で計4回rectangleが呼ばれる
       expect(rectangleCalls.length).toBe(4);
-      
+
       // 背景の高さが160に調整されていることを確認（3つのボタン用）
       const backgroundCall = rectangleCalls[0];
       expect(backgroundCall[3]).toBe(160); // height引数 (x, y, width, height, fillColor, fillAlpha)
@@ -73,7 +77,7 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       const onCancel = jest.fn();
 
       new ActionMenu({
-        scene: scene,
+        scene,
         x: 100,
         y: 100,
         onMove,
@@ -86,11 +90,11 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       // 2番目のボタン（攻撃目標指定）のpointerdownハンドラーを取得
       const attackTargetButtonBg = scene.add.rectangle.mock.results[2].value;
       const pointerdownHandler = attackTargetButtonBg.on.mock.calls.find(
-        (call: any) => call[0] === 'pointerdown'
+        (call: any) => call[0] === 'pointerdown',
       )?.[1];
 
       expect(pointerdownHandler).toBeDefined();
-      
+
       // ハンドラーを実行
       pointerdownHandler();
 
@@ -108,7 +112,7 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
 
       // 敵軍団を作成
       const enemyArmy = ArmyFactory.createEnemyArmyAtGrid(scene, armyManager, 20, 20);
-      
+
       if (!playerArmy || !enemyArmy) {
         throw new Error('Failed to create armies');
       }
@@ -118,7 +122,7 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
 
       // ArmyInfoPanelを作成
       const armyInfoPanel = new ArmyInfoPanel({
-        scene: scene,
+        scene,
         x: 100,
         y: 100,
         width: 300,
@@ -132,28 +136,28 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       // statusTextのsetTextメソッドが呼ばれているか確認
       const textInstances = scene.add.text.mock.results;
       const statusTextInstance = textInstances[1]?.value; // 2番目のテキストがstatusText
-      
+
       expect(statusTextInstance).toBeDefined();
       expect(statusTextInstance.setText).toHaveBeenCalled();
-      
+
       // setTextが攻撃目標情報を含むテキストで呼ばれたか確認
       const setTextCalls = statusTextInstance.setText.mock.calls;
-      const hasAttackTargetCall = setTextCalls.some((call: any) =>
-        call[0] && call[0].includes('攻撃目標:')
+      const hasAttackTargetCall = setTextCalls.some(
+        (call: any) => call[0] && call[0].includes('攻撃目標:'),
       );
-      
+
       expect(hasAttackTargetCall).toBe(true);
     });
 
     test('攻撃目標が設定されていない場合は表示されない', () => {
       const playerArmy = ArmyFactory.createPlayerArmyAtGrid(scene, armyManager, 10, 10);
-      
+
       if (!playerArmy) {
         throw new Error('Failed to create army');
       }
 
       const armyInfoPanel = new ArmyInfoPanel({
-        scene: scene,
+        scene,
         x: 100,
         y: 100,
         width: 300,
@@ -167,11 +171,11 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       const textSetCalls = scene.add.text.mock.results
         .map((result: any) => result.value.setText.mock.calls)
         .flat();
-      
-      const hasAttackTarget = textSetCalls.some((call: any) => 
-        call[0] && call[0].includes('攻撃目標:')
+
+      const hasAttackTarget = textSetCalls.some(
+        (call: any) => call[0] && call[0].includes('攻撃目標:'),
       );
-      
+
       expect(hasAttackTarget).toBe(false);
     });
   });
@@ -189,7 +193,7 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       });
 
       new ActionMenu({
-        scene: scene,
+        scene,
         x: 100,
         y: 100,
         onMove,
@@ -203,7 +207,7 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
 
       // 画面クリックのハンドラーを取得
       const pointerdownHandler = scene.input.on.mock.calls.find(
-        (call: any) => call[0] === 'pointerdown'
+        (call: any) => call[0] === 'pointerdown',
       )?.[1];
 
       expect(pointerdownHandler).toBeDefined();

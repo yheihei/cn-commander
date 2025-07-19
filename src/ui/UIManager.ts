@@ -10,6 +10,7 @@ export class UIManager {
   private movementModeMenu: MovementModeMenu | null = null;
   private armyInfoPanel: ArmyInfoPanel | null = null;
   private currentSelectedArmy: Army | null = null;
+  private guideMessage: Phaser.GameObjects.Container | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -44,7 +45,9 @@ export class UIManager {
     onMove: () => void,
     onStandby: () => void,
     onAttackTarget: () => void,
+    onClearAttackTarget: () => void,
     onCancel: () => void,
+    hasAttackTarget: boolean = false,
   ): void {
     // 既存のメニューがあれば削除
     this.hideActionMenu();
@@ -82,7 +85,13 @@ export class UIManager {
       onAttackTarget: () => {
         onAttackTarget();
         this.actionMenu = null;
-        // 攻撃目標指定を選択しても情報パネルは表示したままにする
+        // 攻撃目標指定を選択したら情報パネルを非表示
+        this.hideArmyInfo();
+      },
+      onClearAttackTarget: () => {
+        onClearAttackTarget();
+        this.actionMenu = null;
+        // 攻撃目標解除を選択しても情報パネルは表示したままにする
       },
       onCancel: () => {
         onCancel();
@@ -91,6 +100,7 @@ export class UIManager {
         // キャンセル時は情報パネルも非表示
         this.hideArmyInfo();
       },
+      hasAttackTarget,
     });
   }
 
@@ -221,10 +231,74 @@ export class UIManager {
     }
   }
 
+  public showGuideMessage(message: string): void {
+    console.log('UIManager.showGuideMessage:', message);
+    // 既存のガイドメッセージを削除
+    this.hideGuideMessage();
+
+    // カメラの現在の表示範囲を取得
+    const cam = this.scene.cameras.main;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+    const viewWidth = cam.worldView.width;
+
+    // 画面上部中央に配置
+    const x = viewLeft + viewWidth / 2;
+    const y = viewTop + 30;
+
+    // ガイドメッセージコンテナを作成
+    this.guideMessage = this.scene.add.container(x, y);
+
+    // 背景
+    const bg = this.scene.add.rectangle(0, 0, 300, 40, 0x000000, 0.8);
+    bg.setStrokeStyle(2, 0xffffff);
+    this.guideMessage.add(bg);
+
+    // テキスト
+    const text = this.scene.add.text(0, 0, message, {
+      fontSize: '14px',
+      color: '#ffffff',
+      align: 'center',
+    });
+    text.setOrigin(0.5);
+    this.guideMessage.add(text);
+
+    // UIレイヤーの最前面に表示
+    this.guideMessage.setDepth(1000);
+    console.log('UIManager.showGuideMessage: ガイドメッセージコンテナを作成しました', { x, y, message });
+  }
+
+  public hideGuideMessage(): void {
+    if (this.guideMessage) {
+      this.guideMessage.destroy();
+      this.guideMessage = null;
+    }
+  }
+
+  public update(): void {
+    // 軍団情報パネルの更新は既存のupdateArmyInfoで行う
+    if (this.currentSelectedArmy && this.armyInfoPanel) {
+      this.updateArmyInfo(this.currentSelectedArmy);
+    }
+
+    // ガイドメッセージの位置更新
+    if (this.guideMessage) {
+      const cam = this.scene.cameras.main;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const viewWidth = cam.worldView.width;
+
+      const x = viewLeft + viewWidth / 2;
+      const y = viewTop + 30;
+      this.guideMessage.setPosition(x, y);
+    }
+  }
+
   public destroy(): void {
     this.hideActionMenu();
     this.hideMovementModeMenu();
     this.hideArmyInfo();
+    this.hideGuideMessage();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();
       this.armyInfoPanel = null;

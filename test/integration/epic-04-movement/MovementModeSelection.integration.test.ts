@@ -52,10 +52,19 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         }),
         getPosition: () => ({ x: 100, y: 100 }),
         getAllMembers: () => [],
+        getAttackTarget: () => null,
+        hasAttackTarget: () => false,
       };
 
       // アクションメニューを表示
-      uiManager.showActionMenu(mockArmy as any, jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy as any,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
       expect(uiManager.isActionMenuVisible()).toBe(true);
       expect(uiManager.isAnyMenuVisible()).toBe(true);
 
@@ -81,9 +90,18 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         }),
         getPosition: () => ({ x: 100, y: 100 }),
         getAllMembers: () => [],
+        getAttackTarget: () => null,
+        hasAttackTarget: () => false,
       };
 
-      uiManager.showActionMenu(mockArmy as any, jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy as any,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
       expect(uiManager.isAnyMenuVisible()).toBe(true);
 
       uiManager.hideActionMenu();

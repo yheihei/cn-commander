@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { Army } from '../army/Army';
 import { ArmyManager } from '../army/ArmyManager';
 import { VisionSystem } from '../vision/VisionSystem';
+import { UIManager } from '../ui/UIManager';
 
 export class AttackTargetInputHandler {
   private scene: Phaser.Scene;
@@ -12,6 +13,7 @@ export class AttackTargetInputHandler {
   private onCancel: () => void;
   private isActive: boolean = false;
   private targetMarker: Phaser.GameObjects.Graphics | null = null;
+  private uiManager: UIManager | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -20,6 +22,7 @@ export class AttackTargetInputHandler {
     attackingArmy: Army,
     onTargetSelected: (target: Army) => void,
     onCancel: () => void,
+    uiManager?: UIManager,
   ) {
     this.scene = scene;
     this.armyManager = armyManager;
@@ -27,10 +30,13 @@ export class AttackTargetInputHandler {
     this.attackingArmy = attackingArmy;
     this.onTargetSelected = onTargetSelected;
     this.onCancel = onCancel;
+    this.uiManager = uiManager || null;
 
     this.setupInputHandlers();
     this.showSelectableTargets();
     this.isActive = true;
+
+    // ガイドメッセージはMovementInputHandlerで既に表示されているため、ここでは表示しない
   }
 
   private setupInputHandlers(): void {
@@ -42,18 +48,23 @@ export class AttackTargetInputHandler {
   }
 
   private handlePointerDown = (pointer: Phaser.Input.Pointer): void => {
+    console.log('AttackTargetInputHandler: handlePointerDown, isActive=', this.isActive);
     if (!this.isActive) return;
 
     if (pointer.leftButtonDown()) {
       const enemy = this.findEnemyAtPosition(pointer.worldX, pointer.worldY);
+      console.log('AttackTargetInputHandler: クリックした位置の敵=', enemy);
       if (enemy) {
+        console.log('AttackTargetInputHandler: 敵を選択:', enemy.getName());
         this.selectTarget(enemy);
       } else {
         // 敵軍団以外をクリックしたらキャンセル
+        console.log('AttackTargetInputHandler: 敵以外をクリックしたのでキャンセル');
         this.cancel();
       }
     } else if (pointer.rightButtonDown()) {
       // 右クリックでキャンセル
+      console.log('AttackTargetInputHandler: 右クリックでキャンセル');
       this.cancel();
     }
   };
@@ -73,9 +84,13 @@ export class AttackTargetInputHandler {
 
   private findEnemyAtPosition(x: number, y: number): Army | null {
     // 発見済みの敵軍団から選択可能なものを探す
-    const playerArmies = this.armyManager.getActiveArmies().filter(a => a.isPlayerArmy());
-    const enemyArmies = this.armyManager.getActiveArmies().filter(a => a.isEnemyArmy());
-    const visibleArmies = this.visionSystem.getVisibleEnemyArmies('player', playerArmies, enemyArmies);
+    const playerArmies = this.armyManager.getActiveArmies().filter((a) => a.isPlayerArmy());
+    const enemyArmies = this.armyManager.getActiveArmies().filter((a) => a.isEnemyArmy());
+    const visibleArmies = this.visionSystem.getVisibleEnemyArmies(
+      'player',
+      playerArmies,
+      enemyArmies,
+    );
 
     for (const army of visibleArmies) {
       if (army === this.attackingArmy) continue; // 自分自身は除外
@@ -93,9 +108,13 @@ export class AttackTargetInputHandler {
 
   private showSelectableTargets(): void {
     // 発見済みの敵軍団をハイライト表示
-    const playerArmies = this.armyManager.getActiveArmies().filter(a => a.isPlayerArmy());
-    const enemyArmies = this.armyManager.getActiveArmies().filter(a => a.isEnemyArmy());
-    const visibleArmies = this.visionSystem.getVisibleEnemyArmies('player', playerArmies, enemyArmies);
+    const playerArmies = this.armyManager.getActiveArmies().filter((a) => a.isPlayerArmy());
+    const enemyArmies = this.armyManager.getActiveArmies().filter((a) => a.isEnemyArmy());
+    const visibleArmies = this.visionSystem.getVisibleEnemyArmies(
+      'player',
+      playerArmies,
+      enemyArmies,
+    );
 
     for (const army of visibleArmies) {
       if (army === this.attackingArmy) continue;
@@ -108,9 +127,13 @@ export class AttackTargetInputHandler {
 
   private hideSelectableTargets(): void {
     // 全ての敵軍団のハイライトを解除
-    const playerArmies = this.armyManager.getActiveArmies().filter(a => a.isPlayerArmy());
-    const enemyArmies = this.armyManager.getActiveArmies().filter(a => a.isEnemyArmy());
-    const visibleArmies = this.visionSystem.getVisibleEnemyArmies('player', playerArmies, enemyArmies);
+    const playerArmies = this.armyManager.getActiveArmies().filter((a) => a.isPlayerArmy());
+    const enemyArmies = this.armyManager.getActiveArmies().filter((a) => a.isEnemyArmy());
+    const visibleArmies = this.visionSystem.getVisibleEnemyArmies(
+      'player',
+      playerArmies,
+      enemyArmies,
+    );
 
     for (const army of visibleArmies) {
       const commander = army.getCommander();
@@ -156,12 +179,30 @@ export class AttackTargetInputHandler {
 
   private selectTarget(target: Army): void {
     this.isActive = false;
+
+    // 一時的に「攻撃目標を指定しました」を表示
+    if (this.uiManager) {
+      this.uiManager.showGuideMessage('攻撃目標を指定しました');
+      // 2秒後に非表示
+      this.scene.time.delayedCall(2000, () => {
+        if (this.uiManager) {
+          this.uiManager.hideGuideMessage();
+        }
+      });
+    }
+
     this.cleanup();
     this.onTargetSelected(target);
   }
 
   private cancel(): void {
     this.isActive = false;
+
+    // ガイドメッセージを非表示
+    if (this.uiManager) {
+      this.uiManager.hideGuideMessage();
+    }
+
     this.cleanup();
     this.onCancel();
   }

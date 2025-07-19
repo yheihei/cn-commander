@@ -419,11 +419,8 @@ export class GameScene extends Phaser.Scene {
     // 戦闘システムの更新
     this.combatSystem.update(time, delta);
 
-    // 選択中の軍団のUI情報を更新
-    const selectedArmy = this.uiManager.getCurrentSelectedArmy();
-    if (selectedArmy) {
-      this.uiManager.updateArmyInfo(selectedArmy);
-    }
+    // UIシステムの更新
+    this.uiManager.update();
   }
 
   private updateVisionAndDiscovery(): void {

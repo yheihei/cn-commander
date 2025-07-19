@@ -7,7 +7,9 @@ export interface ActionMenuConfig {
   onMove?: () => void;
   onStandby?: () => void;
   onAttackTarget?: () => void;
+  onClearAttackTarget?: () => void;
   onCancel?: () => void;
+  hasAttackTarget?: boolean;
 }
 
 export class ActionMenu extends Phaser.GameObjects.Container {
@@ -18,7 +20,9 @@ export class ActionMenu extends Phaser.GameObjects.Container {
   private onMoveCallback?: () => void;
   private onStandbyCallback?: () => void;
   private onAttackTargetCallback?: () => void;
+  private onClearAttackTargetCallback?: () => void;
   private onCancelCallback?: () => void;
+  private hasAttackTarget: boolean;
 
   constructor(config: ActionMenuConfig) {
     super(config.scene, config.x, config.y);
@@ -26,7 +30,9 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.onMoveCallback = config.onMove;
     this.onStandbyCallback = config.onStandby;
     this.onAttackTargetCallback = config.onAttackTarget;
+    this.onClearAttackTargetCallback = config.onClearAttackTarget;
     this.onCancelCallback = config.onCancel;
+    this.hasAttackTarget = config.hasAttackTarget || false;
 
     // メニューの背景（3つのボタン用に高さを調整）
     this.background = config.scene.add.rectangle(0, 0, 120, 160, 0x333333, 0.9);
@@ -42,13 +48,23 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     });
     this.add(this.moveButton);
 
-    // 攻撃目標指定ボタン
-    this.attackTargetButton = this.createButton('攻撃目標指定', 0, 0, () => {
-      if (this.onAttackTargetCallback) {
-        this.onAttackTargetCallback();
-      }
-      this.hide();
-    });
+    // 攻撃目標指定/解除ボタン
+    const attackButtonText = this.hasAttackTarget ? '攻撃目標解除' : '攻撃目標指定';
+    const attackButtonCallback = this.hasAttackTarget
+      ? () => {
+          if (this.onClearAttackTargetCallback) {
+            this.onClearAttackTargetCallback();
+          }
+          this.hide();
+        }
+      : () => {
+          if (this.onAttackTargetCallback) {
+            this.onAttackTargetCallback();
+          }
+          this.hide();
+        };
+
+    this.attackTargetButton = this.createButton(attackButtonText, 0, 0, attackButtonCallback);
     this.add(this.attackTargetButton);
 
     // 待機ボタン
