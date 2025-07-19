@@ -20,7 +20,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
   private combatData: BaseCombatData;
 
   // ビジュアル要素
-  private baseSprite!: Phaser.GameObjects.Sprite;
+  private baseSprites: Phaser.GameObjects.Sprite[] = [];  // 2x2タイル用の4つのスプライト
   private hpBar!: Phaser.GameObjects.Graphics;
   private hpBarBg!: Phaser.GameObjects.Graphics;
   private ownerFlag!: Phaser.GameObjects.Sprite;
@@ -88,17 +88,28 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
    * ビジュアル要素の作成
    */
   private createVisuals(): void {
-    // 拠点スプライト（2x2タイル）
-    this.baseSprite = this.scene.add.sprite(0, 0, 'tilemap');
-    this.baseSprite.setDisplaySize(Base.TILE_SIZE * 2, Base.TILE_SIZE * 2);
-    this.add(this.baseSprite);
+    // 拠点スプライト（2x2の32pxタイル = 4つのスプライト）
+    // 各タイルの位置: 左上(-16,-16), 右上(16,-16), 左下(-16,16), 右下(16,16)
+    const positions = [
+      { x: -16, y: -16 }, // 左上
+      { x: 16, y: -16 },  // 右上
+      { x: -16, y: 16 },  // 左下
+      { x: 16, y: 16 }    // 右下
+    ];
+
+    positions.forEach((pos) => {
+      const sprite = this.scene.add.sprite(pos.x, pos.y, 'tilemap');
+      sprite.setDisplaySize(32, 32);
+      this.baseSprites.push(sprite);
+      this.add(sprite);
+    });
 
     // HPバー背景
     this.hpBarBg = this.scene.add.graphics();
     this.hpBarBg.fillStyle(0x000000, 0.5);
     this.hpBarBg.fillRect(
       -Base.HP_BAR_WIDTH / 2,
-      -Base.TILE_SIZE - 10,
+      -32 - 10,  // 64x64の半分上
       Base.HP_BAR_WIDTH,
       Base.HP_BAR_HEIGHT,
     );
@@ -109,12 +120,12 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     this.add(this.hpBar);
 
     // 所属フラグ
-    this.ownerFlag = this.scene.add.sprite(Base.TILE_SIZE * 0.75, -Base.TILE_SIZE * 0.75, 'icons');
+    this.ownerFlag = this.scene.add.sprite(24, -24, 'icons');
     this.ownerFlag.setDisplaySize(12, 12);
     this.add(this.ownerFlag);
 
     // 拠点名（非表示状態で作成）
-    this.nameText = this.scene.add.text(0, Base.TILE_SIZE + 5, this.baseData.name, {
+    this.nameText = this.scene.add.text(0, 32 + 5, this.baseData.name, {
       fontSize: '10px',
       color: '#ffffff',
       stroke: '#000000',
@@ -127,10 +138,10 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     // インタラクティブ設定
     this.setInteractive(
       new Phaser.Geom.Rectangle(
-        -Base.TILE_SIZE,
-        -Base.TILE_SIZE,
-        Base.TILE_SIZE * 2,
-        Base.TILE_SIZE * 2,
+        -32,
+        -32,
+        64,
+        64,
       ),
       Phaser.Geom.Rectangle.Contains,
     );
@@ -169,15 +180,25 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
    */
   public updateVisual(): void {
     // ビジュアル要素が存在しない場合はスキップ
-    if (!this.baseSprite) return;
+    if (this.baseSprites.length === 0) return;
 
     // スプライトフレームの設定
     const visualConfig = this.getVisualConfig();
-    if (visualConfig.frame !== undefined) {
-      this.baseSprite.setFrame(visualConfig.frame);
-    }
-    if (visualConfig.tint) {
-      this.baseSprite.setTint(visualConfig.tint);
+    if (visualConfig.frame !== undefined && typeof visualConfig.frame === 'number') {
+      // 2x2タイルのフレーム番号を設定
+      // 左上タイルのフレーム番号を基準に、右上(+1)、左下(+8)、右下(+9)
+      const baseFrame = visualConfig.frame;
+      const frames = [
+        baseFrame,      // 左上
+        baseFrame + 1,  // 右上
+        baseFrame + 8,  // 左下
+        baseFrame + 9   // 右下
+      ];
+
+      this.baseSprites.forEach((sprite, index) => {
+        sprite.setFrame(frames[index]);
+        // tintは使用しない
+      });
     }
 
     // HPバーの更新
@@ -191,51 +212,15 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
    * ビジュアル設定の取得
    */
   private getVisualConfig(): BaseVisualConfig {
-    // pipo-map001.pngは32タイル幅なので、城のフレームは以下の通り
-    // 青い城: 17段目の左から3番目 (16 * 32 + 2 = 514)
-    // 灰色の城: 21段目の左から1番目 (20 * 32 + 0 = 640)
-    // 紫の城: 21段目の左から3番目 (20 * 32 + 2 = 642)
-    let frame: number;
-    let tint: number | undefined;
-
-    switch (this.baseData.type) {
-      case BaseType.PLAYER_HQ:
-      case BaseType.HEADQUARTERS:
-        if (this.baseData.owner === 'player') {
-          frame = 514; // 青い城
-        } else {
-          frame = 642; // 紫の城
-        }
-        break;
-      case BaseType.ENEMY_HQ:
-        frame = 642; // 紫の城
-        break;
-      case BaseType.NEUTRAL:
-      case BaseType.NORMAL_BASE:
-        frame = 640; // 灰色の城
-        if (this.baseData.owner === 'player') {
-          tint = 0x8888ff;
-        } else if (this.baseData.owner === 'enemy') {
-          tint = 0xff8888;
-        }
-        break;
-      case BaseType.PLAYER_OCCUPIED:
-        frame = 640; // 灰色の城を青っぽくtint
-        tint = 0x8888ff;
-        break;
-      case BaseType.ENEMY_OCCUPIED:
-        frame = 640; // 灰色の城を赤っぽくtint
-        tint = 0xff8888;
-        break;
-      default:
-        frame = 640;
-    }
+    // pipo-map001.pngは32x32タイルで構成（256px ÷ 32px = 8タイル幅）
+    // 城の画像は x:4~5タイル目, y:7~8タイル目にある
+    // 左上タイルは (7行目, 4列目) = フレーム番号 (6 × 8) + 3 = 51
+    const frame = 51; // すべての拠点で同じ城の画像を使用
 
     return {
       texture: 'tilemap',
       frame,
       tileSize: { width: 2, height: 2 },
-      tint,
     };
   }
 
@@ -261,7 +246,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     this.hpBar.fillStyle(color, 1);
     this.hpBar.fillRect(
       -Base.HP_BAR_WIDTH / 2,
-      -Base.TILE_SIZE - 10,
+      -32 - 10,  // 64x64の半分上
       Base.HP_BAR_WIDTH * hpRatio,
       Base.HP_BAR_HEIGHT,
     );
@@ -402,10 +387,10 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
   // === エフェクト ===
 
   private showDamageEffect(): void {
-    if (!this.baseSprite) return;
+    if (this.baseSprites.length === 0) return;
 
     // 赤くフラッシュ
-    this.baseSprite.setTint(0xff0000);
+    this.baseSprites.forEach(sprite => sprite.setTint(0xff0000));
     if (this.scene && this.scene.time) {
       this.scene.time.delayedCall(100, () => {
         this.updateVisual(); // 元の色に戻す
@@ -415,7 +400,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
 
   private setDestroyed(): void {
     // 破壊状態のビジュアル
-    if (this.baseSprite) this.baseSprite.setTint(0x666666);
+    this.baseSprites.forEach(sprite => sprite.setTint(0x666666));
     if (this.hpBar) this.hpBar.setVisible(false);
     if (this.hpBarBg) this.hpBarBg.setVisible(false);
 

@@ -180,9 +180,10 @@ export class PreloadScene extends Phaser.Scene {
 
   private loadBaseAssets(): void {
     // pipo-map001.pngを読み込み（城のスプライトを含む）
+    // 32x32ピクセルのタイルとして読み込む
     this.load.spritesheet('tilemap', 'assets/images/tilemaps/pipo-map001.png', {
-      frameWidth: 16,
-      frameHeight: 16,
+      frameWidth: 32,
+      frameHeight: 32,
     });
 
     // アイコン用のダミー画像（今は武器画像を流用）
