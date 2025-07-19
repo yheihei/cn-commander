@@ -79,7 +79,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 開発コマンド
 
 ### 基本コマンド
-- `npm run dev` - 開発サーバーを起動（http://localhost:8080 でアクセス可能）
+- `npm run dev` - 開発サーバーを起動（http://localhost:8081 でアクセス可能）
 - `npm run build` - プロダクションビルドを作成
 - `npm run serve` - ビルドしたファイルをローカルサーバーで確認
 
@@ -96,10 +96,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run format:check` - フォーマットのチェックのみ（変更なし）
 - `npm run typecheck` - TypeScriptの型チェック
 
+### 開発環境の設定
+- **TypeScript**: 厳格モード有効（`strict: true`）、未使用変数検出有効
+- **ESLint**: 新しいフラットコンフィグ形式を使用
+- **Prettier**: 行幅100文字、シングルクォート使用、セミコロン必須
+- **テストタイムアウト**: 10秒/テスト
+- **モジュールエイリアス**: `@/`で`src/`を参照可能
+
 ## アーキテクチャ概要
 
 ### ゲーム構成
 本ゲームは2DドットRTSゲーム「クリプト忍者咲耶コマンダー」で、Phaser3を使用して構築されています。
+
+### コアゲームコンセプト
+- **軍団制**: 1軍団 = 1指揮官 + 3一般兵の4人構成が基本単位
+- **リアルタイム戦闘**: 各キャラクターが個別のHPを持ち、自動で攻撃
+- **拠点戦略**: 拠点占領による収入確保と軍団生産
+- **地形効果**: 平地・森林・山地による移動速度と戦闘への影響
+- **視界システム**: 職業と地形による視界範囲の変化、敵の発見メカニクス
 
 ### ディレクトリ構造と責務
 
@@ -150,6 +164,23 @@ TypeScript型定義：
 - 各システムで使用する型定義を集約
 - `global.d.ts` - グローバル型定義
 
+#### `src/base/`
+拠点システム：
+- `Base` - 拠点エンティティ（HP、防御力、所属）
+- `BaseManager` - 全拠点の管理
+- `BaseCombatSystem` - 拠点への攻撃処理
+
+#### `src/combat/`
+戦闘システム：
+- `CombatCalculator` - 戦闘計算（成功率、ダメージ）
+- `CombatEffectManager` - 攻撃エフェクト管理
+- `CombatTimerManager` - 攻撃間隔管理
+
+#### `src/vision/`
+視界システム：
+- `VisionSystem` - 視界計算と敵発見メカニクス
+- `VisionCalculator` - 視界範囲の計算
+
 ### データフロー
 1. **入力処理**: `MovementInputHandler`がマウス入力を受け取る
 2. **UI表示**: `UIManager`が適切なメニューを表示
@@ -171,3 +202,15 @@ TypeScript型定義：
   - ゲームオブジェクトの位置に相対的に配置
   - カメラのスクロールとズームの影響を受ける
   - 例：WaypointMarker（経路マーカー）
+
+### マネージャーパターン
+本プロジェクトは各システムごとにマネージャークラスを配置し、責務を明確に分離：
+- 各マネージャーは`GameScene`で初期化され、相互に連携
+- エンティティ（Army、Character、Base等）とその管理（Manager）を分離
+- ファクトリーパターンでエンティティ生成を抽象化
+
+### エピックベース開発
+- 14のエピックに機能を分割（@docs/epics/epic.md）
+- 各エピックは関連システムをグループ化
+- タスクは`task-X-Y`形式で管理
+- 設計書は`docs/design/epic-XX-name/`に配置
