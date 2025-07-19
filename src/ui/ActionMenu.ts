@@ -6,6 +6,7 @@ export interface ActionMenuConfig {
   scene: Phaser.Scene;
   onMove?: () => void;
   onStandby?: () => void;
+  onAttackTarget?: () => void;
   onCancel?: () => void;
 }
 
@@ -13,8 +14,10 @@ export class ActionMenu extends Phaser.GameObjects.Container {
   private background: Phaser.GameObjects.Rectangle;
   private moveButton: Phaser.GameObjects.Container;
   private standbyButton: Phaser.GameObjects.Container;
+  private attackTargetButton: Phaser.GameObjects.Container;
   private onMoveCallback?: () => void;
   private onStandbyCallback?: () => void;
+  private onAttackTargetCallback?: () => void;
   private onCancelCallback?: () => void;
 
   constructor(config: ActionMenuConfig) {
@@ -22,15 +25,16 @@ export class ActionMenu extends Phaser.GameObjects.Container {
 
     this.onMoveCallback = config.onMove;
     this.onStandbyCallback = config.onStandby;
+    this.onAttackTargetCallback = config.onAttackTarget;
     this.onCancelCallback = config.onCancel;
 
-    // メニューの背景（2つのボタン用に高さを調整）
-    this.background = config.scene.add.rectangle(0, 0, 120, 110, 0x333333, 0.9);
+    // メニューの背景（3つのボタン用に高さを調整）
+    this.background = config.scene.add.rectangle(0, 0, 120, 160, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
     // 移動ボタン
-    this.moveButton = this.createButton('移動', 0, -25, () => {
+    this.moveButton = this.createButton('移動', 0, -50, () => {
       if (this.onMoveCallback) {
         this.onMoveCallback();
       }
@@ -38,8 +42,17 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     });
     this.add(this.moveButton);
 
+    // 攻撃目標指定ボタン
+    this.attackTargetButton = this.createButton('攻撃目標指定', 0, 0, () => {
+      if (this.onAttackTargetCallback) {
+        this.onAttackTargetCallback();
+      }
+      this.hide();
+    });
+    this.add(this.attackTargetButton);
+
     // 待機ボタン
-    this.standbyButton = this.createButton('待機', 0, 25, () => {
+    this.standbyButton = this.createButton('待機', 0, 50, () => {
       if (this.onStandbyCallback) {
         this.onStandbyCallback();
       }
@@ -119,7 +132,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
       const menuScreenX = this.x - cam.worldView.x;
       const menuScreenY = this.y - cam.worldView.y;
       const halfWidth = 60;
-      const halfHeight = 55;
+      const halfHeight = 80;
 
       // メニューの範囲外をクリックした場合（画面座標で判定）
       if (

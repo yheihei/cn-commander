@@ -7,6 +7,8 @@ import { MovementMode } from '../types/MovementTypes';
 import { Position } from '../types/CharacterTypes';
 import { UIManager } from '../ui/UIManager';
 import { WaypointMarker } from '../ui/WaypointMarker';
+import { AttackTargetInputHandler } from './AttackTargetInputHandler';
+import { VisionSystem } from '../vision/VisionSystem';
 
 export class MovementInputHandler {
   private scene: Phaser.Scene;
@@ -14,6 +16,7 @@ export class MovementInputHandler {
   private _mapManager: MapManager;
   private commandSystem: MovementCommandSystem;
   private uiManager: UIManager;
+  private visionSystem: VisionSystem;
 
   private selectedArmy: Army | null = null;
   private currentMode: MovementMode = MovementMode.NORMAL;
@@ -29,12 +32,14 @@ export class MovementInputHandler {
     mapManager: MapManager,
     commandSystem: MovementCommandSystem,
     uiManager: UIManager,
+    visionSystem: VisionSystem,
   ) {
     this.scene = scene;
     this.armyManager = armyManager;
     this._mapManager = mapManager;
     this.commandSystem = commandSystem;
     this.uiManager = uiManager;
+    this.visionSystem = visionSystem;
 
     this.setupInputHandlers();
   }
@@ -122,6 +127,11 @@ export class MovementInputHandler {
         // 待機が選択された
         this.isSelectingAction = false;
         this.setArmyStandby();
+      },
+      () => {
+        // 攻撃目標指定が選択された
+        this.isSelectingAction = false;
+        this.startAttackTargetSelection();
       },
       () => {
         // キャンセルされた
@@ -329,6 +339,31 @@ export class MovementInputHandler {
     if (this.pathLines) {
       this.pathLines.clear();
     }
+  }
+
+  private startAttackTargetSelection(): void {
+    if (!this.selectedArmy) return;
+
+    // 攻撃目標選択モード開始時に軍団情報パネルを非表示にする
+    this.uiManager.hideArmyInfo();
+
+    // 攻撃目標選択モードを開始
+    new AttackTargetInputHandler(
+      this.scene,
+      this.armyManager,
+      this.visionSystem,
+      this.selectedArmy,
+      (target: Army) => {
+        // 目標が選択された
+        if (this.selectedArmy) {
+          this.selectedArmy.setAttackTarget(target);
+          console.log(`${this.selectedArmy.getName()} の攻撃目標を ${target.getName()} に設定しました`);
+        }
+      },
+      () => {
+        // キャンセルされた
+      },
+    );
   }
 
   public destroy(): void {

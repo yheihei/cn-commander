@@ -10,6 +10,7 @@ import {
 import { Character } from '../character/Character';
 import { Position } from '../types/CharacterTypes';
 import { MovementMode, MovementState } from '../types/MovementTypes';
+import { AttackTargetMarker } from '../ui/AttackTargetMarker';
 
 export class Army extends Phaser.GameObjects.Container {
   private id: string;
@@ -27,6 +28,8 @@ export class Army extends Phaser.GameObjects.Container {
   };
   private owner: FactionType;
   private discovered: boolean = false;
+  private attackTarget: Army | null = null;
+  private attackTargetMarker: AttackTargetMarker | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
     super(scene, x, y);
@@ -305,6 +308,16 @@ export class Army extends Phaser.GameObjects.Container {
       }
     }
 
+    // 攻撃目標マーカーの位置を更新
+    if (this.attackTargetMarker) {
+      this.attackTargetMarker.update();
+    }
+
+    // 攻撃目標が無効になった場合はクリア
+    if (this.attackTarget && !this.attackTarget.isActive()) {
+      this.clearAttackTarget();
+    }
+
     this.removeDeadMembers();
   }
 
@@ -386,7 +399,47 @@ export class Army extends Phaser.GameObjects.Container {
     }
   }
 
+  // 攻撃目標関連のメソッド
+
+  setAttackTarget(target: Army | null): void {
+    // 既存のマーカーを削除
+    if (this.attackTargetMarker) {
+      this.attackTargetMarker.destroy();
+      this.attackTargetMarker = null;
+    }
+
+    this.attackTarget = target;
+
+    // 新しい目標が設定されたらマーカーを作成
+    if (target && target.isActive()) {
+      this.attackTargetMarker = new AttackTargetMarker(this.scene, target);
+    }
+  }
+
+  getAttackTarget(): Army | null {
+    return this.attackTarget;
+  }
+
+  hasAttackTarget(): boolean {
+    return this.attackTarget !== null && this.attackTarget.isActive();
+  }
+
+  clearAttackTarget(): void {
+    // マーカーを削除
+    if (this.attackTargetMarker) {
+      this.attackTargetMarker.destroy();
+      this.attackTargetMarker = null;
+    }
+    this.attackTarget = null;
+  }
+
   destroy(): void {
+    // 攻撃目標マーカーを削除
+    if (this.attackTargetMarker) {
+      this.attackTargetMarker.destroy();
+      this.attackTargetMarker = null;
+    }
+    
     this.getAllMembers().forEach((member) => member.destroy());
     super.destroy();
   }

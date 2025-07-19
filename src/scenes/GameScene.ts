@@ -93,6 +93,7 @@ export class GameScene extends Phaser.Scene {
       this.mapManager,
       this.commandSystem,
       this.uiManager,
+      this.visionSystem,
     );
 
     // 入力の設定

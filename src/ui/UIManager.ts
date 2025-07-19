@@ -43,6 +43,7 @@ export class UIManager {
     army: Army,
     onMove: () => void,
     onStandby: () => void,
+    onAttackTarget: () => void,
     onCancel: () => void,
   ): void {
     // 既存のメニューがあれば削除
@@ -77,6 +78,11 @@ export class UIManager {
         this.actionMenu = null;
         // 待機を選択したら情報パネルも非表示
         this.hideArmyInfo();
+      },
+      onAttackTarget: () => {
+        onAttackTarget();
+        this.actionMenu = null;
+        // 攻撃目標指定を選択しても情報パネルは表示したままにする
       },
       onCancel: () => {
         onCancel();
