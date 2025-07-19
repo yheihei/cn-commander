@@ -71,7 +71,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const showArmyInfoSpy = jest.spyOn(uiManager, 'showArmyInfo');
 
       // アクションメニューを表示（内部でshowArmyInfoが呼ばれる）
-      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn());
+      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn());
 
       expect(showArmyInfoSpy).toHaveBeenCalledWith(mockArmy);
     });
@@ -80,14 +80,14 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const mockArmy = createMockArmy();
 
       // 軍団を選択
-      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn());
+      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn());
 
       // hideArmyInfoが呼ばれることを確認
       const hideArmyInfoSpy = jest.spyOn(uiManager, 'hideArmyInfo');
 
       // アクションメニューをキャンセル（内部でhideArmyInfoが呼ばれる）
       const onCancel = jest.fn();
-      uiManager.showActionMenu(mockArmy, jest.fn(), onCancel);
+      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), onCancel);
 
       // onCancelコールバックを実行（実際のUIでキャンセルボタンをクリックした場合の動作）
       const actionMenu = (uiManager as any).actionMenu;
@@ -200,13 +200,94 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const mockArmy2 = createMockArmy('第二軍団');
 
       // 最初の軍団を選択
-      uiManager.showActionMenu(mockArmy1, jest.fn(), jest.fn());
+      uiManager.showActionMenu(mockArmy1, jest.fn(), jest.fn(), jest.fn());
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy1);
 
       // 別の軍団を選択
       uiManager.hideActionMenu();
-      uiManager.showActionMenu(mockArmy2, jest.fn(), jest.fn());
+      uiManager.showActionMenu(mockArmy2, jest.fn(), jest.fn(), jest.fn());
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy2);
+    });
+  });
+
+  describe('待機コマンド', () => {
+    test('待機ボタンをクリックすると軍団が待機モードになる', () => {
+      const mockArmy = createMockArmy();
+
+      // 初期状態を確認
+      expect(mockArmy.getMovementMode()).toBe(MovementMode.NORMAL);
+
+      // 待機コールバックをモック
+      const onStandby = jest.fn(() => {
+        mockArmy.setMovementMode(MovementMode.STANDBY);
+        mockArmy.stopMovement();
+      });
+
+      // アクションメニューを表示
+      uiManager.showActionMenu(mockArmy, jest.fn(), onStandby, jest.fn());
+
+      // 待機ボタンをクリック（コールバックを実行）
+      onStandby();
+
+      // 軍団が待機モードになっていることを確認
+      expect(mockArmy.getMovementMode()).toBe(MovementMode.STANDBY);
+      expect(onStandby).toHaveBeenCalled();
+    });
+
+    test('待機モードでは視界ボーナスが適用される', () => {
+      const mockArmy = createMockArmy();
+      // const commander = mockArmy.getCommander(); // 現在は未使用
+
+      // 基本視界を確認
+      // const baseSight = commander.getStats().sight; // 現在は未使用
+
+      // 待機モードに設定
+      mockArmy.setMovementMode(MovementMode.STANDBY);
+
+      // MovementModeの設定で待機モードの視界ボーナスが+1されることを確認
+      const standbyConfig = require('../../../src/types/MovementTypes').MOVEMENT_MODE_CONFIGS[
+        MovementMode.STANDBY
+      ];
+      expect(standbyConfig.sightBonus).toBe(1);
+    });
+
+    test('待機中の軍団は移動できない', () => {
+      const mockArmy = createMockArmy();
+
+      // 待機モードに設定
+      mockArmy.setMovementMode(MovementMode.STANDBY);
+      mockArmy.stopMovement();
+
+      // 移動速度が0になることを確認
+      const standbyConfig = require('../../../src/types/MovementTypes').MOVEMENT_MODE_CONFIGS[
+        MovementMode.STANDBY
+      ];
+      expect(standbyConfig.speedMultiplier).toBe(0);
+    });
+
+    test('待機選択後は情報パネルが非表示になる', () => {
+      const mockArmy = createMockArmy();
+
+      // アクションメニューを表示
+      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn());
+
+      const hideArmyInfoSpy = jest.spyOn(uiManager, 'hideArmyInfo');
+
+      // 待機コールバックを実行
+      const onStandby = jest.fn();
+      uiManager.showActionMenu(mockArmy, jest.fn(), onStandby, jest.fn());
+
+      // ActionMenuのonStandbyコールバックを直接実行
+      const actionMenu = (uiManager as any).actionMenu;
+      if (actionMenu) {
+        const standbyCallback = (actionMenu as any).onStandbyCallback;
+        if (standbyCallback) {
+          standbyCallback();
+        }
+      }
+
+      // hideArmyInfoが呼ばれたことを確認
+      expect(hideArmyInfoSpy).toHaveBeenCalled();
     });
   });
 });

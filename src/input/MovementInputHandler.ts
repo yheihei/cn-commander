@@ -119,6 +119,11 @@ export class MovementInputHandler {
         this.startMovementProcess();
       },
       () => {
+        // 待機が選択された
+        this.isSelectingAction = false;
+        this.setArmyStandby();
+      },
+      () => {
         // キャンセルされた
         this.isSelectingAction = false;
         this.deselectArmy();
@@ -241,6 +246,22 @@ export class MovementInputHandler {
     if (this.selectedArmy) {
       this.selectedArmy.setMovementMode(mode);
     }
+  }
+
+  // 軍団を待機状態にする
+  private setArmyStandby(): void {
+    if (!this.selectedArmy) return;
+
+    // 待機モードに設定
+    this.selectedArmy.setMovementMode(MovementMode.STANDBY);
+
+    // 移動を停止
+    this.selectedArmy.stopMovement();
+
+    // 選択を解除（情報パネルは表示したまま）
+    this.unhighlightCommander(this.selectedArmy);
+    this.selectedArmy = null;
+    this.isSelectingAction = false;
   }
 
   public getMovementMode(): MovementMode {

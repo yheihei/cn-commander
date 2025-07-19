@@ -39,7 +39,12 @@ export class UIManager {
     });
   }
 
-  public showActionMenu(army: Army, onMove: () => void, onCancel: () => void): void {
+  public showActionMenu(
+    army: Army,
+    onMove: () => void,
+    onStandby: () => void,
+    onCancel: () => void,
+  ): void {
     // 既存のメニューがあれば削除
     this.hideActionMenu();
 
@@ -65,6 +70,12 @@ export class UIManager {
         onMove();
         this.actionMenu = null;
         // 移動を選択したら情報パネルを非表示
+        this.hideArmyInfo();
+      },
+      onStandby: () => {
+        onStandby();
+        this.actionMenu = null;
+        // 待機を選択したら情報パネルも非表示
         this.hideArmyInfo();
       },
       onCancel: () => {

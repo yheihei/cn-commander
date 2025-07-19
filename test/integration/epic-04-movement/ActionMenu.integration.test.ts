@@ -43,7 +43,7 @@ describe('[エピック4] Action Menu Integration Tests', () => {
       const onMove = jest.fn();
       const onCancel = jest.fn();
 
-      uiManager.showActionMenu(mockArmy as any, onMove, onCancel);
+      uiManager.showActionMenu(mockArmy as any, onMove, jest.fn(), onCancel);
 
       expect(uiManager.isActionMenuVisible()).toBe(true);
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy);
@@ -66,7 +66,7 @@ describe('[エピック4] Action Menu Integration Tests', () => {
         getAllMembers: () => [],
       };
 
-      uiManager.showActionMenu(mockArmy as any, jest.fn(), jest.fn());
+      uiManager.showActionMenu(mockArmy as any, jest.fn(), jest.fn(), jest.fn());
       expect(uiManager.isActionMenuVisible()).toBe(true);
 
       uiManager.hideActionMenu();

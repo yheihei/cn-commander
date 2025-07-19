@@ -5,29 +5,47 @@ export interface ActionMenuConfig {
   y: number;
   scene: Phaser.Scene;
   onMove?: () => void;
+  onStandby?: () => void;
   onCancel?: () => void;
 }
 
 export class ActionMenu extends Phaser.GameObjects.Container {
   private background: Phaser.GameObjects.Rectangle;
   private moveButton: Phaser.GameObjects.Container;
+  private standbyButton: Phaser.GameObjects.Container;
   private onMoveCallback?: () => void;
+  private onStandbyCallback?: () => void;
   private onCancelCallback?: () => void;
 
   constructor(config: ActionMenuConfig) {
     super(config.scene, config.x, config.y);
 
     this.onMoveCallback = config.onMove;
+    this.onStandbyCallback = config.onStandby;
     this.onCancelCallback = config.onCancel;
 
-    // メニューの背景
-    this.background = config.scene.add.rectangle(0, 0, 120, 64, 0x333333, 0.9);
+    // メニューの背景（2つのボタン用に高さを調整）
+    this.background = config.scene.add.rectangle(0, 0, 120, 110, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
     // 移動ボタン
-    this.moveButton = this.createButton('移動', 0, 0);
+    this.moveButton = this.createButton('移動', 0, -25, () => {
+      if (this.onMoveCallback) {
+        this.onMoveCallback();
+      }
+      this.hide();
+    });
     this.add(this.moveButton);
+
+    // 待機ボタン
+    this.standbyButton = this.createButton('待機', 0, 25, () => {
+      if (this.onStandbyCallback) {
+        this.onStandbyCallback();
+      }
+      this.hide();
+    });
+    this.add(this.standbyButton);
 
     // Containerを配置
     config.scene.add.existing(this);
@@ -42,11 +60,16 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.setupOutsideClickHandler();
   }
 
-  private createButton(text: string, x: number, y: number): Phaser.GameObjects.Container {
+  private createButton(
+    text: string,
+    x: number,
+    y: number,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     // ボタンの背景
-    const buttonBg = this.scene.add.rectangle(0, 0, 100, 44, 0x555555);
+    const buttonBg = this.scene.add.rectangle(0, 0, 100, 40, 0x555555);
     buttonBg.setStrokeStyle(1, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
 
@@ -70,12 +93,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     });
 
     // クリックイベント
-    buttonBg.on('pointerdown', () => {
-      if (this.onMoveCallback) {
-        this.onMoveCallback();
-      }
-      this.hide();
-    });
+    buttonBg.on('pointerdown', onClick);
 
     return button;
   }
@@ -101,7 +119,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
       const menuScreenX = this.x - cam.worldView.x;
       const menuScreenY = this.y - cam.worldView.y;
       const halfWidth = 60;
-      const halfHeight = 32;
+      const halfHeight = 55;
 
       // メニューの範囲外をクリックした場合（画面座標で判定）
       if (
