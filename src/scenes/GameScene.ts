@@ -103,6 +103,7 @@ export class GameScene extends Phaser.Scene {
       this,
       this.armyManager,
       this.mapManager,
+      this.baseManager,
       this.commandSystem,
       this.uiManager,
       this.visionSystem,

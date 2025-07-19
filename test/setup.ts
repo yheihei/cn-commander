@@ -343,6 +343,7 @@ export const createMockScene = () => {
         setOrigin: jest.fn().mockReturnThis(),
         setText: jest.fn().mockReturnThis(),
         setVisible: jest.fn().mockReturnThis(),
+        setStyle: jest.fn().mockReturnThis(),
         destroy: jest.fn(),
       })),
       graphics: jest.fn(() => ({

@@ -2,22 +2,25 @@ import * as Phaser from 'phaser';
 import { ActionMenu } from './ActionMenu';
 import { MovementModeMenu } from './MovementModeMenu';
 import { ArmyInfoPanel } from './ArmyInfoPanel';
+import { BaseInfoPanel } from './BaseInfoPanel';
 import { Army } from '../army/Army';
+import { Base } from '../base/Base';
 
 export class UIManager {
   private scene: Phaser.Scene;
   private actionMenu: ActionMenu | null = null;
   private movementModeMenu: MovementModeMenu | null = null;
   private armyInfoPanel: ArmyInfoPanel | null = null;
+  private baseInfoPanel: BaseInfoPanel | null = null;
   private currentSelectedArmy: Army | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.initializeInfoPanel();
+    this.initializeInfoPanels();
   }
 
-  private initializeInfoPanel(): void {
+  private initializeInfoPanels(): void {
     // カメラのズームを考慮したパネルサイズ
     const zoom = this.scene.cameras.main.zoom || 2.25;
     const viewWidth = 1280 / zoom; // 実際の表示幅
@@ -27,7 +30,7 @@ export class UIManager {
     const panelWidth = viewWidth / 2 - 20; // 右半分から余白を引く
     const panelHeight = viewHeight - 36; // 上下の余白を引く
 
-    // 初期位置は画面外に配置（showArmyInfoで正しい位置に移動）
+    // 初期位置は画面外に配置（showArmyInfo/showBaseInfoで正しい位置に移動）
     const panelX = -1000;
     const panelY = -1000;
 
@@ -37,6 +40,16 @@ export class UIManager {
       y: panelY,
       width: panelWidth,
       height: panelHeight,
+    });
+
+    // BaseInfoPanelは小さめのサイズで作成
+    const baseInfoPanelHeight = 120; // 固定高さ
+    this.baseInfoPanel = new BaseInfoPanel({
+      scene: this.scene,
+      x: panelX,
+      y: panelY,
+      width: panelWidth,
+      height: baseInfoPanelHeight,
     });
   }
 
@@ -172,6 +185,9 @@ export class UIManager {
   }
 
   public showArmyInfo(army: Army): void {
+    // BaseInfoPanelが表示されている場合は非表示にする
+    this.hideBaseInfo();
+
     if (this.armyInfoPanel) {
       // カメラの現在の表示範囲を取得
       const cam = this.scene.cameras.main;
@@ -279,10 +295,46 @@ export class UIManager {
     }
   }
 
+  public showBaseInfo(base: Base): void {
+    // ArmyInfoPanelが表示されている場合は非表示にする
+    this.hideArmyInfo();
+
+    if (this.baseInfoPanel) {
+      // カメラの現在の表示範囲を取得
+      const cam = this.scene.cameras.main;
+      const viewTop = cam.worldView.y;
+      const viewRight = cam.worldView.right;
+
+      // パネルを画面の右端に配置
+      const panelX = viewRight - this.baseInfoPanel.getWidth() - 10;
+      const panelY = viewTop + 20;
+
+      this.baseInfoPanel.setPosition(panelX, panelY);
+      this.baseInfoPanel.show(base);
+    }
+  }
+
+  public hideBaseInfo(): void {
+    if (this.baseInfoPanel) {
+      this.baseInfoPanel.hide();
+    }
+  }
+
   public update(): void {
     // 軍団情報パネルの更新は既存のupdateArmyInfoで行う
     if (this.currentSelectedArmy && this.armyInfoPanel) {
       this.updateArmyInfo(this.currentSelectedArmy);
+    }
+
+    // BaseInfoPanelの位置更新
+    if (this.baseInfoPanel && this.baseInfoPanel.isVisible()) {
+      const cam = this.scene.cameras.main;
+      const viewTop = cam.worldView.y;
+      const viewRight = cam.worldView.right;
+
+      const panelX = viewRight - this.baseInfoPanel.getWidth() - 10;
+      const panelY = viewTop + 20;
+      this.baseInfoPanel.setPosition(panelX, panelY);
     }
 
     // ガイドメッセージの位置更新
@@ -302,10 +354,15 @@ export class UIManager {
     this.hideActionMenu();
     this.hideMovementModeMenu();
     this.hideArmyInfo();
+    this.hideBaseInfo();
     this.hideGuideMessage();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();
       this.armyInfoPanel = null;
+    }
+    if (this.baseInfoPanel) {
+      this.baseInfoPanel.destroy();
+      this.baseInfoPanel = null;
     }
   }
 }

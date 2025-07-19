@@ -9,11 +9,14 @@ import { UIManager } from '../ui/UIManager';
 import { WaypointMarker } from '../ui/WaypointMarker';
 import { AttackTargetInputHandler } from './AttackTargetInputHandler';
 import { VisionSystem } from '../vision/VisionSystem';
+import { BaseManager } from '../base/BaseManager';
+import { Base } from '../base/Base';
 
 export class MovementInputHandler {
   private scene: Phaser.Scene;
   private armyManager: ArmyManager;
   private _mapManager: MapManager;
+  private baseManager: BaseManager;
   private commandSystem: MovementCommandSystem;
   private uiManager: UIManager;
   private visionSystem: VisionSystem;
@@ -31,6 +34,7 @@ export class MovementInputHandler {
     scene: Phaser.Scene,
     armyManager: ArmyManager,
     mapManager: MapManager,
+    baseManager: BaseManager,
     commandSystem: MovementCommandSystem,
     uiManager: UIManager,
     visionSystem: VisionSystem,
@@ -38,6 +42,7 @@ export class MovementInputHandler {
     this.scene = scene;
     this.armyManager = armyManager;
     this._mapManager = mapManager;
+    this.baseManager = baseManager;
     this.commandSystem = commandSystem;
     this.uiManager = uiManager;
     this.visionSystem = visionSystem;
@@ -79,6 +84,15 @@ export class MovementInputHandler {
 
       if (clickedArmy) {
         this.showActionMenu(clickedArmy);
+      } else {
+        // 軍団が見つからなかった場合、拠点を探す
+        const clickedBase = this.findBaseAtPosition(x, y);
+        if (clickedBase) {
+          this.uiManager.showBaseInfo(clickedBase);
+        } else {
+          // 軍団も拠点も見つからなかった場合、BaseInfoPanelを非表示
+          this.uiManager.hideBaseInfo();
+        }
       }
     } else if (this.isSettingPath) {
       // 経路点を追加
@@ -98,6 +112,8 @@ export class MovementInputHandler {
     } else {
       // 軍団の選択を解除
       this.deselectArmy();
+      // BaseInfoPanelも非表示
+      this.uiManager.hideBaseInfo();
     }
   }
 
@@ -110,6 +126,20 @@ export class MovementInputHandler {
 
       if (commanderBounds.contains(x, y)) {
         return army;
+      }
+    }
+
+    return null;
+  }
+
+  private findBaseAtPosition(x: number, y: number): Base | null {
+    const bases = this.baseManager.getAllBases();
+
+    for (const base of bases) {
+      // BaseはPhaser.GameObjects.Containerを継承している
+      const bounds = base.getBounds();
+      if (bounds.contains(x, y)) {
+        return base;
       }
     }
 

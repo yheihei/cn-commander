@@ -8,11 +8,13 @@ import { ArmyFactory } from '../../../src/army/ArmyFactory';
 import { MovementMode } from '../../../src/types/MovementTypes';
 import { createMockScene } from '../../setup';
 import { VisionSystem } from '../../../src/vision/VisionSystem';
+import { BaseManager } from '../../../src/base/BaseManager';
 
 describe('[エピック4] Movement Execution Integration Tests', () => {
   let scene: any;
   let armyManager: ArmyManager;
   let mapManager: MapManager;
+  let baseManager: BaseManager;
   let movementManager: MovementManager;
   let commandSystem: MovementCommandSystem;
   let inputHandler: MovementInputHandler;
@@ -23,6 +25,7 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
     scene = createMockScene();
     armyManager = new ArmyManager(scene);
     mapManager = new MapManager(scene);
+    baseManager = new BaseManager(scene, mapManager);
     commandSystem = new MovementCommandSystem();
     movementManager = new MovementManager(scene, armyManager, mapManager, commandSystem);
     uiManager = new UIManager(scene);
@@ -31,6 +34,7 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
       scene,
       armyManager,
       mapManager,
+      baseManager,
       commandSystem,
       uiManager,
       visionSystem,
