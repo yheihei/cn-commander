@@ -125,14 +125,19 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     this.add(this.ownerFlag);
 
     // 拠点名（非表示状態で作成）
-    this.nameText = this.scene.add.text(0, 32 + 5, this.baseData.name, {
-      fontSize: '10px',
+    this.nameText = this.scene.add.text(0, 37, this.baseData.name, {
+      fontSize: '12px',  // 少し大きく
+      fontFamily: 'monospace, "Courier New", Courier',  // モノスペースフォントを明示的に指定
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 2,
+      strokeThickness: 1,  // 縁取りを細く
+      resolution: 2,  // 高解像度でレンダリング
+      padding: { x: 2, y: 2 },  // 余白を追加
     });
     this.nameText.setOrigin(0.5, 0);
     this.nameText.setVisible(false);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める
+    this.nameText.setPosition(Math.round(this.nameText.x), Math.round(this.nameText.y));
     this.add(this.nameText);
 
     // インタラクティブ設定
