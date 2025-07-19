@@ -79,7 +79,7 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     const attackTarget = army.getAttackTarget();
     let fullStatusText = `状態: ${statusText}`;
     if (attackTarget && attackTarget.isActive()) {
-      fullStatusText += `\n攻撃目標: ${attackTarget.getName()}`;
+      fullStatusText += ` 攻撃目標: ${attackTarget.getName()}`;
     }
     this.statusText.setText(fullStatusText);
 
