@@ -337,7 +337,7 @@ export const createMockScene = () => {
         add: jest.fn(),
         remove: jest.fn(),
         clear: jest.fn(),
-        destroy: jest.fn()
+        destroy: jest.fn(),
       })),
       text: jest.fn(() => ({
         setOrigin: jest.fn().mockReturnThis(),
@@ -529,16 +529,16 @@ export const createMockScene = () => {
       emit: jest.fn(),
       on: jest.fn(),
       off: jest.fn(),
-      once: jest.fn()
+      once: jest.fn(),
     },
     sound: {
-      play: jest.fn()
+      play: jest.fn(),
     },
     input: {
       on: jest.fn(),
       off: jest.fn(),
       emit: jest.fn(),
-      setDefaultCursor: jest.fn()
+      setDefaultCursor: jest.fn(),
     },
   };
 

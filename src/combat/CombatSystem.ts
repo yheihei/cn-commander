@@ -34,7 +34,7 @@ export class CombatSystem {
 
     this.setupEventHandlers();
   }
-  
+
   /**
    * BaseManagerを設定（拠点戦闘のため）
    */
@@ -102,7 +102,9 @@ export class CombatSystem {
     // 攻撃目標が設定されている場合の処理
     const attackTarget = attackerArmy.getAttackTarget();
     if (attackTarget && attackTarget.isActive() && attackTarget.isDiscovered()) {
-      console.log(`CombatSystem: ${attackerArmy.getName()} は攻撃目標 ${attackTarget.getName()} を優先攻撃します`);
+      console.log(
+        `CombatSystem: ${attackerArmy.getName()} は攻撃目標 ${attackTarget.getName()} を優先攻撃します`,
+      );
       // 攻撃目標の軍団メンバーのみを対象にする
       const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
       const validTargets = targetMembers.filter((enemy) => enemy.isAlive());

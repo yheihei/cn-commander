@@ -15,7 +15,7 @@ export enum BaseType {
   /** 味方占領拠点 */
   PLAYER_OCCUPIED = 'player_occupied',
   /** 敵占領拠点 */
-  ENEMY_OCCUPIED = 'enemy_occupied'
+  ENEMY_OCCUPIED = 'enemy_occupied',
 }
 
 /**
@@ -29,7 +29,7 @@ export enum FacilityType {
   /** 医療施設 */
   MEDICAL = 'medical',
   /** 倉庫 */
-  WAREHOUSE = 'warehouse'
+  WAREHOUSE = 'warehouse',
 }
 
 /**

@@ -12,10 +12,7 @@ export class BaseCombatSystem {
   private baseManager: BaseManager;
   private scene: Phaser.Scene;
 
-  constructor(
-    scene: Phaser.Scene,
-    baseManager: BaseManager
-  ) {
+  constructor(scene: Phaser.Scene, baseManager: BaseManager) {
     this.scene = scene;
     this.baseManager = baseManager;
   }
@@ -34,26 +31,26 @@ export class BaseCombatSystem {
 
     // ダメージ計算
     const damage = this.calculateDamageToBase(attacker, targetBase);
-    
+
     // 攻撃成功判定
     const stats = attacker.getStats();
     const weapon = attacker.getItemHolder().getEquippedWeapon();
     const attackPower = stats.attack + (weapon?.attackBonus || 0);
     const defenseValue = targetBase.getDefenseBonus();
     const hitChance = attackPower / (attackPower + defenseValue);
-    
+
     if (Math.random() < hitChance) {
       // ダメージを与える
       const isDestroyed = targetBase.takeDamage(damage);
-      
+
       // ダメージ数値表示
       this.showBaseDamageNumber(targetBase, damage);
-      
+
       // 破壊された場合
       if (isDestroyed) {
         this.scene.events.emit('baseDestroyed', {
           base: targetBase,
-          attacker: attacker
+          attacker,
         });
       }
     } else {
@@ -77,10 +74,7 @@ export class BaseCombatSystem {
     const weapon = attacker.getItemHolder().getEquippedWeapon();
     if (!weapon) return false;
 
-    const distance = this.getDistanceToBase(
-      { x: attacker.x / 16, y: attacker.y / 16 },
-      targetBase
-    );
+    const distance = this.getDistanceToBase({ x: attacker.x / 16, y: attacker.y / 16 }, targetBase);
 
     return distance >= weapon.minRange && distance <= weapon.maxRange;
   }
@@ -95,10 +89,10 @@ export class BaseCombatSystem {
     // 拠点の中心点（2x2タイルの中心）
     const baseCenterX = basePos.x + 1;
     const baseCenterY = basePos.y + 1;
-    
+
     const dx = baseCenterX - from.x;
     const dy = baseCenterY - from.y;
-    
+
     // チェビシェフ距離（8方向移動）
     return Math.max(Math.abs(dx), Math.abs(dy));
   }
@@ -120,8 +114,7 @@ export class BaseCombatSystem {
 
     // 敵拠点または中立拠点のみ攻撃可能
     // TODO: CharacterからArmyを取得する方法が必要
-    // 現在は一時的にtrueを返す
-    return true;
+    // 現在は射程チェックのみ実施
 
     // 射程チェック
     return this.isBaseInRange(attacker, targetBase);
@@ -132,7 +125,7 @@ export class BaseCombatSystem {
    */
   getAttackableBases(attacker: Character): Base[] {
     const allBases = this.baseManager.getAllBases();
-    return allBases.filter(base => this.canAttackBase(attacker, base));
+    return allBases.filter((base) => this.canAttackBase(attacker, base));
   }
 
   /**
@@ -149,21 +142,16 @@ export class BaseCombatSystem {
   showBaseDamageNumber(base: Base, damage: number): void {
     const text = damage > 0 ? `-${damage}` : 'Miss';
     const color = damage > 0 ? '#ff0000' : '#ffff00';
-    
-    const damageText = this.scene.add.text(
-      base.x,
-      base.y - 20,
-      text,
-      {
-        fontSize: '16px',
-        color: color,
-        stroke: '#000000',
-        strokeThickness: 2
-      }
-    );
-    
+
+    const damageText = this.scene.add.text(base.x, base.y - 20, text, {
+      fontSize: '16px',
+      color,
+      stroke: '#000000',
+      strokeThickness: 2,
+    });
+
     damageText.setOrigin(0.5);
-    
+
     // フロートアニメーション
     this.scene.tweens.add({
       targets: damageText,
@@ -173,7 +161,7 @@ export class BaseCombatSystem {
       ease: 'Power2',
       onComplete: () => {
         damageText.destroy();
-      }
+      },
     });
   }
 }

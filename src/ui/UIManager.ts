@@ -265,7 +265,11 @@ export class UIManager {
 
     // UIレイヤーの最前面に表示
     this.guideMessage.setDepth(1000);
-    console.log('UIManager.showGuideMessage: ガイドメッセージコンテナを作成しました', { x, y, message });
+    console.log('UIManager.showGuideMessage: ガイドメッセージコンテナを作成しました', {
+      x,
+      y,
+      message,
+    });
   }
 
   public hideGuideMessage(): void {

@@ -409,7 +409,9 @@ export class Army extends Phaser.GameObjects.Container {
     }
 
     this.attackTarget = target;
-    console.log(`Army.setAttackTarget: ${this.getName()} の攻撃目標を ${target ? target.getName() : 'null'} に設定`);
+    console.log(
+      `Army.setAttackTarget: ${this.getName()} の攻撃目標を ${target ? target.getName() : 'null'} に設定`,
+    );
 
     // 新しい目標が設定されたらマーカーを作成
     if (target && target.isActive()) {

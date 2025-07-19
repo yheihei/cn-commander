@@ -10,15 +10,15 @@ describe('[エピック7] 拠点システム統合テスト', () => {
 
   beforeEach(() => {
     scene = createMockScene();
-    
+
     // MapManagerのモック
     mapManager = {
       pixelToGrid: jest.fn((x: number, y: number) => ({
         x: Math.floor(x / 16),
-        y: Math.floor(y / 16)
-      }))
+        y: Math.floor(y / 16),
+      })),
     };
-    
+
     baseManager = new BaseManager(scene, mapManager);
   });
 
@@ -39,7 +39,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 80,
         maxHp: 80,
         owner: 'neutral' as const,
-        income: 100
+        income: 100,
       };
 
       const base = baseManager.addBase(baseData);
@@ -60,7 +60,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 10,
         hp: 80,
         maxHp: 80,
-        owner: 'neutral' as const
+        owner: 'neutral' as const,
       };
 
       const base = baseManager.addBase(baseData);
@@ -79,7 +79,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 10,
         hp: 80,
         maxHp: 80,
-        owner: 'neutral' as const
+        owner: 'neutral' as const,
       };
 
       const base = baseManager.addBase(baseData);
@@ -101,7 +101,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 200,
         maxHp: 200,
         owner: 'player',
-        income: 200
+        income: 200,
       });
 
       baseManager.addBase({
@@ -113,7 +113,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 200,
         maxHp: 200,
         owner: 'enemy',
-        income: 200
+        income: 200,
       });
 
       baseManager.addBase({
@@ -125,7 +125,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 80,
         maxHp: 80,
         owner: 'neutral',
-        income: 100
+        income: 100,
       });
 
       const playerBases = baseManager.getBasesByOwner('player');
@@ -147,7 +147,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 200,
         maxHp: 200,
         owner: 'player',
-        income: 200
+        income: 200,
       });
 
       baseManager.addBase({
@@ -159,7 +159,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 80,
         maxHp: 80,
         owner: 'player',
-        income: 100
+        income: 100,
       });
 
       const income = baseManager.calculateIncome('player');
@@ -177,14 +177,14 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 10,
         hp: 80,
         maxHp: 80,
-        owner: 'neutral' as const
+        owner: 'neutral' as const,
       };
 
       const base = baseManager.addBase(baseData);
-      
+
       // ダメージを与える
       const isDestroyed = base.takeDamage(20);
-      
+
       expect(base.getCurrentHp()).toBe(60);
       expect(isDestroyed).toBe(false);
       expect(base.getHpPercentage()).toBe(75);
@@ -199,14 +199,14 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 10,
         hp: 10,
         maxHp: 80,
-        owner: 'neutral' as const
+        owner: 'neutral' as const,
       };
 
       const base = baseManager.addBase(baseData);
-      
+
       // 残りHP以上のダメージを与える
       const isDestroyed = base.takeDamage(10);
-      
+
       expect(base.getCurrentHp()).toBe(0);
       expect(isDestroyed).toBe(true);
       expect(base.isDestroyed()).toBe(true);
@@ -223,7 +223,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 10,
         hp: 200,
         maxHp: 200,
-        owner: 'player'
+        owner: 'player',
       });
 
       // 通常拠点
@@ -235,7 +235,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 20,
         hp: 80,
         maxHp: 80,
-        owner: 'neutral'
+        owner: 'neutral',
       });
 
       expect(hqBase.getDefenseBonus()).toBe(30);
@@ -243,7 +243,6 @@ describe('[エピック7] 拠点システム統合テスト', () => {
     });
 
     test('拠点への攻撃処理', () => {
-
       const mockCharacter = {
         getId: jest.fn(() => 'char-1'),
         isAlive: jest.fn(() => true),
@@ -253,17 +252,14 @@ describe('[エピック7] 拠点システム統合テスト', () => {
             attackBonus: 10,
             minRange: 1,
             maxRange: 3,
-            durability: 50
-          })
+            durability: 50,
+          }),
         })),
         x: 11 * 16,
-        y: 11 * 16
+        y: 11 * 16,
       };
 
-      const baseCombatSystem = new BaseCombatSystem(
-        scene,
-        baseManager
-      );
+      const baseCombatSystem = new BaseCombatSystem(scene, baseManager);
 
       const targetBase = baseManager.addBase({
         id: 'enemy-base',
@@ -273,28 +269,19 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         y: 12,
         hp: 50,
         maxHp: 200,
-        owner: 'enemy'
+        owner: 'enemy',
       });
 
       // 攻撃可能チェック
-      const canAttack = baseCombatSystem.canAttackBase(
-        mockCharacter as any,
-        targetBase
-      );
+      const canAttack = baseCombatSystem.canAttackBase(mockCharacter as any, targetBase);
       expect(canAttack).toBe(true);
 
       // 距離計算
-      const distance = baseCombatSystem.getDistanceToBase(
-        { x: 11, y: 11 },
-        targetBase
-      );
+      const distance = baseCombatSystem.getDistanceToBase({ x: 11, y: 11 }, targetBase);
       expect(distance).toBe(2); // チェビシェフ距離
 
       // 射程内チェック
-      const inRange = baseCombatSystem.isBaseInRange(
-        mockCharacter as any,
-        targetBase
-      );
+      const inRange = baseCombatSystem.isBaseInRange(mockCharacter as any, targetBase);
       expect(inRange).toBe(true);
     });
   });
@@ -328,7 +315,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
         hp: 80,
         maxHp: 80,
         owner: 'neutral',
-        income: 100
+        income: 100,
       });
 
       // 初期状態の確認
@@ -365,7 +352,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
       const nearestEnemyBase = baseManager.getNearestBase(
         15,
         15,
-        (base) => base.getOwner() === 'enemy'
+        (base) => base.getOwner() === 'enemy',
       );
       expect(nearestEnemyBase).toBeDefined();
       expect(nearestEnemyBase?.getName()).toBe('風魔の砦');

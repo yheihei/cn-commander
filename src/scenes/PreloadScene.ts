@@ -86,7 +86,7 @@ export class PreloadScene extends Phaser.Scene {
 
     // 効果音の読み込み
     this.loadSoundAssets();
-    
+
     // 拠点アセットの読み込み
     this.loadBaseAssets();
   }
@@ -177,14 +177,14 @@ export class PreloadScene extends Phaser.Scene {
     // 敵発見時の効果音を読み込み
     this.load.audio('enemyFound', 'assets/sounds/EnemyFound.mp3');
   }
-  
+
   private loadBaseAssets(): void {
     // pipo-map001.pngを読み込み（城のスプライトを含む）
     this.load.spritesheet('tilemap', 'assets/images/tilemaps/pipo-map001.png', {
       frameWidth: 16,
       frameHeight: 16,
     });
-    
+
     // アイコン用のダミー画像（今は武器画像を流用）
     this.load.image('icons', 'assets/images/weapons/shuriken.png');
   }

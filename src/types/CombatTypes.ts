@@ -12,7 +12,7 @@ export enum AttackTargetType {
   /** 軍団 */
   ARMY = 'army',
   /** 拠点 */
-  BASE = 'base'
+  BASE = 'base',
 }
 
 /**

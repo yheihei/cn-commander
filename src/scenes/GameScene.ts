@@ -206,9 +206,9 @@ export class GameScene extends Phaser.Scene {
     };
 
     this.mapManager.loadMap(mapData);
-    
+
     // 拠点の配置
-    mapData.bases.forEach(baseData => {
+    mapData.bases.forEach((baseData) => {
       this.baseManager.addBase(baseData);
     });
   }
@@ -426,7 +426,7 @@ export class GameScene extends Phaser.Scene {
 
     // 軍団の更新
     this.armyManager.update(time, delta);
-    
+
     // 拠点の更新
     this.baseManager.update(delta);
 
