@@ -14,10 +14,12 @@ import { VisionSystem } from '../vision/VisionSystem';
 import { DiscoverySystem } from '../vision/DiscoverySystem';
 import { WeaponFactory } from '../item/WeaponFactory';
 import { CombatSystem } from '../combat/CombatSystem';
+import { BaseManager } from '../base/BaseManager';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
   private armyManager!: ArmyManager;
+  private baseManager!: BaseManager;
   private movementManager!: MovementManager;
   private uiManager!: UIManager;
   private inputHandler!: MovementInputHandler;
@@ -43,6 +45,9 @@ export class GameScene extends Phaser.Scene {
 
     // 軍団マネージャーの初期化
     this.armyManager = new ArmyManager(this);
+
+    // 拠点マネージャーの初期化
+    this.baseManager = new BaseManager(this, this.mapManager);
 
     // 移動コマンドシステムの初期化
     this.commandSystem = new MovementCommandSystem();
@@ -70,11 +75,18 @@ export class GameScene extends Phaser.Scene {
 
     // 戦闘システムの初期化
     this.combatSystem = new CombatSystem(this, this.armyManager, this.mapManager);
+    this.combatSystem.setBaseManager(this.baseManager);
 
     // テストマップを読み込むか、デフォルトマップを作成
     const testMapData = this.cache.json.get('testMap');
     if (testMapData) {
       this.mapManager.loadMap(testMapData);
+      // マップデータから拠点を読み込み
+      if (testMapData.bases) {
+        testMapData.bases.forEach((baseData: any) => {
+          this.baseManager.addBase(baseData);
+        });
+      }
     } else {
       // テストマップがない場合は、小さめのデフォルトマップを作成
       this.createDefaultMap();
@@ -194,6 +206,11 @@ export class GameScene extends Phaser.Scene {
     };
 
     this.mapManager.loadMap(mapData);
+    
+    // 拠点の配置
+    mapData.bases.forEach(baseData => {
+      this.baseManager.addBase(baseData);
+    });
   }
 
   private createTestArmies(): void {
@@ -409,6 +426,9 @@ export class GameScene extends Phaser.Scene {
 
     // 軍団の更新
     this.armyManager.update(time, delta);
+    
+    // 拠点の更新
+    this.baseManager.update(delta);
 
     // 移動システムの更新
     this.movementManager.update(time, delta);

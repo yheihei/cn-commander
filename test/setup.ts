@@ -333,9 +333,16 @@ export const createMockScene = () => {
   const mockScene = {
     add: {
       existing: jest.fn(),
+      group: jest.fn(() => ({
+        add: jest.fn(),
+        remove: jest.fn(),
+        clear: jest.fn(),
+        destroy: jest.fn()
+      })),
       text: jest.fn(() => ({
         setOrigin: jest.fn().mockReturnThis(),
         setText: jest.fn().mockReturnThis(),
+        setVisible: jest.fn().mockReturnThis(),
         destroy: jest.fn(),
       })),
       graphics: jest.fn(() => ({
@@ -477,11 +484,6 @@ export const createMockScene = () => {
         },
       },
     },
-    input: {
-      on: jest.fn(),
-      off: jest.fn(),
-      emit: jest.fn(),
-    },
     time: {
       delayedCall: jest.fn((delay, callback) => {
         setTimeout(callback, delay);
@@ -522,6 +524,21 @@ export const createMockScene = () => {
           destroy: jest.fn(),
         };
       }),
+    },
+    events: {
+      emit: jest.fn(),
+      on: jest.fn(),
+      off: jest.fn(),
+      once: jest.fn()
+    },
+    sound: {
+      play: jest.fn()
+    },
+    input: {
+      on: jest.fn(),
+      off: jest.fn(),
+      emit: jest.fn(),
+      setDefaultCursor: jest.fn()
     },
   };
 

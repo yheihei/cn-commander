@@ -36,11 +36,17 @@ export interface BaseData {
   hp: number;
   maxHp: number;
   owner: 'player' | 'enemy' | 'neutral';
+  income?: number; // 収入（両/分）
 }
 
 export enum BaseType {
   HEADQUARTERS = 'headquarters', // 本拠地
   NORMAL_BASE = 'normal_base', // 通常拠点
+  PLAYER_HQ = 'player_hq', // 味方本拠地
+  ENEMY_HQ = 'enemy_hq', // 敵本拠地
+  NEUTRAL = 'neutral', // 中立拠点
+  PLAYER_OCCUPIED = 'player_occupied', // 味方占領拠点
+  ENEMY_OCCUPIED = 'enemy_occupied', // 敵占領拠点
 }
 
 export interface Coordinate {

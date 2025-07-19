@@ -8,9 +8,16 @@ import { AttackTimerManager } from './AttackTimer';
 import { CombatEffectManager } from './CombatEffectManager';
 import { MapManager } from '../map/MapManager';
 import { MovementMode } from '../types/MovementTypes';
+import { BaseManager } from '../base/BaseManager';
+// import { BaseCombatSystem } from '../base/BaseCombatSystem';
+// import { Base } from '../base/Base';
+// import { AttackTarget, AttackTargetType } from '../types/CombatTypes';
 
 export class CombatSystem {
   private armyManager: ArmyManager;
+  // 拠点戦闘システムは後日実装
+  // private baseManager?: BaseManager;
+  // private baseCombatSystem?: BaseCombatSystem;
   private rangeCalculator: RangeCalculator;
   private combatCalculator: CombatCalculator;
   private attackTimerManager: AttackTimerManager;
@@ -26,6 +33,16 @@ export class CombatSystem {
     this.effectManager = new CombatEffectManager(scene);
 
     this.setupEventHandlers();
+  }
+  
+  /**
+   * BaseManagerを設定（拠点戦闘のため）
+   */
+  setBaseManager(_baseManager: BaseManager): void {
+    // TODO: 拠点への攻撃ターゲット指定の実装時に有効化
+    // this.baseManager = baseManager;
+    // const scene = (this.effectManager as any).scene || this.armyManager.scene;
+    // this.baseCombatSystem = new BaseCombatSystem(scene, baseManager);
   }
 
   private setupEventHandlers(): void {
