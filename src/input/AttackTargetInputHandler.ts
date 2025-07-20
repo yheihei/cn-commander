@@ -5,7 +5,7 @@ import { VisionSystem } from '../vision/VisionSystem';
 import { UIManager } from '../ui/UIManager';
 import { Base } from '../base/Base';
 import { BaseManager } from '../base/BaseManager';
-import { SimpleAttackTarget } from '../types/CombatTypes';
+import { SimpleAttackTarget, isArmyTarget, isBaseTarget } from '../types/CombatTypes';
 
 export class AttackTargetInputHandler {
   private scene: Phaser.Scene;
@@ -127,8 +127,13 @@ export class AttackTargetInputHandler {
       const baseWorldX = basePos.x * tileSize;
       const baseWorldY = basePos.y * tileSize;
 
-      // 2x2タイルの範囲内かチェック
-      if (x >= baseWorldX && x < baseWorldX + 32 && y >= baseWorldY && y < baseWorldY + 32) {
+      // Baseのインタラクティブ領域に合わせて判定（中心から64x64の範囲）
+      if (
+        x >= baseWorldX - 32 &&
+        x < baseWorldX + 32 &&
+        y >= baseWorldY - 32 &&
+        y < baseWorldY + 32
+      ) {
         return base;
       }
     }
@@ -186,6 +191,16 @@ export class AttackTargetInputHandler {
   private showTargetHover(target: SimpleAttackTarget): void {
     if (!target) return;
 
+    // 拠点の場合は照準を表示しない
+    if (isBaseTarget(target)) {
+      return;
+    }
+
+    // 軍団の場合のみ照準を表示
+    if (!isArmyTarget(target)) {
+      return;
+    }
+
     if (!this.targetMarker) {
       this.targetMarker = this.scene.add.graphics();
       this.targetMarker.setDepth(100);
@@ -193,23 +208,9 @@ export class AttackTargetInputHandler {
 
     this.targetMarker.clear();
 
-    let x: number, y: number;
-
-    // 軍団の場合
-    if ('getCommander' in target) {
-      const commander = target.getCommander();
-      x = commander.x;
-      y = commander.y;
-    }
-    // 拠点の場合
-    else if ('getPosition' in target) {
-      const pos = target.getPosition();
-      // 拠点の中心位置（2x2タイルの中心）
-      x = (pos.x + 1) * 16;
-      y = (pos.y + 1) * 16;
-    } else {
-      return;
-    }
+    const commander = target.getCommander();
+    const x = commander.x;
+    const y = commander.y;
 
     // 十字の照準を描画
     this.targetMarker.lineStyle(2, 0xff0000, 1);

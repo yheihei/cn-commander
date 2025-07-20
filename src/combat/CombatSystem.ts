@@ -38,7 +38,7 @@ export class CombatSystem {
    */
   setBaseManager(baseManager: BaseManager): void {
     const scene = (this.effectManager as any).scene;
-    this.baseCombatSystem = new BaseCombatSystem(scene, baseManager);
+    this.baseCombatSystem = new BaseCombatSystem(scene, baseManager, this.effectManager);
   }
 
   private setupEventHandlers(): void {

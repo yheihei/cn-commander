@@ -3,6 +3,7 @@ import { Base } from './Base';
 import { BaseManager } from './BaseManager';
 // CombatManagerはこのコンテキストでは不要
 import { Character } from '../character/Character';
+import { CombatEffectManager } from '../combat/CombatEffectManager';
 
 /**
  * 拠点戦闘システム
@@ -11,10 +12,19 @@ import { Character } from '../character/Character';
 export class BaseCombatSystem {
   private baseManager: BaseManager;
   private scene: Phaser.Scene;
+  private effectManager?: CombatEffectManager;
 
-  constructor(scene: Phaser.Scene, baseManager: BaseManager) {
+  constructor(scene: Phaser.Scene, baseManager: BaseManager, effectManager?: CombatEffectManager) {
     this.scene = scene;
     this.baseManager = baseManager;
+    this.effectManager = effectManager;
+
+    // baseHitEffectイベントをリッスン
+    if (this.effectManager) {
+      this.scene.events.on('baseHitEffect', (data: { x: number; y: number }) => {
+        this.effectManager!.createHitEffect(data);
+      });
+    }
   }
 
   /**
@@ -43,9 +53,6 @@ export class BaseCombatSystem {
       // ダメージを与える
       const isDestroyed = targetBase.takeDamage(damage);
 
-      // ダメージ数値表示
-      this.showBaseDamageNumber(targetBase, damage);
-
       // 破壊された場合
       if (isDestroyed) {
         this.scene.events.emit('baseDestroyed', {
@@ -53,9 +60,6 @@ export class BaseCombatSystem {
           attacker,
         });
       }
-    } else {
-      // ミス表示
-      this.showBaseDamageNumber(targetBase, 0);
     }
   }
 

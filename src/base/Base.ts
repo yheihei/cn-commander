@@ -387,15 +387,13 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
   // === エフェクト ===
 
   private showDamageEffect(): void {
-    if (this.baseSprites.length === 0) return;
+    // 赤いフラッシュは表示しない
+    // 代わりに爆発エフェクトをイベント経由で表示する
+    const centerX = this.x;
+    const centerY = this.y;
 
-    // 赤くフラッシュ
-    this.baseSprites.forEach((sprite) => sprite.setTint(0xff0000));
-    if (this.scene && this.scene.time) {
-      this.scene.time.delayedCall(100, () => {
-        this.updateVisual(); // 元の色に戻す
-      });
-    }
+    // 爆発エフェクトの表示をイベントで通知
+    this.scene.events.emit('baseHitEffect', { x: centerX, y: centerY });
   }
 
   private setDestroyed(): void {
