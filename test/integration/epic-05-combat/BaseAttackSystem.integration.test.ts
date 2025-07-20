@@ -62,6 +62,10 @@ describe('[エピック5] BaseAttackSystem Integration Tests', () => {
       maxHp: 50,
       owner: 'neutral',
     });
+
+    // テスト用に防御力を0に設定（攻撃成功率100%を保証）
+    const testBase = baseManager.getAllBases()[0];
+    (testBase as any).combatData.defenseValue = 0;
   });
 
   afterEach(() => {
@@ -102,13 +106,7 @@ describe('[エピック5] BaseAttackSystem Integration Tests', () => {
       // 攻撃タイマーの実行（手裏剣装備で速さ20の場合、4.5秒に1回攻撃）
       jest.advanceTimersByTime(5000); // 5秒進める
 
-      // HPが減少したか確認（攻撃成功率に依存するため、必ずしも減少しない可能性がある）
-      // この時点でHPが減少していなければ、さらに時間を進める
-      if (base.getCurrentHp() === initialHp) {
-        jest.advanceTimersByTime(5000); // さらに5秒進める
-      }
-
-      // 最終的にHPが減少したことを確認
+      // HPが減少したことを確認（防御力0なので100%成功）
       expect(base.getCurrentHp()).toBeLessThan(initialHp);
     }
   });
