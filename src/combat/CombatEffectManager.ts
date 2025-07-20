@@ -48,7 +48,7 @@ export class CombatEffectManager {
     // キャラクターのワールド座標を取得
     let attackerX: number, attackerY: number;
     let targetX: number, targetY: number;
-    
+
     if (typeof attacker.getWorldTransformMatrix === 'function') {
       const attackerWorldPos = attacker.getWorldTransformMatrix();
       attackerX = attackerWorldPos.tx;
@@ -64,7 +64,7 @@ export class CombatEffectManager {
         attackerY = attacker.y;
       }
     }
-    
+
     if (typeof target.getWorldTransformMatrix === 'function') {
       const targetWorldPos = target.getWorldTransformMatrix();
       targetX = targetWorldPos.tx;
@@ -85,12 +85,7 @@ export class CombatEffectManager {
     effect.setDepth(1000);
     this.activeEffects.push(effect);
 
-    const distance = Phaser.Math.Distance.Between(
-      attackerX,
-      attackerY,
-      targetX,
-      targetY,
-    );
+    const distance = Phaser.Math.Distance.Between(attackerX, attackerY, targetX, targetY);
     const duration = Math.max(config.duration, (distance / 32) * 500); // 2マス/秒の速度
 
     this.scene.tweens.add({

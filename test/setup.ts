@@ -68,14 +68,18 @@ jest.mock('phaser', () => ({
           public height: number,
         ) {}
         contains = jest.fn((x: number, y: number) => {
-          return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+          return (
+            x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height
+          );
         });
       },
       {
         Contains: jest.fn((rect: any, x: number, y: number) => {
-          return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+          return (
+            x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height
+          );
         }),
-      }
+      },
     ),
   },
   Game: jest.fn().mockImplementation((config) => ({
@@ -196,7 +200,7 @@ jest.mock('phaser', () => ({
     Sprite: class MockSprite {
       parentContainer: any = null;
       rotation: number = 0;
-      
+
       constructor(
         public scene: any,
         public x: number,
@@ -547,7 +551,7 @@ export const createMockScene = () => {
           delay: config.delay || 1000,
           loop: config.loop || false,
         };
-        
+
         // jestのfakeTimersと連携
         if (config.callback) {
           const executeCallback = () => {
@@ -558,7 +562,7 @@ export const createMockScene = () => {
           };
           setTimeout(executeCallback, config.delay);
         }
-        
+
         return event;
       }),
       now: Date.now(),

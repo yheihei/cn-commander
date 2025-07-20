@@ -251,7 +251,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
           getEquippedWeapon: () => ({
             attackBonus: 10,
             minRange: 1,
-            maxRange: 6,  // 手裏剣の射程に変更
+            maxRange: 6, // 手裏剣の射程に変更
             durability: 50,
           }),
         })),

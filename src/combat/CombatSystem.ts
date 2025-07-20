@@ -299,11 +299,11 @@ export class CombatSystem {
     allArmies.forEach((army) => {
       // 移動モードに応じて戦闘開始/停止
       const mode = army.getMovementMode();
-      
+
       if (mode === MovementMode.COMBAT || mode === MovementMode.STANDBY) {
         // 射程内に敵がいるかチェック
         const hasTargetsInRange = this.hasEnemiesInRange(army);
-        
+
         if (hasTargetsInRange) {
           // 既に戦闘中でなければ開始
           this.startCombat(army);
