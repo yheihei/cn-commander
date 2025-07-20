@@ -49,18 +49,34 @@ global.cancelAnimationFrame = jest.fn((id) => {
 
 // Phaser固有のモック設定
 jest.mock('phaser', () => ({
-  Geom: {
-    Rectangle: class MockRectangle {
-      constructor(
-        public x: number,
-        public y: number,
-        public width: number,
-        public height: number,
-      ) {}
-      contains = jest.fn((x: number, y: number) => {
-        return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
-      });
+  Math: {
+    Distance: {
+      Between: jest.fn((x1: number, y1: number, x2: number, y2: number) => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
+      }),
     },
+  },
+  Geom: {
+    Rectangle: Object.assign(
+      class MockRectangle {
+        constructor(
+          public x: number,
+          public y: number,
+          public width: number,
+          public height: number,
+        ) {}
+        contains = jest.fn((x: number, y: number) => {
+          return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+        });
+      },
+      {
+        Contains: jest.fn((rect: any, x: number, y: number) => {
+          return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+        }),
+      }
+    ),
   },
   Game: jest.fn().mockImplementation((config) => ({
     config,
@@ -178,6 +194,9 @@ jest.mock('phaser', () => ({
   },
   GameObjects: {
     Sprite: class MockSprite {
+      parentContainer: any = null;
+      rotation: number = 0;
+      
       constructor(
         public scene: any,
         public x: number,
@@ -190,6 +209,8 @@ jest.mock('phaser', () => ({
       setOrigin = jest.fn().mockReturnThis();
       setTint = jest.fn().mockReturnThis();
       clearTint = jest.fn().mockReturnThis();
+      setScale = jest.fn().mockReturnThis();
+      setDepth = jest.fn().mockReturnThis();
       setPosition = jest.fn(function (this: any, x?: number, y?: number) {
         if (x !== undefined) this.x = x;
         if (y !== undefined) this.y = y;
@@ -291,9 +312,22 @@ jest.mock('phaser', () => ({
       }
       add = jest.fn(function (this: any, child: any) {
         this.list.push(child);
+        // Set parentContainer reference
+        if (child && typeof child === 'object') {
+          child.parentContainer = this;
+        }
         return this;
       });
-      remove = jest.fn().mockReturnThis();
+      remove = jest.fn(function (this: any, child: any) {
+        const index = this.list.indexOf(child);
+        if (index !== -1) {
+          this.list.splice(index, 1);
+          if (child && typeof child === 'object') {
+            child.parentContainer = null;
+          }
+        }
+        return this;
+      });
       setVisible = jest.fn(function (this: any, visible: boolean) {
         this.visible = visible;
         return this;
@@ -376,11 +410,14 @@ export const createMockScene = () => {
           y,
           texture,
           frame,
-          setDisplaySize: jest.fn(),
-          setInteractive: jest.fn(),
+          rotation: 0,
+          setDisplaySize: jest.fn().mockReturnThis(),
+          setInteractive: jest.fn().mockReturnThis(),
           setOrigin: jest.fn().mockReturnThis(),
           setTint: jest.fn().mockReturnThis(),
           clearTint: jest.fn().mockReturnThis(),
+          setScale: jest.fn().mockReturnThis(),
+          setDepth: jest.fn().mockReturnThis(),
           on: jest.fn(),
           getBounds: jest.fn(function (this: any) {
             return {
@@ -414,6 +451,20 @@ export const createMockScene = () => {
           list: [],
           add: jest.fn(function (this: any, child: any) {
             this.list.push(child);
+            // Set parentContainer reference
+            if (child && typeof child === 'object') {
+              child.parentContainer = this;
+            }
+            return this;
+          }),
+          remove: jest.fn(function (this: any, child: any) {
+            const index = this.list.indexOf(child);
+            if (index !== -1) {
+              this.list.splice(index, 1);
+              if (child && typeof child === 'object') {
+                child.parentContainer = null;
+              }
+            }
             return this;
           }),
           setVisible: jest.fn(function (this: any, visible: boolean) {
@@ -496,9 +547,18 @@ export const createMockScene = () => {
           delay: config.delay || 1000,
           loop: config.loop || false,
         };
-        if (config.callback && config.loop) {
-          // テスト用にループは実行しない
+        
+        // jestのfakeTimersと連携
+        if (config.callback) {
+          const executeCallback = () => {
+            config.callback();
+            if (config.loop) {
+              setTimeout(executeCallback, config.delay);
+            }
+          };
+          setTimeout(executeCallback, config.delay);
         }
+        
         return event;
       }),
       now: Date.now(),

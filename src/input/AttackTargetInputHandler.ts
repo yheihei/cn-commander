@@ -3,13 +3,17 @@ import { Army } from '../army/Army';
 import { ArmyManager } from '../army/ArmyManager';
 import { VisionSystem } from '../vision/VisionSystem';
 import { UIManager } from '../ui/UIManager';
+import { Base } from '../base/Base';
+import { BaseManager } from '../base/BaseManager';
+import { SimpleAttackTarget } from '../types/CombatTypes';
 
 export class AttackTargetInputHandler {
   private scene: Phaser.Scene;
   private armyManager: ArmyManager;
+  private baseManager: BaseManager;
   private visionSystem: VisionSystem;
   private attackingArmy: Army;
-  private onTargetSelected: (target: Army) => void;
+  private onTargetSelected: (target: SimpleAttackTarget) => void;
   private onCancel: () => void;
   private isActive: boolean = false;
   private targetMarker: Phaser.GameObjects.Graphics | null = null;
@@ -18,14 +22,16 @@ export class AttackTargetInputHandler {
   constructor(
     scene: Phaser.Scene,
     armyManager: ArmyManager,
+    baseManager: BaseManager,
     visionSystem: VisionSystem,
     attackingArmy: Army,
-    onTargetSelected: (target: Army) => void,
+    onTargetSelected: (target: SimpleAttackTarget) => void,
     onCancel: () => void,
     uiManager?: UIManager,
   ) {
     this.scene = scene;
     this.armyManager = armyManager;
+    this.baseManager = baseManager;
     this.visionSystem = visionSystem;
     this.attackingArmy = attackingArmy;
     this.onTargetSelected = onTargetSelected;
@@ -52,14 +58,14 @@ export class AttackTargetInputHandler {
     if (!this.isActive) return;
 
     if (pointer.leftButtonDown()) {
-      const enemy = this.findEnemyAtPosition(pointer.worldX, pointer.worldY);
-      console.log('AttackTargetInputHandler: クリックした位置の敵=', enemy);
-      if (enemy) {
-        console.log('AttackTargetInputHandler: 敵を選択:', enemy.getName());
-        this.selectTarget(enemy);
+      const target = this.findTargetAtPosition(pointer.worldX, pointer.worldY);
+      console.log('AttackTargetInputHandler: クリックした位置のターゲット=', target);
+      if (target) {
+        console.log('AttackTargetInputHandler: ターゲットを選択:', target.getName());
+        this.selectTarget(target);
       } else {
-        // 敵軍団以外をクリックしたらキャンセル
-        console.log('AttackTargetInputHandler: 敵以外をクリックしたのでキャンセル');
+        // 攻撃対象以外をクリックしたらキャンセル
+        console.log('AttackTargetInputHandler: 攻撃対象以外をクリックしたのでキャンセル');
         this.cancel();
       }
     } else if (pointer.rightButtonDown()) {
@@ -72,9 +78,9 @@ export class AttackTargetInputHandler {
   private handlePointerMove = (pointer: Phaser.Input.Pointer): void => {
     if (!this.isActive) return;
 
-    const enemy = this.findEnemyAtPosition(pointer.worldX, pointer.worldY);
-    if (enemy) {
-      this.showTargetHover(enemy);
+    const target = this.findTargetAtPosition(pointer.worldX, pointer.worldY);
+    if (target) {
+      this.showTargetHover(target);
       this.scene.input.setDefaultCursor('pointer');
     } else {
       this.hideTargetHover();
@@ -102,6 +108,42 @@ export class AttackTargetInputHandler {
         return army;
       }
     }
+
+    return null;
+  }
+
+  private findBaseAtPosition(x: number, y: number): Base | null {
+    // 敵拠点と中立拠点を探す
+    const allBases = this.baseManager.getAllBases();
+
+    for (const base of allBases) {
+      const owner = base.getOwner();
+      // 味方拠点は攻撃対象外
+      if (owner === 'player') continue;
+
+      // 拠点の位置を確認（拠点は2x2タイル）
+      const basePos = base.getPosition();
+      const tileSize = 16;
+      const baseWorldX = basePos.x * tileSize;
+      const baseWorldY = basePos.y * tileSize;
+
+      // 2x2タイルの範囲内かチェック
+      if (x >= baseWorldX && x < baseWorldX + 32 && y >= baseWorldY && y < baseWorldY + 32) {
+        return base;
+      }
+    }
+
+    return null;
+  }
+
+  private findTargetAtPosition(x: number, y: number): SimpleAttackTarget {
+    // まず敵軍団を探す
+    const enemy = this.findEnemyAtPosition(x, y);
+    if (enemy) return enemy;
+
+    // 次に拠点を探す
+    const base = this.findBaseAtPosition(x, y);
+    if (base) return base;
 
     return null;
   }
@@ -141,7 +183,9 @@ export class AttackTargetInputHandler {
     }
   }
 
-  private showTargetHover(enemy: Army): void {
+  private showTargetHover(target: SimpleAttackTarget): void {
+    if (!target) return;
+
     if (!this.targetMarker) {
       this.targetMarker = this.scene.add.graphics();
       this.targetMarker.setDepth(100);
@@ -149,10 +193,23 @@ export class AttackTargetInputHandler {
 
     this.targetMarker.clear();
 
-    // 敵軍団の指揮官の位置に照準マーカーを描画
-    const commander = enemy.getCommander();
-    const x = commander.x;
-    const y = commander.y;
+    let x: number, y: number;
+
+    // 軍団の場合
+    if ('getCommander' in target) {
+      const commander = target.getCommander();
+      x = commander.x;
+      y = commander.y;
+    }
+    // 拠点の場合
+    else if ('getPosition' in target) {
+      const pos = target.getPosition();
+      // 拠点の中心位置（2x2タイルの中心）
+      x = (pos.x + 1) * 16;
+      y = (pos.y + 1) * 16;
+    } else {
+      return;
+    }
 
     // 十字の照準を描画
     this.targetMarker.lineStyle(2, 0xff0000, 1);
@@ -177,7 +234,7 @@ export class AttackTargetInputHandler {
     }
   }
 
-  private selectTarget(target: Army): void {
+  private selectTarget(target: SimpleAttackTarget): void {
     this.isActive = false;
 
     // 一時的に「攻撃目標を指定しました」を表示

@@ -9,15 +9,13 @@ import { CombatEffectManager } from './CombatEffectManager';
 import { MapManager } from '../map/MapManager';
 import { MovementMode } from '../types/MovementTypes';
 import { BaseManager } from '../base/BaseManager';
-// import { BaseCombatSystem } from '../base/BaseCombatSystem';
-// import { Base } from '../base/Base';
-// import { AttackTarget, AttackTargetType } from '../types/CombatTypes';
+import { BaseCombatSystem } from '../base/BaseCombatSystem';
+import { Base } from '../base/Base';
+import { isArmyTarget, isBaseTarget } from '../types/CombatTypes';
 
 export class CombatSystem {
   private armyManager: ArmyManager;
-  // 拠点戦闘システムは後日実装
-  // private baseManager?: BaseManager;
-  // private baseCombatSystem?: BaseCombatSystem;
+  private baseCombatSystem?: BaseCombatSystem;
   private rangeCalculator: RangeCalculator;
   private combatCalculator: CombatCalculator;
   private attackTimerManager: AttackTimerManager;
@@ -38,11 +36,9 @@ export class CombatSystem {
   /**
    * BaseManagerを設定（拠点戦闘のため）
    */
-  setBaseManager(_baseManager: BaseManager): void {
-    // TODO: 拠点への攻撃ターゲット指定の実装時に有効化
-    // this.baseManager = baseManager;
-    // const scene = (this.effectManager as any).scene || this.armyManager.scene;
-    // this.baseCombatSystem = new BaseCombatSystem(scene, baseManager);
+  setBaseManager(baseManager: BaseManager): void {
+    const scene = (this.effectManager as any).scene;
+    this.baseCombatSystem = new BaseCombatSystem(scene, baseManager);
   }
 
   private setupEventHandlers(): void {
@@ -101,36 +97,44 @@ export class CombatSystem {
 
     // 攻撃目標が設定されている場合の処理
     const attackTarget = attackerArmy.getAttackTarget();
-    if (attackTarget && attackTarget.isActive() && attackTarget.isDiscovered()) {
-      console.log(
-        `CombatSystem: ${attackerArmy.getName()} は攻撃目標 ${attackTarget.getName()} を優先攻撃します`,
-      );
-      // 攻撃目標の軍団メンバーのみを対象にする
-      const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
-      const validTargets = targetMembers.filter((enemy) => enemy.isAlive());
+    if (attackTarget) {
+      // 軍団の場合
+      if (isArmyTarget(attackTarget) && attackTarget.isActive() && attackTarget.isDiscovered()) {
+        // 攻撃目標の軍団メンバーのみを対象にする
+        const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
+        const validTargets = targetMembers.filter((enemy) => enemy.isAlive());
 
-      if (validTargets.length === 0) return;
+        if (validTargets.length === 0) return;
 
-      // 距離順にソート（近い順）
-      const sortedTargets = this.rangeCalculator.sortByDistance(attacker, validTargets);
+        // 距離順にソート（近い順）
+        const sortedTargets = this.rangeCalculator.sortByDistance(attacker, validTargets);
 
-      // 最も近い敵から順に射程内かチェック
-      let target: Character | null = null;
-      for (const enemy of sortedTargets) {
-        if (this.rangeCalculator.isInRange(attacker, enemy)) {
-          target = enemy;
-          break;
+        // 最も近い敵から順に射程内かチェック
+        let target: Character | null = null;
+        for (const enemy of sortedTargets) {
+          if (this.rangeCalculator.isInRange(attacker, enemy)) {
+            target = enemy;
+            break;
+          }
         }
-      }
 
-      if (!target) {
-        // 攻撃目標が射程外の場合は攻撃しない
+        if (!target) {
+          // 攻撃目標が射程外の場合は攻撃しない
+          return;
+        }
+
+        // 攻撃を実行
+        this.executeAttack(attacker, target);
         return;
       }
-
-      // 攻撃を実行
-      this.executeAttack(attacker, target);
-      return;
+      // 拠点の場合
+      else if (isBaseTarget(attackTarget) && !attackTarget.isDestroyed()) {
+        if (this.baseCombatSystem && this.baseCombatSystem.isBaseInRange(attacker, attackTarget)) {
+          // 拠点への攻撃を実行
+          this.executeBaseAttack(attacker, attackTarget);
+        }
+        return;
+      }
     }
 
     // 攻撃目標が設定されていない場合は通常の処理
@@ -184,6 +188,41 @@ export class CombatSystem {
     }
   }
 
+  private executeBaseAttack(attacker: Character, targetBase: Base): void {
+    if (!this.baseCombatSystem) return;
+
+    // 拠点への攻撃エフェクトを表示
+    const weapon = attacker.getItemHolder().getEquippedWeapon();
+    if (weapon) {
+      // 拠点の中心座標を計算
+      const basePos = targetBase.getPosition();
+      const targetWorldPos = {
+        x: (basePos.x + 1) * 16, // 2x2タイルの中心
+        y: (basePos.y + 1) * 16,
+      };
+
+      // ダミーターゲット（拠点の中心位置）を作成
+      const dummyTarget = {
+        x: targetWorldPos.x,
+        y: targetWorldPos.y,
+        getWorldTransformMatrix: () => ({
+          tx: targetWorldPos.x,
+          ty: targetWorldPos.y,
+        }),
+      } as any;
+
+      this.effectManager.createAttackEffect(attacker, dummyTarget, weapon.weaponType, () => {
+        // エフェクト完了後、拠点への攻撃を実行
+        if (attacker.isAlive() && !targetBase.isDestroyed()) {
+          this.baseCombatSystem!.processBaseAttack(attacker, targetBase);
+
+          // 武器の耐久度を消費
+          weapon.use();
+        }
+      });
+    }
+  }
+
   private getEnemyArmies(army: Army): Army[] {
     return this.armyManager.getAllArmies().filter((otherArmy) => {
       return otherArmy.getOwner() !== army.getOwner();
@@ -195,21 +234,38 @@ export class CombatSystem {
 
     // 攻撃目標が設定されている場合
     const attackTarget = army.getAttackTarget();
-    if (attackTarget && attackTarget.isActive() && attackTarget.isDiscovered()) {
-      // 軍団の各メンバーについて、攻撃目標が射程内にいるかチェック
-      for (const member of allMembers) {
-        if (!member.isAlive() || !this.combatCalculator.canAttack(member)) {
-          continue;
-        }
+    if (attackTarget) {
+      // 軍団の場合
+      if (isArmyTarget(attackTarget) && attackTarget.isActive() && attackTarget.isDiscovered()) {
+        // 軍団の各メンバーについて、攻撃目標が射程内にいるかチェック
+        for (const member of allMembers) {
+          if (!member.isAlive() || !this.combatCalculator.canAttack(member)) {
+            continue;
+          }
 
-        const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
-        for (const enemy of targetMembers) {
-          if (enemy.isAlive() && this.rangeCalculator.isInRange(member, enemy)) {
-            return true; // 攻撃目標が射程内にいる
+          const targetMembers = [attackTarget.getCommander(), ...attackTarget.getSoldiers()];
+          for (const enemy of targetMembers) {
+            if (enemy.isAlive() && this.rangeCalculator.isInRange(member, enemy)) {
+              return true; // 攻撃目標が射程内にいる
+            }
           }
         }
+        return false; // 攻撃目標が射程外
       }
-      return false; // 攻撃目標が射程外
+      // 拠点の場合
+      else if (isBaseTarget(attackTarget) && !attackTarget.isDestroyed()) {
+        // 軍団の各メンバーについて、拠点が射程内にあるかチェック
+        for (const member of allMembers) {
+          if (!member.isAlive() || !this.combatCalculator.canAttack(member)) {
+            continue;
+          }
+
+          if (this.baseCombatSystem && this.baseCombatSystem.isBaseInRange(member, attackTarget)) {
+            return true; // 拠点が射程内にある
+          }
+        }
+        return false; // 拠点が射程外
+      }
     }
 
     // 攻撃目標が設定されていない場合は通常の処理
@@ -243,9 +299,12 @@ export class CombatSystem {
     allArmies.forEach((army) => {
       // 移動モードに応じて戦闘開始/停止
       const mode = army.getMovementMode();
+      
       if (mode === MovementMode.COMBAT || mode === MovementMode.STANDBY) {
         // 射程内に敵がいるかチェック
-        if (this.hasEnemiesInRange(army)) {
+        const hasTargetsInRange = this.hasEnemiesInRange(army);
+        
+        if (hasTargetsInRange) {
           // 既に戦闘中でなければ開始
           this.startCombat(army);
         } else {

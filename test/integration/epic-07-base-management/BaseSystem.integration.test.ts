@@ -251,7 +251,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
           getEquippedWeapon: () => ({
             attackBonus: 10,
             minRange: 1,
-            maxRange: 3,
+            maxRange: 6,  // 手裏剣の射程に変更
             durability: 50,
           }),
         })),
@@ -278,7 +278,7 @@ describe('[エピック7] 拠点システム統合テスト', () => {
 
       // 距離計算
       const distance = baseCombatSystem.getDistanceToBase({ x: 11, y: 11 }, targetBase);
-      expect(distance).toBe(2); // チェビシェフ距離
+      expect(distance).toBe(4); // マンハッタン距離 (拠点中心(13,13)まで|13-11|+|13-11|=4)
 
       // 射程内チェック
       const inRange = baseCombatSystem.isBaseInRange(mockCharacter as any, targetBase);

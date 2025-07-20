@@ -40,3 +40,23 @@ export interface IAttackable {
   /** 位置取得 */
   getPosition(): { x: number; y: number };
 }
+
+/**
+ * 攻撃目標の型定義（シンプル版）
+ * 軍団または拠点を直接扱う
+ */
+export type SimpleAttackTarget = Army | Base | null;
+
+/**
+ * 攻撃目標が軍団かどうかを判定するタイプガード
+ */
+export function isArmyTarget(target: SimpleAttackTarget): target is Army {
+  return target !== null && 'getCommander' in target;
+}
+
+/**
+ * 攻撃目標が拠点かどうかを判定するタイプガード
+ */
+export function isBaseTarget(target: SimpleAttackTarget): target is Base {
+  return target !== null && 'getIncome' in target;
+}

@@ -3,6 +3,7 @@ import { Army } from '../army/Army';
 import { Character } from '../character/Character';
 import { MovementMode } from '../types/MovementTypes';
 import { IItem } from '../types/ItemTypes';
+import { isArmyTarget, isBaseTarget } from '../types/CombatTypes';
 
 export interface ArmyInfoPanelConfig {
   scene: Phaser.Scene;
@@ -78,8 +79,15 @@ export class ArmyInfoPanel extends Phaser.GameObjects.Container {
     // 攻撃目標を含めて状態テキストを更新
     const attackTarget = army.getAttackTarget();
     let fullStatusText = `状態: ${statusText}`;
-    if (attackTarget && attackTarget.isActive()) {
-      fullStatusText += ` 攻撃目標: ${attackTarget.getName()}`;
+    if (attackTarget) {
+      // 軍団の場合
+      if (isArmyTarget(attackTarget) && attackTarget.isActive()) {
+        fullStatusText += ` 攻撃目標: ${attackTarget.getName()}`;
+      }
+      // 拠点の場合
+      else if (isBaseTarget(attackTarget) && !attackTarget.isDestroyed()) {
+        fullStatusText += ` 攻撃目標: ${attackTarget.getName()}`;
+      }
     }
     this.statusText.setText(fullStatusText);
 

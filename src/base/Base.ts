@@ -20,7 +20,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
   private combatData: BaseCombatData;
 
   // ビジュアル要素
-  private baseSprites: Phaser.GameObjects.Sprite[] = [];  // 2x2タイル用の4つのスプライト
+  private baseSprites: Phaser.GameObjects.Sprite[] = []; // 2x2タイル用の4つのスプライト
   private hpBar!: Phaser.GameObjects.Graphics;
   private hpBarBg!: Phaser.GameObjects.Graphics;
   private ownerFlag!: Phaser.GameObjects.Sprite;
@@ -92,9 +92,9 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     // 各タイルの位置: 左上(-16,-16), 右上(16,-16), 左下(-16,16), 右下(16,16)
     const positions = [
       { x: -16, y: -16 }, // 左上
-      { x: 16, y: -16 },  // 右上
-      { x: -16, y: 16 },  // 左下
-      { x: 16, y: 16 }    // 右下
+      { x: 16, y: -16 }, // 右上
+      { x: -16, y: 16 }, // 左下
+      { x: 16, y: 16 }, // 右下
     ];
 
     positions.forEach((pos) => {
@@ -109,7 +109,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     this.hpBarBg.fillStyle(0x000000, 0.5);
     this.hpBarBg.fillRect(
       -Base.HP_BAR_WIDTH / 2,
-      -32 - 10,  // 64x64の半分上
+      -32 - 10, // 64x64の半分上
       Base.HP_BAR_WIDTH,
       Base.HP_BAR_HEIGHT,
     );
@@ -126,13 +126,13 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
 
     // 拠点名（非表示状態で作成）
     this.nameText = this.scene.add.text(0, 37, this.baseData.name, {
-      fontSize: '12px',  // 少し大きく
-      fontFamily: 'monospace, "Courier New", Courier',  // モノスペースフォントを明示的に指定
+      fontSize: '12px', // 少し大きく
+      fontFamily: 'monospace, "Courier New", Courier', // モノスペースフォントを明示的に指定
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 1,  // 縁取りを細く
-      resolution: 2,  // 高解像度でレンダリング
-      padding: { x: 2, y: 2 },  // 余白を追加
+      strokeThickness: 1, // 縁取りを細く
+      resolution: 2, // 高解像度でレンダリング
+      padding: { x: 2, y: 2 }, // 余白を追加
     });
     this.nameText.setOrigin(0.5, 0);
     this.nameText.setVisible(false);
@@ -142,12 +142,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
 
     // インタラクティブ設定
     this.setInteractive(
-      new Phaser.Geom.Rectangle(
-        -32,
-        -32,
-        64,
-        64,
-      ),
+      new Phaser.Geom.Rectangle(-32, -32, 64, 64),
       Phaser.Geom.Rectangle.Contains,
     );
 
@@ -194,10 +189,10 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
       // 左上タイルのフレーム番号を基準に、右上(+1)、左下(+8)、右下(+9)
       const baseFrame = visualConfig.frame;
       const frames = [
-        baseFrame,      // 左上
-        baseFrame + 1,  // 右上
-        baseFrame + 8,  // 左下
-        baseFrame + 9   // 右下
+        baseFrame, // 左上
+        baseFrame + 1, // 右上
+        baseFrame + 8, // 左下
+        baseFrame + 9, // 右下
       ];
 
       this.baseSprites.forEach((sprite, index) => {
@@ -251,7 +246,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     this.hpBar.fillStyle(color, 1);
     this.hpBar.fillRect(
       -Base.HP_BAR_WIDTH / 2,
-      -32 - 10,  // 64x64の半分上
+      -32 - 10, // 64x64の半分上
       Base.HP_BAR_WIDTH * hpRatio,
       Base.HP_BAR_HEIGHT,
     );
@@ -395,7 +390,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     if (this.baseSprites.length === 0) return;
 
     // 赤くフラッシュ
-    this.baseSprites.forEach(sprite => sprite.setTint(0xff0000));
+    this.baseSprites.forEach((sprite) => sprite.setTint(0xff0000));
     if (this.scene && this.scene.time) {
       this.scene.time.delayedCall(100, () => {
         this.updateVisual(); // 元の色に戻す
@@ -405,7 +400,7 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
 
   private setDestroyed(): void {
     // 破壊状態のビジュアル
-    this.baseSprites.forEach(sprite => sprite.setTint(0x666666));
+    this.baseSprites.forEach((sprite) => sprite.setTint(0x666666));
     if (this.hpBar) this.hpBar.setVisible(false);
     if (this.hpBarBg) this.hpBarBg.setVisible(false);
 

@@ -11,6 +11,7 @@ import { Character } from '../character/Character';
 import { Position } from '../types/CharacterTypes';
 import { MovementMode, MovementState } from '../types/MovementTypes';
 import { AttackTargetMarker } from '../ui/AttackTargetMarker';
+import { SimpleAttackTarget } from '../types/CombatTypes';
 
 export class Army extends Phaser.GameObjects.Container {
   private id: string;
@@ -28,7 +29,7 @@ export class Army extends Phaser.GameObjects.Container {
   };
   private owner: FactionType;
   private discovered: boolean = false;
-  private attackTarget: Army | null = null;
+  private attackTarget: SimpleAttackTarget = null;
   private attackTargetMarker: AttackTargetMarker | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
@@ -314,8 +315,16 @@ export class Army extends Phaser.GameObjects.Container {
     }
 
     // 攻撃目標が無効になった場合はクリア
-    if (this.attackTarget && !this.attackTarget.isActive()) {
-      this.clearAttackTarget();
+    if (this.attackTarget) {
+      let shouldClear = false;
+      if ('isActive' in this.attackTarget && !this.attackTarget.isActive()) {
+        shouldClear = true;
+      } else if ('isDestroyed' in this.attackTarget && this.attackTarget.isDestroyed()) {
+        shouldClear = true;
+      }
+      if (shouldClear) {
+        this.clearAttackTarget();
+      }
     }
 
     this.removeDeadMembers();
@@ -401,7 +410,7 @@ export class Army extends Phaser.GameObjects.Container {
 
   // 攻撃目標関連のメソッド
 
-  setAttackTarget(target: Army | null): void {
+  setAttackTarget(target: SimpleAttackTarget): void {
     // 既存のマーカーを削除
     if (this.attackTargetMarker) {
       this.attackTargetMarker.destroy();
@@ -409,23 +418,29 @@ export class Army extends Phaser.GameObjects.Container {
     }
 
     this.attackTarget = target;
-    console.log(
-      `Army.setAttackTarget: ${this.getName()} の攻撃目標を ${target ? target.getName() : 'null'} に設定`,
-    );
 
-    // 新しい目標が設定されたらマーカーを作成
-    if (target && target.isActive()) {
+    // 新しい目標が設定されたらマーカーを作成（軍団の場合のみ）
+    if (target && 'isActive' in target && target.isActive()) {
       this.attackTargetMarker = new AttackTargetMarker(this.scene, target);
-      console.log(`Army.setAttackTarget: マーカーを作成しました`);
     }
   }
 
-  getAttackTarget(): Army | null {
+  getAttackTarget(): SimpleAttackTarget {
     return this.attackTarget;
   }
 
   hasAttackTarget(): boolean {
-    return this.attackTarget !== null && this.attackTarget.isActive();
+    if (this.attackTarget === null) return false;
+
+    // 軍団の場合
+    if ('isActive' in this.attackTarget) {
+      return this.attackTarget.isActive();
+    }
+    // 拠点の場合
+    if ('isDestroyed' in this.attackTarget) {
+      return !this.attackTarget.isDestroyed();
+    }
+    return false;
   }
 
   clearAttackTarget(): void {

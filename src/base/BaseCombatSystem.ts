@@ -74,7 +74,25 @@ export class BaseCombatSystem {
     const weapon = attacker.getItemHolder().getEquippedWeapon();
     if (!weapon) return false;
 
-    const distance = this.getDistanceToBase({ x: attacker.x / 16, y: attacker.y / 16 }, targetBase);
+    // ワールド座標を取得
+    let attackerX: number, attackerY: number;
+    if (typeof attacker.getWorldTransformMatrix === 'function') {
+      const worldPos = attacker.getWorldTransformMatrix();
+      attackerX = worldPos.tx;
+      attackerY = worldPos.ty;
+    } else {
+      // テスト環境では、親コンテナ（Army）の位置を考慮
+      const parent = (attacker as any).parentContainer;
+      if (parent && 'x' in parent && 'y' in parent) {
+        attackerX = parent.x + attacker.x;
+        attackerY = parent.y + attacker.y;
+      } else {
+        attackerX = attacker.x;
+        attackerY = attacker.y;
+      }
+    }
+
+    const distance = this.getDistanceToBase({ x: attackerX / 16, y: attackerY / 16 }, targetBase);
 
     return distance >= weapon.minRange && distance <= weapon.maxRange;
   }
@@ -93,8 +111,8 @@ export class BaseCombatSystem {
     const dx = baseCenterX - from.x;
     const dy = baseCenterY - from.y;
 
-    // チェビシェフ距離（8方向移動）
-    return Math.max(Math.abs(dx), Math.abs(dy));
+    // マンハッタン距離（RangeCalculatorと同じ計算方式）
+    return Math.abs(dx) + Math.abs(dy);
   }
 
   /**

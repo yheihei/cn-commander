@@ -417,14 +417,15 @@ export class MovementInputHandler {
       new AttackTargetInputHandler(
         this.scene,
         this.armyManager,
+        this.baseManager,
         this.visionSystem,
         this.selectedArmy,
-        (target: Army) => {
+        (target) => {
           // 目標が選択された
           if (this.selectedArmy) {
             this.selectedArmy.setAttackTarget(target);
             console.log(
-              `${this.selectedArmy.getName()} の攻撃目標を ${target.getName()} に設定しました`,
+              `${this.selectedArmy.getName()} の攻撃目標を ${target?.getName() || '不明'} に設定しました`,
             );
           }
           // モードを解除
