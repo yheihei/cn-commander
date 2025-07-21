@@ -2,6 +2,8 @@ import * as Phaser from 'phaser';
 import { Base } from './Base';
 import { BaseData, BaseType } from '../types/MapTypes';
 import { MapManager } from '../map/MapManager';
+import { Character } from '../character/Character';
+import { Army } from '../army/Army';
 
 /**
  * 拠点管理クラス
@@ -11,6 +13,12 @@ export class BaseManager {
   private scene: Phaser.Scene;
   private bases: Map<string, Base>;
   private baseGroup: Phaser.GameObjects.Group;
+
+  // 待機兵士管理（拠点ID => 兵士リスト）
+  private waitingSoldiers: Map<string, Character[]> = new Map();
+
+  // 駐留軍団管理（拠点ID => 軍団リスト）
+  private stationedArmies: Map<string, Army[]> = new Map();
 
   // 収入計算用
   private lastIncomeUpdate: number = 0;
@@ -138,6 +146,71 @@ export class BaseManager {
       // 敵の収入も計算（AI用）
       const enemyIncome = this.calculateIncome('enemy');
       this.scene.events.emit('enemyIncomeUpdate', { enemy: enemyIncome });
+    }
+  }
+
+  /**
+   * 待機兵士を取得
+   */
+  getWaitingSoldiers(baseId: string): Character[] {
+    return this.waitingSoldiers.get(baseId) || [];
+  }
+
+  /**
+   * 待機兵士を追加
+   */
+  addWaitingSoldier(baseId: string, soldier: Character): void {
+    const soldiers = this.waitingSoldiers.get(baseId) || [];
+    soldiers.push(soldier);
+    this.waitingSoldiers.set(baseId, soldiers);
+  }
+
+  /**
+   * 待機兵士を削除
+   */
+  removeWaitingSoldier(baseId: string, soldier: Character): void {
+    const soldiers = this.waitingSoldiers.get(baseId) || [];
+    const index = soldiers.indexOf(soldier);
+    if (index > -1) {
+      soldiers.splice(index, 1);
+      this.waitingSoldiers.set(baseId, soldiers);
+    }
+  }
+
+  /**
+   * 複数の待機兵士を削除
+   */
+  removeWaitingSoldiers(baseId: string, soldiersToRemove: Character[]): void {
+    const soldiers = this.waitingSoldiers.get(baseId) || [];
+    const remaining = soldiers.filter((s) => !soldiersToRemove.includes(s));
+    this.waitingSoldiers.set(baseId, remaining);
+  }
+
+  /**
+   * 駐留軍団を取得
+   */
+  getStationedArmies(baseId: string): Army[] {
+    return this.stationedArmies.get(baseId) || [];
+  }
+
+  /**
+   * 駐留軍団を追加
+   */
+  addStationedArmy(baseId: string, army: Army): void {
+    const armies = this.stationedArmies.get(baseId) || [];
+    armies.push(army);
+    this.stationedArmies.set(baseId, armies);
+  }
+
+  /**
+   * 駐留軍団を削除
+   */
+  removeStationedArmy(baseId: string, army: Army): void {
+    const armies = this.stationedArmies.get(baseId) || [];
+    const index = armies.indexOf(army);
+    if (index > -1) {
+      armies.splice(index, 1);
+      this.stationedArmies.set(baseId, armies);
     }
   }
 

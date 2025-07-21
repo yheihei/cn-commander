@@ -15,6 +15,7 @@ import { DiscoverySystem } from '../vision/DiscoverySystem';
 import { WeaponFactory } from '../item/WeaponFactory';
 import { CombatSystem } from '../combat/CombatSystem';
 import { BaseManager } from '../base/BaseManager';
+import { CharacterFactory } from '../character/CharacterFactory';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -117,6 +118,9 @@ export class GameScene extends Phaser.Scene {
 
     // テスト用の軍団を作成
     this.createTestArmies();
+
+    // テスト用の待機兵士を追加
+    this.createTestWaitingSoldiers();
 
     // 初期カメラ位置を設定（プレイヤー軍団の中心）
     const cameraX = 10 * 16 + 16;
@@ -264,6 +268,69 @@ export class GameScene extends Phaser.Scene {
     });
 
     // テストシナリオ: 咲耶軍団を東（右）に移動させて敵軍団を発見してください
+  }
+
+  private createTestWaitingSoldiers(): void {
+    // プレイヤー本拠地に待機兵士を追加
+    const baseId = 'player-hq'; // createDefaultMapで作成された拠点IDを使用
+
+    // 待機兵士を作成
+    const waitingSoldiers = [
+      CharacterFactory.createCharacter(this, 0, 0, 'wind', '疾風太郎', {
+        hp: 30,
+        maxHp: 30,
+        attack: 20,
+        defense: 10,
+        speed: 20,
+        moveSpeed: 13,
+        sight: 8,
+      }),
+      CharacterFactory.createCharacter(this, 0, 0, 'iron', '鉄壁花子', {
+        hp: 50,
+        maxHp: 50,
+        attack: 15,
+        defense: 25,
+        speed: 15,
+        moveSpeed: 8,
+        sight: 6,
+      }),
+      CharacterFactory.createCharacter(this, 0, 0, 'shadow', '影丸', {
+        hp: 35,
+        maxHp: 35,
+        attack: 30,
+        defense: 12,
+        speed: 25,
+        moveSpeed: 12,
+        sight: 11,
+      }),
+      CharacterFactory.createCharacter(this, 0, 0, 'medicine', '薬師梅', {
+        hp: 40,
+        maxHp: 40,
+        attack: 12,
+        defense: 15,
+        speed: 18,
+        moveSpeed: 10,
+        sight: 9,
+      }),
+      CharacterFactory.createCharacter(this, 0, 0, 'wind', '風小僧', {
+        hp: 28,
+        maxHp: 28,
+        attack: 18,
+        defense: 9,
+        speed: 22,
+        moveSpeed: 14,
+        sight: 8,
+      }),
+    ];
+
+    // BaseManagerに待機兵士を追加
+    waitingSoldiers.forEach((soldier) => {
+      this.baseManager.addWaitingSoldier(baseId, soldier);
+      // 見えないように非表示にする
+      soldier.setVisible(false);
+    });
+
+    console.log(`待機兵士${waitingSoldiers.length}名を拠点「${baseId}」に追加しました`);
   }
 
   private setupCamera(): void {

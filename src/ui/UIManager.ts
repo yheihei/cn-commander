@@ -5,8 +5,10 @@ import { ArmyInfoPanel } from './ArmyInfoPanel';
 import { BaseInfoPanel } from './BaseInfoPanel';
 import { BaseActionMenu } from './BaseActionMenu';
 import { BarracksSubMenu } from './BarracksSubMenu';
+import { ArmyFormationUITabbed } from './ArmyFormationUITabbed';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
+import { ArmyFormationData } from '../types/ArmyFormationTypes';
 
 export class UIManager {
   private scene: Phaser.Scene;
@@ -16,6 +18,7 @@ export class UIManager {
   private baseInfoPanel: BaseInfoPanel | null = null;
   private baseActionMenu: BaseActionMenu | null = null;
   private barracksSubMenu: BarracksSubMenu | null = null;
+  private armyFormationUI: ArmyFormationUITabbed | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
@@ -409,8 +412,10 @@ export class UIManager {
       y: menuY,
       onFormArmy: () => {
         this.hideBarracksSubMenu();
-        // TODO: 軍団編成画面を表示
-        console.log('軍団編成が選択されました');
+        // 軍団編成画面を表示
+        if (this.currentSelectedBase) {
+          this.showArmyFormationUI(this.currentSelectedBase);
+        }
       },
       onManageGarrison: () => {
         this.hideBarracksSubMenu();
@@ -477,6 +482,121 @@ export class UIManager {
       const y = viewTop + 30;
       this.guideMessage.setPosition(x, y);
     }
+
+    // ArmyFormationUIの位置更新（ArmyInfoPanelと同じ方式）
+    if (this.armyFormationUI && this.armyFormationUI.visible) {
+      const cam = this.scene.cameras.main;
+      const viewTop = cam.worldView.y;
+      const viewRight = cam.worldView.right;
+
+      const panelX = viewRight - this.armyFormationUI.getWidth() - 10;
+      const panelY = viewTop + 20;
+      this.armyFormationUI.setPosition(panelX, panelY);
+    }
+  }
+
+  public showArmyFormationUI(base: Base, onArmyFormed?: (data: ArmyFormationData) => void): void {
+    // 既存のUIをすべて非表示
+    this.hideAllUI();
+
+    // 軍団編成UIが既に存在する場合は一旦削除
+    if (this.armyFormationUI) {
+      this.armyFormationUI.destroy();
+      this.armyFormationUI = null;
+    }
+
+    // カメラのズームを考慮したパネルサイズ（initializeInfoPanelsと同じ計算）
+    const zoom = this.scene.cameras.main.zoom || 2.25;
+    const viewWidth = 1280 / zoom;
+    const viewHeight = 720 / zoom;
+    const panelWidth = viewWidth / 2 - 20;
+    const panelHeight = viewHeight - 36;
+
+    // 初期位置は画面外に配置
+    const initialX = -1000;
+    const initialY = -1000;
+
+    // 軍団編成UIを作成
+    this.armyFormationUI = new ArmyFormationUITabbed({
+      scene: this.scene,
+      x: initialX,
+      y: initialY,
+      width: panelWidth,
+      height: panelHeight,
+      base,
+      onArmyFormed: (data) => {
+        this.hideArmyFormationUI();
+
+        // ArmyManagerを使って軍団を作成
+        const armyManager = (this.scene as any).armyManager;
+        const baseManager = (this.scene as any).baseManager;
+
+        if (armyManager && baseManager) {
+          const army = armyManager.createArmyFromBase(data, base);
+
+          if (army) {
+            // 待機兵士から削除
+            const soldiersToRemove = [data.commander, ...data.soldiers];
+            baseManager.removeWaitingSoldiers(base.getId(), soldiersToRemove);
+
+            console.log('軍団が出撃しました:', army.getName());
+          }
+        }
+
+        if (onArmyFormed) {
+          onArmyFormed(data);
+        }
+      },
+      onCancelled: () => {
+        this.hideArmyFormationUI();
+        // 拠点情報を再表示
+        if (this.currentSelectedBase) {
+          this.showBaseInfo(this.currentSelectedBase);
+        }
+      },
+    });
+
+    // BaseManagerから待機兵士を取得してUIに設定
+    const baseManager = (this.scene as any).baseManager;
+    if (baseManager) {
+      const waitingSoldiers = baseManager.getWaitingSoldiers(base.getId());
+      this.armyFormationUI.updateWaitingSoldiers(waitingSoldiers);
+    }
+
+    // カメラの現在の表示範囲を取得（showArmyInfoと同じ方式）
+    const cam = this.scene.cameras.main;
+    const viewTop = cam.worldView.y;
+    const viewRight = cam.worldView.right;
+
+    // パネルを画面の右端に配置
+    const panelX = viewRight - this.armyFormationUI.getWidth() - 10;
+    const panelY = viewTop + 20;
+
+    this.armyFormationUI.setPosition(panelX, panelY);
+    this.armyFormationUI.show();
+  }
+
+  public hideArmyFormationUI(): void {
+    if (this.armyFormationUI) {
+      this.armyFormationUI.destroy();
+      this.armyFormationUI = null;
+    }
+  }
+
+  public isArmyFormationUIVisible(): boolean {
+    return this.armyFormationUI !== null;
+  }
+
+  private hideAllUI(): void {
+    console.log('hideAllUI called');
+    this.hideActionMenu();
+    this.hideMovementModeMenu();
+    this.hideArmyInfo();
+    this.hideBaseInfo();
+    this.hideBaseActionMenu();
+    this.hideBarracksSubMenu();
+    this.hideGuideMessage();
+    // 注: armyFormationUIは意図的に含めない（専用のhideメソッドがあるため）
   }
 
   public destroy(): void {
@@ -487,6 +607,7 @@ export class UIManager {
     this.hideBaseActionMenu();
     this.hideBarracksSubMenu();
     this.hideGuideMessage();
+    this.hideArmyFormationUI();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();
       this.armyInfoPanel = null;
