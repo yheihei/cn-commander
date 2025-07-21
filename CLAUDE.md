@@ -203,6 +203,77 @@ TypeScript型定義：
   - カメラのスクロールとズームの影響を受ける
   - 例：WaypointMarker（経路マーカー）
 
+### **重要** UIのビューポート設定方法（必読）
+
+#### 問題：UIがカメラに映らない
+新しいUIを作成する際、よく「UIがカメラに映らない」問題が発生します。これを防ぐため、以下の手順に必ず従ってください。
+
+#### 正しいUIのビューポート設定手順
+
+1. **カメラのズーム値を考慮する**
+```typescript
+const zoom = this.scene.cameras.main.zoom || 2.25;
+const viewWidth = 1280 / zoom;  // 実際の表示幅
+const viewHeight = 720 / zoom;   // 実際の表示高さ
+```
+
+2. **初期作成時は画面外に配置**
+```typescript
+// UIコンポーネント作成時は画面外に初期配置
+const initialX = -1000;
+const initialY = -1000;
+this.myUI = new MyUIComponent({
+  scene: this.scene,
+  x: initialX,
+  y: initialY,
+  width: viewWidth / 2 - 20,  // ズームを考慮したサイズ
+  height: viewHeight - 36,
+});
+```
+
+3. **表示時にカメラのworldViewを使用して配置**
+```typescript
+public showMyUI(): void {
+  const cam = this.scene.cameras.main;
+  const viewTop = cam.worldView.y;
+  const viewLeft = cam.worldView.x;
+  const viewRight = cam.worldView.right;
+  
+  // 画面右側に配置する例
+  const uiX = viewRight - this.myUI.getWidth() - 10;
+  const uiY = viewTop + 20;
+  
+  this.myUI.setPosition(uiX, uiY);
+  this.myUI.show();
+}
+```
+
+4. **UIManagerのupdateメソッドで位置を更新**
+```typescript
+public update(): void {
+  // カメラが移動してもUIが追従するように
+  if (this.myUI && this.myUI.visible) {
+    const cam = this.scene.cameras.main;
+    const viewTop = cam.worldView.y;
+    const viewRight = cam.worldView.right;
+    
+    const uiX = viewRight - this.myUI.getWidth() - 10;
+    const uiY = viewTop + 20;
+    this.myUI.setPosition(uiX, uiY);
+  }
+}
+```
+
+#### 重要なポイント
+- **cam.worldView**：現在のカメラの表示範囲を取得（これが最重要）
+- **ズーム値の考慮**：UIのサイズ計算時は必ずズーム値で除算
+- **update()での更新**：カメラ移動時もUIが正しく表示されるよう更新
+- **初期位置**：作成時は画面外（-1000, -1000）に配置し、表示時に正しい位置へ移動
+
+#### 参考実装
+- `src/ui/UIManager.ts`の`showArmyInfo()`メソッド
+- `src/ui/UIManager.ts`の`update()`メソッド内のUI位置更新処理
+
 ### マネージャーパターン
 本プロジェクトは各システムごとにマネージャークラスを配置し、責務を明確に分離：
 - 各マネージャーは`GameScene`で初期化され、相互に連携
