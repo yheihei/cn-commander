@@ -102,13 +102,19 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     buttonBg.setStrokeStyle(1, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
 
-    // ボタンのテキスト
+    // ボタンのテキスト（ピクセルパーフェクト設定）
     const buttonText = this.scene.add.text(0, 0, text, {
       fontSize: '14px',
+      fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
+      resolution: 2,
       padding: { x: 2, y: 2 },
     });
     buttonText.setOrigin(0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (buttonText.setPosition) {
+      buttonText.setPosition(Math.round(buttonText.x), Math.round(buttonText.y));
+    }
 
     button.add([buttonBg, buttonText]);
 

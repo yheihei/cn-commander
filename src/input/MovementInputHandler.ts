@@ -90,7 +90,7 @@ export class MovementInputHandler {
         if (clickedBase) {
           this.uiManager.showBaseInfo(clickedBase);
         } else {
-          // 軍団も拠点も見つからなかった場合、BaseInfoPanelを非表示
+          // 軍団も拠点も見つからなかった場合、BaseInfoPanelと関連メニューを非表示
           this.uiManager.hideBaseInfo();
         }
       }

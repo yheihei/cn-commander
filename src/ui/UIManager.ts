@@ -3,6 +3,8 @@ import { ActionMenu } from './ActionMenu';
 import { MovementModeMenu } from './MovementModeMenu';
 import { ArmyInfoPanel } from './ArmyInfoPanel';
 import { BaseInfoPanel } from './BaseInfoPanel';
+import { BaseActionMenu } from './BaseActionMenu';
+import { BarracksSubMenu } from './BarracksSubMenu';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 
@@ -12,7 +14,10 @@ export class UIManager {
   private movementModeMenu: MovementModeMenu | null = null;
   private armyInfoPanel: ArmyInfoPanel | null = null;
   private baseInfoPanel: BaseInfoPanel | null = null;
+  private baseActionMenu: BaseActionMenu | null = null;
+  private barracksSubMenu: BarracksSubMenu | null = null;
   private currentSelectedArmy: Army | null = null;
+  private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
 
   constructor(scene: Phaser.Scene) {
@@ -312,11 +317,125 @@ export class UIManager {
       this.baseInfoPanel.setPosition(panelX, panelY);
       this.baseInfoPanel.show(base);
     }
+
+    this.currentSelectedBase = base;
+
+    // 味方拠点の場合はBaseActionMenuも表示
+    if (base.getOwner() === 'player') {
+      this.showBaseActionMenu(base);
+    }
   }
 
   public hideBaseInfo(): void {
     if (this.baseInfoPanel) {
       this.baseInfoPanel.hide();
+    }
+    this.hideBaseActionMenu();
+    this.hideBarracksSubMenu();
+    this.currentSelectedBase = null;
+  }
+
+  public showBaseActionMenu(base: Base): void {
+    // 既存のメニューがあれば削除
+    this.hideBaseActionMenu();
+
+    // 味方拠点でない場合は表示しない
+    if (base.getOwner() !== 'player') {
+      return;
+    }
+
+    // カメラの現在の表示範囲を取得
+    const cam = this.scene.cameras.main;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+
+    // 画面左側の固定位置に配置
+    const menuX = viewLeft + 80; // 左端から80px
+    const menuY = viewTop + 120; // 上端から120px
+
+    this.baseActionMenu = new BaseActionMenu({
+      scene: this.scene,
+      x: menuX,
+      y: menuY,
+      onBarracks: () => {
+        this.hideBaseActionMenu();
+        this.showBarracksSubMenu();
+      },
+      onFactory: () => {
+        this.hideBaseActionMenu();
+        // TODO: 生産工場サブメニューを表示
+        console.log('生産工場が選択されました');
+      },
+      onHospital: () => {
+        this.hideBaseActionMenu();
+        // TODO: 医療施設サブメニューを表示
+        console.log('医療施設が選択されました');
+      },
+      onWarehouse: () => {
+        this.hideBaseActionMenu();
+        // TODO: 倉庫サブメニューを表示
+        console.log('倉庫が選択されました');
+      },
+      onCancel: () => {
+        this.hideBaseActionMenu();
+        this.hideBaseInfo();
+      },
+    });
+  }
+
+  public hideBaseActionMenu(): void {
+    if (this.baseActionMenu) {
+      this.baseActionMenu.destroy();
+      this.baseActionMenu = null;
+    }
+  }
+
+  public showBarracksSubMenu(): void {
+    // 既存のメニューがあれば削除
+    this.hideBarracksSubMenu();
+
+    // カメラの現在の表示範囲を取得
+    const cam = this.scene.cameras.main;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+
+    // 画面左側の固定位置に配置（BaseActionMenuより少し右に）
+    const menuX = viewLeft + 100; // 左端から100px
+    const menuY = viewTop + 140; // 上端から140px
+
+    this.barracksSubMenu = new BarracksSubMenu({
+      scene: this.scene,
+      x: menuX,
+      y: menuY,
+      onFormArmy: () => {
+        this.hideBarracksSubMenu();
+        // TODO: 軍団編成画面を表示
+        console.log('軍団編成が選択されました');
+      },
+      onManageGarrison: () => {
+        this.hideBarracksSubMenu();
+        // TODO: 駐留軍団管理画面を表示
+        console.log('駐留軍団管理が選択されました');
+      },
+      onViewSoldiers: () => {
+        this.hideBarracksSubMenu();
+        // TODO: 待機兵士確認画面を表示
+        console.log('待機兵士確認が選択されました');
+      },
+      onCancel: () => {
+        this.hideBarracksSubMenu();
+        // BaseActionMenuに戻る
+        if (this.currentSelectedBase) {
+          this.showBaseActionMenu(this.currentSelectedBase);
+        }
+      },
+    });
+  }
+
+  public hideBarracksSubMenu(): void {
+    if (this.barracksSubMenu) {
+      this.barracksSubMenu.destroy();
+      this.barracksSubMenu = null;
     }
   }
 
@@ -337,6 +456,16 @@ export class UIManager {
       this.baseInfoPanel.setPosition(panelX, panelY);
     }
 
+    // BaseActionMenuの位置更新
+    if (this.baseActionMenu) {
+      this.baseActionMenu.updateFixedPosition(80, 120);
+    }
+
+    // BarracksSubMenuの位置更新
+    if (this.barracksSubMenu) {
+      this.barracksSubMenu.updateFixedPosition(100, 140);
+    }
+
     // ガイドメッセージの位置更新
     if (this.guideMessage) {
       const cam = this.scene.cameras.main;
@@ -355,6 +484,8 @@ export class UIManager {
     this.hideMovementModeMenu();
     this.hideArmyInfo();
     this.hideBaseInfo();
+    this.hideBaseActionMenu();
+    this.hideBarracksSubMenu();
     this.hideGuideMessage();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();

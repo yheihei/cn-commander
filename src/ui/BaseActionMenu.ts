@@ -1,42 +1,77 @@
 import * as Phaser from 'phaser';
-import { MovementMode } from '../types/MovementTypes';
 
-export interface MovementModeMenuConfig {
+export interface BaseActionMenuConfig {
   x: number;
   y: number;
   scene: Phaser.Scene;
-  onNormalMove?: () => void;
-  onCombatMove?: () => void;
+  onBarracks?: () => void;
+  onFactory?: () => void;
+  onHospital?: () => void;
+  onWarehouse?: () => void;
   onCancel?: () => void;
 }
 
-export class MovementModeMenu extends Phaser.GameObjects.Container {
+export class BaseActionMenu extends Phaser.GameObjects.Container {
   private background: Phaser.GameObjects.Rectangle;
-  private normalMoveButton: Phaser.GameObjects.Container;
-  private combatMoveButton: Phaser.GameObjects.Container;
-  private onNormalMoveCallback?: () => void;
-  private onCombatMoveCallback?: () => void;
+  private barracksButton: Phaser.GameObjects.Container;
+  private factoryButton: Phaser.GameObjects.Container;
+  private hospitalButton: Phaser.GameObjects.Container;
+  private warehouseButton: Phaser.GameObjects.Container;
+  private onBarracksCallback?: () => void;
+  private onFactoryCallback?: () => void;
+  private onHospitalCallback?: () => void;
+  private onWarehouseCallback?: () => void;
   private onCancelCallback?: () => void;
 
-  constructor(config: MovementModeMenuConfig) {
+  constructor(config: BaseActionMenuConfig) {
     super(config.scene, config.x, config.y);
 
-    this.onNormalMoveCallback = config.onNormalMove;
-    this.onCombatMoveCallback = config.onCombatMove;
+    this.onBarracksCallback = config.onBarracks;
+    this.onFactoryCallback = config.onFactory;
+    this.onHospitalCallback = config.onHospital;
+    this.onWarehouseCallback = config.onWarehouse;
     this.onCancelCallback = config.onCancel;
 
-    // メニューの背景（2つのボタンを含むサイズ）
-    this.background = config.scene.add.rectangle(0, 0, 140, 118, 0x333333, 0.9);
+    // メニューの背景（4つのボタン用に高さを調整）
+    this.background = config.scene.add.rectangle(0, 0, 120, 210, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
-    // 通常移動ボタン
-    this.normalMoveButton = this.createButton('通常移動', 0, -27, MovementMode.NORMAL);
-    this.add(this.normalMoveButton);
+    // 兵舎ボタン
+    this.barracksButton = this.createButton('兵舎', 0, -75, () => {
+      if (this.onBarracksCallback) {
+        this.onBarracksCallback();
+      }
+      this.hide();
+    });
+    this.add(this.barracksButton);
 
-    // 戦闘移動ボタン
-    this.combatMoveButton = this.createButton('戦闘移動', 0, 27, MovementMode.COMBAT);
-    this.add(this.combatMoveButton);
+    // 生産工場ボタン
+    this.factoryButton = this.createButton('生産工場', 0, -25, () => {
+      if (this.onFactoryCallback) {
+        this.onFactoryCallback();
+      }
+      this.hide();
+    });
+    this.add(this.factoryButton);
+
+    // 医療施設ボタン
+    this.hospitalButton = this.createButton('医療施設', 0, 25, () => {
+      if (this.onHospitalCallback) {
+        this.onHospitalCallback();
+      }
+      this.hide();
+    });
+    this.add(this.hospitalButton);
+
+    // 倉庫ボタン
+    this.warehouseButton = this.createButton('倉庫', 0, 75, () => {
+      if (this.onWarehouseCallback) {
+        this.onWarehouseCallback();
+      }
+      this.hide();
+    });
+    this.add(this.warehouseButton);
 
     // Containerを配置
     config.scene.add.existing(this);
@@ -55,12 +90,12 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     text: string,
     x: number,
     y: number,
-    mode: MovementMode,
+    onClick: () => void,
   ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     // ボタンの背景
-    const buttonBg = this.scene.add.rectangle(0, 0, 120, 44, 0x555555);
+    const buttonBg = this.scene.add.rectangle(0, 0, 100, 40, 0x555555);
     buttonBg.setStrokeStyle(1, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
 
@@ -90,14 +125,7 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
     });
 
     // クリックイベント
-    buttonBg.on('pointerdown', () => {
-      if (mode === MovementMode.NORMAL && this.onNormalMoveCallback) {
-        this.onNormalMoveCallback();
-      } else if (mode === MovementMode.COMBAT && this.onCombatMoveCallback) {
-        this.onCombatMoveCallback();
-      }
-      this.hide();
-    });
+    buttonBg.on('pointerdown', onClick);
 
     return button;
   }
@@ -122,8 +150,8 @@ export class MovementModeMenu extends Phaser.GameObjects.Container {
       const cam = this.scene.cameras.main;
       const menuScreenX = this.x - cam.worldView.x;
       const menuScreenY = this.y - cam.worldView.y;
-      const halfWidth = 70;
-      const halfHeight = 59;
+      const halfWidth = 60;
+      const halfHeight = 105;
 
       // メニューの範囲外をクリックした場合（画面座標で判定）
       if (
