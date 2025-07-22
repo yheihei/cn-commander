@@ -58,7 +58,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     const viewTop = cam.worldView.y;
     
     // 全体的な座標オフセット
-    const xOffset = 66;   // 左右方向への移動（正の値で右へ、負の値で左へ）
+    const xOffset = 70;   // 左右方向への移動（正の値で右へ、負の値で左へ）
     const yOffset = 184; // 下方向へ移動
 
     super(config.scene, viewLeft, viewTop);
@@ -79,10 +79,10 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     this.add(this.modalBackground);
 
     // メインパネルの背景（画面の90%×85%）
-    const panelWidth = viewWidth * 0.9;
-    const panelHeight = viewHeight * 0.85;
+    const panelWidth = viewWidth;
+    const panelHeight = viewHeight;
     this.background = config.scene.add.rectangle(
-      viewWidth / 2 + xOffset,  // 画面中央に配置 + xOffset
+      viewWidth + xOffset ,  // 画面中央に配置 + xOffset
       viewHeight / 2 + yOffset,
       panelWidth, 
       panelHeight, 
@@ -96,7 +96,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     // タイトル
     const titleText = `軍団編成`;
     this.titleText = config.scene.add.text(
-      viewWidth / 2 + xOffset, 
+      viewWidth / 2 + xOffset + 60, 
       viewHeight / 2 - panelHeight / 2 + 20 + yOffset, 
       titleText, 
       {
