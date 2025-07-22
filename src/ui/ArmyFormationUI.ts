@@ -1,25 +1,26 @@
 import * as Phaser from 'phaser';
 import { Base } from '../base/Base';
 import { Character } from '../character/Character';
-import { IItem } from '../types/ItemTypes';
 import {
-  ArmyFormationData,
   FormationSlot,
   WaitingSoldier,
-  DeployPosition,
 } from '../types/ArmyFormationTypes';
 import { ARMY_CONSTRAINTS } from '../types/ArmyTypes';
 
 export interface ArmyFormationUIConfig {
   scene: Phaser.Scene;
   base: Base;
-  onArmyFormed?: (data: ArmyFormationData) => void;
+  onProceedToItemSelection?: (data: FormationData) => void;
   onCancelled?: () => void;
 }
 
+export interface FormationData {
+  commander: Character | null;
+  soldiers: (Character | null)[];
+}
+
 export class ArmyFormationUI extends Phaser.GameObjects.Container {
-  private currentBase: Base;
-  private onArmyFormedCallback?: (data: ArmyFormationData) => void;
+  private onProceedToItemSelectionCallback?: (data: FormationData) => void;
   private onCancelledCallback?: () => void;
 
   // UI要素
@@ -27,92 +28,100 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   private modalBackground: Phaser.GameObjects.Rectangle;
   private titleText: Phaser.GameObjects.Text;
 
-  // メインコンテンツコンテナ（スクロール用）
+  // メインコンテンツコンテナ
   private contentContainer!: Phaser.GameObjects.Container;
 
-  // 3列レイアウトのコンテナ
-  private waitingSoldiersPanel!: Phaser.GameObjects.Container;
-  private formationPanel!: Phaser.GameObjects.Container;
-  private itemEquipPanel!: Phaser.GameObjects.Container;
+  // 左右分割レイアウトのコンテナ
+  private formationArea!: Phaser.GameObjects.Container;  // 左側：編成エリア
+  private waitingSoldiersArea!: Phaser.GameObjects.Container;  // 右側：待機兵士リスト
 
   // データ管理
   private waitingSoldiers: WaitingSoldier[] = [];
   private formationSlots: FormationSlot[] = [];
-  private selectedCharacter: Character | null = null;
-  private selectedDeployPosition: DeployPosition | null = null;
-  private characterItems: Map<Character, IItem[]> = new Map();
+  private selectedSlot: { type: 'commander' | 'soldier'; index?: number } | null = null;
+  private slotVisuals: Map<string, Phaser.GameObjects.Container> = new Map();
+  private assignedSoldiers: Set<Character> = new Set();
 
   // ボタン
-  private confirmButton!: Phaser.GameObjects.Container;
+  private proceedButton!: Phaser.GameObjects.Container;
   private cancelButton!: Phaser.GameObjects.Container;
 
   constructor(config: ArmyFormationUIConfig) {
-    // カメラの実際の表示範囲を取得
+    // カメラのズーム値を考慮
     const cam = config.scene.cameras.main;
-    const viewWidth = cam.width;
-    const viewHeight = cam.height;
-    const viewCenterX = cam.worldView.x + viewWidth / 2;
-    const viewCenterY = cam.worldView.y + viewHeight / 2;
+    const zoom = cam.zoom || 2.25;
+    const viewWidth = 1280 / zoom;
+    const viewHeight = 720 / zoom;
+    
+    // worldViewの左上を基準にコンテナを配置
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+    
+    // 全体的な座標オフセット
+    const xOffset = 66;   // 左右方向への移動（正の値で右へ、負の値で左へ）
+    const yOffset = 184; // 下方向へ移動
 
-    super(config.scene, viewCenterX, viewCenterY);
+    super(config.scene, viewLeft, viewTop);
 
-    this.currentBase = config.base;
-    this.onArmyFormedCallback = config.onArmyFormed;
+    this.onProceedToItemSelectionCallback = config.onProceedToItemSelection;
     this.onCancelledCallback = config.onCancelled;
 
-    // 画面全体を覆う半透明の背景
+    // 画面全体を覆う半透明の背景（viewWidthの2倍幅で試す）
     this.modalBackground = config.scene.add.rectangle(
-      0,
-      0,
-      viewWidth * 2,
-      viewHeight * 2,
+      viewWidth / 2 + xOffset,  // 中央に配置 + xOffset
+      viewHeight / 2 + yOffset,
+      viewWidth * 2,  // 2倍幅
+      viewHeight,
       0x000000,
-      0.7,
+      0.5,
     );
     this.modalBackground.setOrigin(0.5);
     this.add(this.modalBackground);
 
-    // メインパネルの背景（画面サイズに合わせて調整）
-    const panelWidth = Math.min(viewWidth * 0.85, 600); // 画面幅の85%または600pxの小さい方
-    const panelHeight = Math.min(viewHeight * 0.8, 400); // 画面高さの80%または400pxの小さい方
-    this.background = config.scene.add.rectangle(0, 0, panelWidth, panelHeight, 0x222222, 0.95);
+    // メインパネルの背景（画面の90%×85%）
+    const panelWidth = viewWidth * 0.9;
+    const panelHeight = viewHeight * 0.85;
+    this.background = config.scene.add.rectangle(
+      viewWidth / 2 + xOffset,  // 画面中央に配置 + xOffset
+      viewHeight / 2 + yOffset,
+      panelWidth, 
+      panelHeight, 
+      0x222222, 
+      0.95
+    );
     this.background.setStrokeStyle(3, 0xffffff);
     this.background.setOrigin(0.5);
     this.add(this.background);
 
     // タイトル
-    const titleText = `軍団編成 - ${this.currentBase.getName()}`;
-    this.titleText = config.scene.add.text(0, -panelHeight / 2 + 15, titleText, {
-      fontSize: '16px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      resolution: 2,
-    });
+    const titleText = `軍団編成`;
+    this.titleText = config.scene.add.text(
+      viewWidth / 2 + xOffset, 
+      viewHeight / 2 - panelHeight / 2 + 20 + yOffset, 
+      titleText, 
+      {
+        fontSize: '20px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        resolution: 2,
+      }
+    );
     this.titleText.setOrigin(0.5, 0);
     this.add(this.titleText);
 
     // コンテンツコンテナを作成
-    this.contentContainer = config.scene.add.container(0, 0);
+    this.contentContainer = config.scene.add.container(viewWidth / 2 + xOffset, viewHeight / 2 + 20 + yOffset);
     this.add(this.contentContainer);
 
-    // 3列レイアウトの作成（パネルサイズを渡す）
-    this.createWaitingSoldiersPanel(panelWidth, panelHeight);
-    this.createFormationPanel(panelWidth, panelHeight);
-    this.createItemEquipPanel(panelWidth, panelHeight);
+    // 左右分割レイアウトの作成（左側40%、右側60%）
+    this.createFormationArea(panelWidth, panelHeight);
+    this.createWaitingSoldiersArea(panelWidth, panelHeight);
 
-    // ボタンの作成（パネルサイズを渡す）
+    // ボタンの作成
     this.createButtons(panelHeight);
 
     // 編成スロットの初期化
     this.initializeFormationSlots();
-
-    // デフォルトの出撃位置を設定（拠点の右隣）
-    const basePos = this.currentBase.getPosition();
-    this.selectedDeployPosition = {
-      x: basePos.x + 2,
-      y: basePos.y + 1,
-      isValid: true,
-    };
 
     // コンテナをシーンに追加
     config.scene.add.existing(this as any);
@@ -127,137 +136,128 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     this.setScrollFactor(0);
   }
 
-  private createWaitingSoldiersPanel(parentWidth: number, parentHeight: number): void {
-    // パネルのサイズと位置を動的に計算
-    const spacing = 8;
-    const columnWidth = (parentWidth - spacing * 4) / 3; // 3列で均等割り
-    const panelWidth = Math.min(columnWidth, 150); // 最大幅を制限
-    const panelHeight = parentHeight - 80; // 上下のマージンを考慮
+  private createFormationArea(parentWidth: number, parentHeight: number): void {
+    // 左側エリア：画面幅の40%
+    const areaWidth = parentWidth * 0.4;
+    const areaHeight = parentHeight - 120; // タイトルとボタン分を除く
+    const areaX = -parentWidth / 2 + areaWidth / 2;
+    const areaY = -20; // コンテンツコンテナの相対位置を調整
 
-    const panelX = -parentWidth / 2 + spacing + panelWidth / 2;
-    const panelY = -parentHeight / 2 + 50; // タイトル分のオフセット
+    this.formationArea = this.scene.add.container(areaX, areaY);
 
-    this.waitingSoldiersPanel = this.scene.add.container(panelX, panelY);
-
-    // パネルの背景
-    const bg = this.scene.add.rectangle(0, 0, panelWidth, panelHeight, 0x333333, 0.8);
+    // エリアの背景
+    const bg = this.scene.add.rectangle(0, 0, areaWidth - 20, areaHeight, 0x333333, 0.8);
     bg.setStrokeStyle(1, 0xaaaaaa);
-    bg.setOrigin(0.5, 0);
-    this.waitingSoldiersPanel.add(bg);
+    bg.setOrigin(0.5);
+    this.formationArea.add(bg);
 
     // ヘッダー
-    const header = this.scene.add.text(0, 10 - panelHeight / 2, '待機兵士', {
-      fontSize: '14px',
+    const header = this.scene.add.text(0, -areaHeight / 2 + 20, '編成エリア', {
+      fontSize: '16px',
       color: '#ffffff',
       fontStyle: 'bold',
     });
     header.setOrigin(0.5, 0);
-    this.waitingSoldiersPanel.add(header);
+    this.formationArea.add(header);
 
-    this.contentContainer.add(this.waitingSoldiersPanel);
-  }
-
-  private createFormationPanel(parentWidth: number, parentHeight: number): void {
-    // パネルのサイズと位置を動的に計算
-    const spacing = 8;
-    const columnWidth = (parentWidth - spacing * 4) / 3;
-    const panelWidth = Math.min(columnWidth * 1.2, 180); // 中央パネルは少し広め
-    const panelHeight = parentHeight - 80;
-
-    const panelX = 0; // 中央配置
-    const panelY = -parentHeight / 2 + 50;
-
-    this.formationPanel = this.scene.add.container(panelX, panelY);
-
-    // パネルの背景
-    const bg = this.scene.add.rectangle(0, 0, panelWidth, panelHeight, 0x333333, 0.8);
-    bg.setStrokeStyle(1, 0xaaaaaa);
-    bg.setOrigin(0.5, 0);
-    this.formationPanel.add(bg);
-
-    // ヘッダー
-    const header = this.scene.add.text(0, 10 - panelHeight / 2, '編成中の軍団', {
-      fontSize: '14px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-    });
-    header.setOrigin(0.5, 0);
-    this.formationPanel.add(header);
-
-    // 指揮官スロット
+    // 指揮官ラベル
     const commanderLabel = this.scene.add.text(
-      -panelWidth / 2 + 10,
-      50 - panelHeight / 2,
-      '指揮官（必須）:',
+      0,
+      -areaHeight / 2 + 60,
+      '指揮官',
       {
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#ffff00',
       },
     );
-    commanderLabel.setOrigin(0, 0);
-    this.formationPanel.add(commanderLabel);
+    commanderLabel.setOrigin(0.5, 0);
+    this.formationArea.add(commanderLabel);
 
-    // 一般兵スロット
+    // 一般兵ラベル
     const soldiersLabel = this.scene.add.text(
-      -panelWidth / 2 + 10,
-      120 - panelHeight / 2,
-      '一般兵（最大3名）:',
+      0,
+      -areaHeight / 2 + 200,
+      '一般兵',
       {
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#ffffff',
       },
     );
-    soldiersLabel.setOrigin(0, 0);
-    this.formationPanel.add(soldiersLabel);
+    soldiersLabel.setOrigin(0.5, 0);
+    this.formationArea.add(soldiersLabel);
 
-    this.contentContainer.add(this.formationPanel);
+    this.contentContainer.add(this.formationArea);
   }
 
-  private createItemEquipPanel(parentWidth: number, parentHeight: number): void {
-    // パネルのサイズと位置を動的に計算
-    const spacing = 8;
-    const columnWidth = (parentWidth - spacing * 4) / 3;
-    const panelWidth = Math.min(columnWidth, 150);
-    const panelHeight = parentHeight - 80;
+  private createWaitingSoldiersArea(parentWidth: number, parentHeight: number): void {
+    // 右側エリア：画面幅の60%
+    const areaWidth = parentWidth * 0.6;
+    const areaHeight = parentHeight - 120;
+    const areaX = parentWidth / 2 - areaWidth / 2;
+    const areaY = -20; // コンテンツコンテナの相対位置を調整
 
-    const panelX = parentWidth / 2 - spacing - panelWidth / 2;
-    const panelY = -parentHeight / 2 + 50;
+    this.waitingSoldiersArea = this.scene.add.container(areaX, areaY);
 
-    this.itemEquipPanel = this.scene.add.container(panelX, panelY);
-
-    // パネルの背景
-    const bg = this.scene.add.rectangle(0, 0, panelWidth, panelHeight, 0x333333, 0.8);
+    // エリアの背景
+    const bg = this.scene.add.rectangle(0, 0, areaWidth - 20, areaHeight, 0x333333, 0.8);
     bg.setStrokeStyle(1, 0xaaaaaa);
-    bg.setOrigin(0.5, 0);
-    this.itemEquipPanel.add(bg);
+    bg.setOrigin(0.5);
+    this.waitingSoldiersArea.add(bg);
 
     // ヘッダー
-    const header = this.scene.add.text(0, 10 - panelHeight / 2, 'アイテム装備', {
-      fontSize: '14px',
+    const header = this.scene.add.text(0, -areaHeight / 2 + 20, '待機兵士リスト', {
+      fontSize: '16px',
       color: '#ffffff',
       fontStyle: 'bold',
     });
     header.setOrigin(0.5, 0);
-    this.itemEquipPanel.add(header);
+    this.waitingSoldiersArea.add(header);
 
-    this.contentContainer.add(this.itemEquipPanel);
+    this.contentContainer.add(this.waitingSoldiersArea);
   }
 
+
   private createButtons(panelHeight: number): void {
+    // カメラのズーム値を考慮
+    const cam = this.scene.cameras.main;
+    const zoom = cam.zoom || 2.25;
+    const viewWidth = 1280 / zoom;
+    const viewHeight = 720 / zoom;
+    
+    // 全体的な座標オフセット
+    const xOffset = 0;   // 左右方向への移動（正の値で右へ、負の値で左へ）
+    const yOffset = 180; // 下方向へ移動（constructorと同じ値を使用）
+    
     // ボタンをパネルの下部に配置
-    const buttonY = panelHeight / 2 - 30;
+    const buttonY = viewHeight / 2 + panelHeight / 2 - 40 + yOffset;
 
-    // 確定ボタン
-    this.confirmButton = this.createButton('出撃', -60, buttonY, () => {
-      this.onConfirm();
-    });
-    this.add(this.confirmButton);
-
-    // キャンセルボタン
-    this.cancelButton = this.createButton('キャンセル', 60, buttonY, () => {
-      this.onCancel();
-    });
+    // キャンセルボタン（左側）
+    this.cancelButton = this.createButton(
+      'キャンセル', 
+      viewWidth / 2 - 100 + xOffset, 
+      buttonY, 
+      () => {
+        this.onCancel();
+      }
+    );
     this.add(this.cancelButton);
+
+    // 出撃準備ボタン（右側）
+    this.proceedButton = this.createButton(
+      '出撃準備', 
+      viewWidth / 2 + 100 + xOffset, 
+      buttonY, 
+      () => {
+        this.onProceed();
+      }
+    );
+    this.add(this.proceedButton);
+
+    // 初期状態では出撃準備ボタンを無効化
+    // ボタンが作成された後に実行
+    this.scene.time.delayedCall(0, () => {
+      this.updateProceedButtonState();
+    });
   }
 
   private createButton(
@@ -280,6 +280,10 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     buttonText.setOrigin(0.5);
 
     button.add([buttonBg, buttonText]);
+    
+    // Store references for later access
+    button.setData('background', buttonBg);
+    button.setData('text', buttonText);
 
     buttonBg.on('pointerover', () => {
       buttonBg.setFillStyle(0x777777);
@@ -316,26 +320,28 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   }
 
   private createSlotVisuals(): void {
-    // パネルの背景を取得してサイズを計算
-    const panelBg = this.formationPanel.list[0] as Phaser.GameObjects.Rectangle;
-    const panelHeight = panelBg.height;
+    // エリアの背景を取得してサイズを計算
+    const areaBg = this.formationArea.list[0] as Phaser.GameObjects.Rectangle;
+    const areaHeight = areaBg.height;
 
     // 指揮官スロット（中央配置）
-    const commanderSlot = this.createSlotVisual(0, 80 - panelHeight / 2, 'commander', 0);
-    this.formationPanel.add(commanderSlot);
+    const commanderSlot = this.createSlotVisual(0, -areaHeight / 2 + 120, 'commander', 0);
+    this.formationArea.add(commanderSlot);
+    this.slotVisuals.set('commander-0', commanderSlot);
 
     // 一般兵スロット（横並び配置）
-    const slotSize = 50;
-    const slotSpacing = 10;
+    const slotSize = 120;
+    const slotSpacing = 20;
     const totalWidth =
       slotSize * ARMY_CONSTRAINTS.maxSoldiers + slotSpacing * (ARMY_CONSTRAINTS.maxSoldiers - 1);
     const startX = -totalWidth / 2 + slotSize / 2;
 
     for (let i = 0; i < ARMY_CONSTRAINTS.maxSoldiers; i++) {
       const slotX = startX + i * (slotSize + slotSpacing);
-      const slotY = 150 - panelHeight / 2;
+      const slotY = -areaHeight / 2 + 280;
       const soldierSlot = this.createSlotVisual(slotX, slotY, 'soldier', i);
-      this.formationPanel.add(soldierSlot);
+      this.formationArea.add(soldierSlot);
+      this.slotVisuals.set(`soldier-${i}`, soldierSlot);
     }
   }
 
@@ -347,29 +353,38 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   ): Phaser.GameObjects.Container {
     const slotContainer = this.scene.add.container(x, y);
 
-    // スロットの背景（サイズを小さく）
-    const slotSize = 50;
-    const slotBg = this.scene.add.rectangle(0, 0, slotSize, slotSize, 0x444444);
-    slotBg.setStrokeStyle(2, type === 'commander' ? 0xffff00 : 0xaaaaaa);
+    // スロットのサイズ
+    const slotWidth = 120;
+    const slotHeight = 150;
+    
+    // スロットの背景（点線枠）
+    const slotBg = this.scene.add.rectangle(0, 0, slotWidth, slotHeight, 0x444444);
+    slotBg.setStrokeStyle(2, type === 'commander' ? 0xffff00 : 0xaaaaaa, 1);
     slotBg.setInteractive({ useHandCursor: true });
     slotBg.setData('slotType', type);
     slotBg.setData('slotIndex', index);
 
     slotContainer.add(slotBg);
+    slotContainer.setData('background', slotBg);
+    slotContainer.setData('slotType', type);
+    slotContainer.setData('slotIndex', index);
 
-    // ドロップ領域として設定
+    // クリックイベント
     slotBg.on('pointerover', () => {
-      if (this.selectedCharacter) {
-        slotBg.setFillStyle(0x666666);
+      if (!this.getSlotCharacter(type, index)) {
+        slotBg.setFillStyle(0x555555);
       }
     });
 
     slotBg.on('pointerout', () => {
-      slotBg.setFillStyle(0x444444);
+      if (!this.selectedSlot || this.selectedSlot.type !== type || 
+          (type === 'soldier' && this.selectedSlot.index !== index)) {
+        slotBg.setFillStyle(0x444444);
+      }
     });
 
     slotBg.on('pointerdown', () => {
-      this.onSlotClicked(type, index);
+      this.selectSlot(type, index);
     });
 
     return slotContainer;
@@ -389,12 +404,45 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     });
   }
 
-  private onSlotClicked(type: 'commander' | 'soldier', index: number): void {
-    // TODO: スロットクリック時の処理
-    console.log(`Slot clicked: ${type} ${index}`);
+  // スロット選択状態の管理
+  public selectSlot(type: 'commander' | 'soldier', index?: number): void {
+    // 以前の選択をクリア
+    if (this.selectedSlot) {
+      const prevKey = this.selectedSlot.type === 'commander' 
+        ? 'commander-0' 
+        : `soldier-${this.selectedSlot.index}`;
+      const prevSlot = this.slotVisuals.get(prevKey);
+      if (prevSlot) {
+        const prevBg = prevSlot.getData('background') as Phaser.GameObjects.Rectangle;
+        prevBg.setFillStyle(0x444444);
+      }
+    }
+
+    // 新しい選択を設定
+    this.selectedSlot = { type, index };
+    
+    // 選択スロットをハイライト
+    const key = type === 'commander' ? 'commander-0' : `soldier-${index}`;
+    const slot = this.slotVisuals.get(key);
+    if (slot) {
+      const bg = slot.getData('background') as Phaser.GameObjects.Rectangle;
+      bg.setFillStyle(0x666666);
+    }
   }
 
-  private onConfirm(): void {
+  public getSelectedSlot(): { type: string; index?: number } | null {
+    return this.selectedSlot;
+  }
+
+  // スロットに割り当てられたキャラクターを取得
+  private getSlotCharacter(type: 'commander' | 'soldier', index?: number): Character | null {
+    const slot = this.formationSlots.find(s => 
+      s.slotType === type && (type === 'commander' || s.index === index)
+    );
+    return slot ? slot.character : null;
+  }
+
+  private onProceed(): void {
     // 指揮官が選択されているかチェック
     const commanderSlot = this.formationSlots.find((slot) => slot.slotType === 'commander');
     if (!commanderSlot || !commanderSlot.character) {
@@ -403,30 +451,45 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       return;
     }
 
-    // 出撃位置が選択されているかチェック
-    if (!this.selectedDeployPosition) {
-      console.warn('出撃位置が選択されていません');
-      return;
-    }
-
-    // 軍団編成データを作成
+    // 編成データを作成
     const soldiers = this.formationSlots
-      .filter((slot) => slot.slotType === 'soldier' && slot.character !== null)
-      .map((slot) => slot.character!);
+      .filter((slot) => slot.slotType === 'soldier')
+      .map((slot) => slot.character);
 
-    const formationData: ArmyFormationData = {
+    const formationData: FormationData = {
       commander: commanderSlot.character,
       soldiers,
-      items: this.characterItems,
-      deployPosition: this.selectedDeployPosition,
     };
 
-    // コールバックを実行
-    if (this.onArmyFormedCallback) {
-      this.onArmyFormedCallback(formationData);
+    // コールバックを実行（アイテム選択画面へ遷移）
+    if (this.onProceedToItemSelectionCallback) {
+      this.onProceedToItemSelectionCallback(formationData);
     }
 
     this.destroy();
+  }
+
+  // 出撃準備ボタンの状態更新
+  private updateProceedButtonState(): void {
+    if (!this.proceedButton) return;
+    
+    const commanderSlot = this.formationSlots.find(s => s.slotType === 'commander');
+    const hasCommander = commanderSlot && commanderSlot.character !== null;
+
+    const bg = this.proceedButton.getData('background') as Phaser.GameObjects.Rectangle;
+    const text = this.proceedButton.getData('text') as Phaser.GameObjects.Text;
+
+    if (hasCommander) {
+      // ボタンを有効化
+      bg.setFillStyle(0x555555);
+      bg.setInteractive({ useHandCursor: true });
+      text.setColor('#ffffff');
+    } else {
+      // ボタンを無効化
+      bg.setFillStyle(0x333333);
+      bg.disableInteractive();
+      text.setColor('#666666');
+    }
   }
 
   private onCancel(): void {
@@ -448,25 +511,31 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
 
   private updateWaitingSoldiersDisplay(): void {
     // 既存の兵士表示をクリア
-    const existingSoldierDisplays = this.waitingSoldiersPanel.list.filter(
-      (child) => child.getData && child.getData('isSoldierDisplay'),
+    const existingSoldierDisplays = this.waitingSoldiersArea.list.filter(
+      (child: any) => child.getData && child.getData('isSoldierDisplay'),
     );
-    existingSoldierDisplays.forEach((display) => display.destroy());
+    existingSoldierDisplays.forEach((display: any) => display.destroy());
 
-    // パネルサイズを取得
-    const panelBg = this.waitingSoldiersPanel.list[0] as Phaser.GameObjects.Rectangle;
-    const panelWidth = panelBg.width;
-    const panelHeight = panelBg.height;
+    // エリアサイズを取得
+    const areaBg = this.waitingSoldiersArea.list[0] as Phaser.GameObjects.Rectangle;
+    const areaWidth = areaBg.width;
+    const areaHeight = areaBg.height;
 
-    // 待機兵士を表示
-    const itemHeight = 40;
-    const spacing = 5;
-    const startY = -panelHeight / 2 + 40; // ヘッダー分のオフセット
+    // グリッド形式：2列×N行
+    const cardWidth = 140;
+    const cardHeight = 180;
+    const spacing = 20;
+    const startX = -areaWidth / 2 + cardWidth / 2 + 20;
+    const startY = -areaHeight / 2 + 80;
+    const columns = 2;
 
     this.waitingSoldiers.forEach((soldier, index) => {
-      const yPos = startY + index * (itemHeight + spacing);
-      const soldierDisplay = this.createSoldierDisplay(soldier, 0, yPos, panelWidth - 20);
-      this.waitingSoldiersPanel.add(soldierDisplay);
+      const col = index % columns;
+      const row = Math.floor(index / columns);
+      const xPos = startX + col * (cardWidth + spacing);
+      const yPos = startY + row * (cardHeight + spacing);
+      const soldierDisplay = this.createSoldierDisplay(soldier, xPos, yPos);
+      this.waitingSoldiersArea.add(soldierDisplay);
     });
   }
 
@@ -474,60 +543,224 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     soldier: WaitingSoldier,
     x: number,
     y: number,
-    width: number = 160,
   ): Phaser.GameObjects.Container {
     const container = this.scene.add.container(x, y);
     container.setData('isSoldierDisplay', true);
+    container.setData('character', soldier.character);
 
-    // 背景
-    const itemHeight = 40;
-    const bg = this.scene.add.rectangle(0, 0, width, itemHeight, 0x555555);
-    bg.setOrigin(0.5, 0.5);
-    bg.setInteractive({ useHandCursor: soldier.isAvailable });
+    const cardWidth = 140;
+    const cardHeight = 180;
+
+    // カード背景
+    const bg = this.scene.add.rectangle(0, 0, cardWidth, cardHeight, 0x555555);
+    bg.setOrigin(0.5);
+    bg.setStrokeStyle(1, 0x888888);
+    
+    // 利用可能かつ選択スロットがある場合のみインタラクティブに
+    const isAssigned = this.assignedSoldiers.has(soldier.character);
+    if (!isAssigned && soldier.isAvailable) {
+      bg.setInteractive({ useHandCursor: true });
+    }
     container.add(bg);
+
+    // 顔画像のプレースホルダー
+    const faceSize = 80;
+    const facePlaceholder = this.scene.add.rectangle(
+      0, 
+      -cardHeight / 2 + faceSize / 2 + 10, 
+      faceSize, 
+      faceSize, 
+      0x777777
+    );
+    facePlaceholder.setStrokeStyle(1, 0x999999);
+    container.add(facePlaceholder);
 
     // キャラクター名
     const nameText = this.scene.add.text(
-      -width / 2 + 5,
-      -itemHeight / 2 + 3,
+      0,
+      20,
       soldier.character.getName(),
       {
-        fontSize: '12px',
-        color: soldier.isAvailable ? '#ffffff' : '#888888',
+        fontSize: '14px',
+        color: isAssigned ? '#888888' : '#ffffff',
+        fontStyle: 'bold',
       },
     );
-    nameText.setOrigin(0, 0);
+    nameText.setOrigin(0.5);
     container.add(nameText);
 
-    // 職業とHP
+    // 職業
     const jobType = soldier.character.getJobType();
-    const stats = soldier.character.getStats();
-    const infoText = this.scene.add.text(
-      -width / 2 + 5,
-      -itemHeight / 2 + 20,
-      `${jobType} HP:${stats.hp}/${stats.maxHp}`,
+    const jobText = this.scene.add.text(
+      0,
+      45,
+      jobType,
       {
-        fontSize: '10px',
-        color: soldier.isAvailable ? '#aaaaaa' : '#666666',
+        fontSize: '12px',
+        color: isAssigned ? '#666666' : '#ffff00',
       },
     );
-    infoText.setOrigin(0, 0);
-    container.add(infoText);
+    jobText.setOrigin(0.5);
+    container.add(jobText);
+
+    // ステータス
+    const stats = soldier.character.getStats();
+    const statsText = this.scene.add.text(
+      0,
+      70,
+      `HP: ${stats.hp}/${stats.maxHp}`,
+      {
+        fontSize: '11px',
+        color: isAssigned ? '#666666' : '#aaaaaa',
+      },
+    );
+    statsText.setOrigin(0.5);
+    container.add(statsText);
 
     // クリックイベント
-    if (soldier.isAvailable) {
+    if (!isAssigned && soldier.isAvailable) {
       bg.on('pointerover', () => bg.setFillStyle(0x666666));
       bg.on('pointerout', () => bg.setFillStyle(0x555555));
-      bg.on('pointerdown', () => this.onSoldierSelected(soldier.character));
+      bg.on('pointerdown', () => this.assignSoldier(soldier.character));
+    }
+
+    // 割り当て済みの場合はグレーアウト
+    if (isAssigned) {
+      bg.setFillStyle(0x333333);
+      container.setAlpha(0.5);
     }
 
     return container;
   }
 
-  private onSoldierSelected(character: Character): void {
-    this.selectedCharacter = character;
-    // TODO: ドラッグまたは配置モードの実装
-    console.log(`Selected soldier: ${character.getName()}`);
+  // 兵士の割り当て
+  public assignSoldier(soldier: Character): void {
+    if (!this.selectedSlot) {
+      console.warn('スロットが選択されていません');
+      return;
+    }
+
+    // 選択中のスロットを取得
+    const slot = this.formationSlots.find(s => 
+      s.slotType === this.selectedSlot!.type && 
+      (this.selectedSlot!.type === 'commander' || s.index === this.selectedSlot!.index)
+    );
+
+    if (!slot) return;
+
+    // 既に別のスロットに割り当てられている場合は解除
+    const existingSlot = this.formationSlots.find(s => s.character === soldier);
+    if (existingSlot) {
+      this.removeSoldier(existingSlot.slotType, existingSlot.index);
+    }
+
+    // 現在のスロットに別の兵士がいる場合は解除
+    if (slot.character) {
+      this.removeSoldier(slot.slotType, slot.index);
+    }
+
+    // 兵士を割り当て
+    slot.character = soldier;
+    this.assignedSoldiers.add(soldier);
+
+    // スロットの表示を更新
+    this.updateSlotDisplay(slot.slotType, slot.index);
+
+    // 待機兵士リストを更新
+    this.updateWaitingSoldiersDisplay();
+
+    // ボタン状態を更新
+    this.updateProceedButtonState();
+  }
+
+  // 兵士の解除
+  public removeSoldier(slotType: 'commander' | 'soldier', index?: number): void {
+    const slot = this.formationSlots.find(s => 
+      s.slotType === slotType && (slotType === 'commander' || s.index === index)
+    );
+
+    if (!slot || !slot.character) return;
+
+    // 兵士を解除
+    this.assignedSoldiers.delete(slot.character);
+    slot.character = null;
+
+    // スロットの表示を更新
+    this.updateSlotDisplay(slotType, index);
+
+    // 待機兵士リストを更新
+    this.updateWaitingSoldiersDisplay();
+
+    // ボタン状態を更新
+    this.updateProceedButtonState();
+  }
+
+  // スロット表示の更新
+  private updateSlotDisplay(type: 'commander' | 'soldier', index?: number): void {
+    const key = type === 'commander' ? 'commander-0' : `soldier-${index}`;
+    const slotContainer = this.slotVisuals.get(key);
+    if (!slotContainer) return;
+
+    // 既存の内容をクリア（背景以外）
+    const toRemove = slotContainer.list.filter((child: any) => 
+      child !== slotContainer.getData('background')
+    );
+    toRemove.forEach((child: any) => child.destroy());
+
+    // スロットに割り当てられたキャラクターを取得
+    const character = this.getSlotCharacter(type, index);
+    if (!character) return;
+
+    // 顔画像のプレースホルダー
+    const faceSize = 60;
+    const facePlaceholder = this.scene.add.rectangle(
+      0, 
+      -20, 
+      faceSize, 
+      faceSize, 
+      0x777777
+    );
+    facePlaceholder.setStrokeStyle(1, 0x999999);
+    slotContainer.add(facePlaceholder);
+
+    // 名前
+    const nameText = this.scene.add.text(
+      0,
+      30,
+      character.getName(),
+      {
+        fontSize: '12px',
+        color: '#ffffff',
+      },
+    );
+    nameText.setOrigin(0.5);
+    slotContainer.add(nameText);
+
+    // バツマーク
+    const removeButton = this.scene.add.container(50, -60);
+    const removeBg = this.scene.add.circle(0, 0, 10, 0xff0000);
+    removeBg.setInteractive({ useHandCursor: true });
+    const removeX = this.scene.add.text(0, 0, '×', {
+      fontSize: '16px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+    });
+    removeX.setOrigin(0.5);
+    removeButton.add([removeBg, removeX]);
+    slotContainer.add(removeButton);
+
+    // バツマークのクリックイベント
+    removeBg.on('pointerover', () => removeBg.setFillStyle(0xff3333));
+    removeBg.on('pointerout', () => removeBg.setFillStyle(0xff0000));
+    removeBg.on('pointerdown', () => this.removeSoldier(type, index));
+  }
+
+  public show(): void {
+    this.setVisible(true);
+  }
+
+  public hide(): void {
+    this.setVisible(false);
   }
 
   public destroy(): void {

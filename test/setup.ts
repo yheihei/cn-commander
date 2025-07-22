@@ -130,20 +130,33 @@ jest.mock('phaser', () => ({
         setVisible: jest.fn(),
         destroy: jest.fn(),
       })),
-      rectangle: jest.fn((x, y, width, height, fillColor, fillAlpha) => ({
-        x,
-        y,
-        width,
-        height,
-        fillColor,
-        fillAlpha,
-        setStrokeStyle: jest.fn().mockReturnThis(),
-        setInteractive: jest.fn().mockReturnThis(),
-        setOrigin: jest.fn().mockReturnThis(),
-        on: jest.fn().mockReturnThis(),
-        emit: jest.fn().mockReturnThis(),
-        destroy: jest.fn(),
-      })),
+      rectangle: jest.fn((x, y, width, height, fillColor, fillAlpha) => {
+        const rect: any = {
+          x,
+          y,
+          width,
+          height,
+          fillColor,
+          fillAlpha,
+          data: new Map(),
+          setStrokeStyle: jest.fn().mockReturnThis(),
+          setFillStyle: jest.fn().mockReturnThis(),
+          setInteractive: jest.fn().mockReturnThis(),
+          disableInteractive: jest.fn().mockReturnThis(),
+          setOrigin: jest.fn().mockReturnThis(),
+          setData: jest.fn(function (this: any, key: string, value: any) {
+            this.data.set(key, value);
+            return this;
+          }),
+          getData: jest.fn(function (this: any, key: string) {
+            return this.data.get(key);
+          }),
+          on: jest.fn().mockReturnThis(),
+          emit: jest.fn().mockReturnThis(),
+          destroy: jest.fn(),
+        };
+        return rect;
+      }),
       existing: jest.fn(),
       image: jest.fn((x, y, texture) => ({
         x,
@@ -304,6 +317,8 @@ jest.mock('phaser', () => ({
       y: number;
       visible: boolean = true;
       list: any[] = [];
+      depth: number = 0;
+      data: Map<string, any> = new Map();
 
       constructor(
         public scene: any,
@@ -360,7 +375,20 @@ jest.mock('phaser', () => ({
         return this;
       });
       once = jest.fn().mockReturnThis();
-      setDepth = jest.fn().mockReturnThis();
+      setDepth = jest.fn(function (this: any, depth: number) {
+        this.depth = depth;
+        return this;
+      });
+      setScrollFactor = jest.fn().mockReturnThis();
+      setData = jest.fn(function (this: any, key: string, value: any) {
+        this.data.set(key, value);
+        return this;
+      });
+      getData = jest.fn(function (this: any, key: string) {
+        return this.data.get(key);
+      });
+      setAlpha = jest.fn().mockReturnThis();
+      removeAllListeners = jest.fn().mockReturnThis();
       destroy = jest.fn();
     },
   },
@@ -377,13 +405,29 @@ export const createMockScene = () => {
         clear: jest.fn(),
         destroy: jest.fn(),
       })),
-      text: jest.fn(() => ({
-        setOrigin: jest.fn().mockReturnThis(),
-        setText: jest.fn().mockReturnThis(),
-        setVisible: jest.fn().mockReturnThis(),
-        setStyle: jest.fn().mockReturnThis(),
-        destroy: jest.fn(),
-      })),
+      text: jest.fn((x, y, text, style) => {
+        const textObj: any = {
+          x,
+          y,
+          text,
+          style,
+          data: new Map(),
+          setOrigin: jest.fn().mockReturnThis(),
+          setText: jest.fn().mockReturnThis(),
+          setVisible: jest.fn().mockReturnThis(),
+          setStyle: jest.fn().mockReturnThis(),
+          setColor: jest.fn().mockReturnThis(),
+          setData: jest.fn(function (this: any, key: string, value: any) {
+            this.data.set(key, value);
+            return this;
+          }),
+          getData: jest.fn(function (this: any, key: string) {
+            return this.data.get(key);
+          }),
+          destroy: jest.fn(),
+        };
+        return textObj;
+      }),
       graphics: jest.fn(() => ({
         fillStyle: jest.fn().mockReturnThis(),
         fillRect: jest.fn().mockReturnThis(),
@@ -448,11 +492,12 @@ export const createMockScene = () => {
         return sprite;
       }),
       container: jest.fn((x?: number, y?: number) => {
-        const container = {
+        const container: any = {
           x: x || 0,
           y: y || 0,
           visible: true,
           list: [],
+          data: new Map(),
           add: jest.fn(function (this: any, child: any) {
             this.list.push(child);
             // Set parentContainer reference
@@ -471,6 +516,13 @@ export const createMockScene = () => {
             }
             return this;
           }),
+          setData: jest.fn(function (this: any, key: string, value: any) {
+            this.data.set(key, value);
+            return this;
+          }),
+          getData: jest.fn(function (this: any, key: string) {
+            return this.data.get(key);
+          }),
           setVisible: jest.fn(function (this: any, visible: boolean) {
             this.visible = visible;
             return this;
@@ -483,6 +535,8 @@ export const createMockScene = () => {
             return this.list[index];
           }),
           setDepth: jest.fn().mockReturnThis(),
+          setScrollFactor: jest.fn().mockReturnThis(),
+          setAlpha: jest.fn().mockReturnThis(),
           destroy: jest.fn(),
         };
         return container;
@@ -495,21 +549,56 @@ export const createMockScene = () => {
           height: number,
           fillColor?: number,
           fillAlpha?: number,
-        ) => ({
+        ) => {
+          const rect: any = {
+            x,
+            y,
+            width,
+            height,
+            fillColor,
+            fillAlpha,
+            data: new Map(),
+            setStrokeStyle: jest.fn().mockReturnThis(),
+            setFillStyle: jest.fn().mockReturnThis(),
+            setInteractive: jest.fn().mockReturnThis(),
+            disableInteractive: jest.fn().mockReturnThis(),
+            setOrigin: jest.fn().mockReturnThis(),
+            setData: jest.fn(function (this: any, key: string, value: any) {
+              this.data.set(key, value);
+              return this;
+            }),
+            getData: jest.fn(function (this: any, key: string) {
+              return this.data.get(key);
+            }),
+            on: jest.fn().mockReturnThis(),
+            emit: jest.fn().mockReturnThis(),
+            destroy: jest.fn(),
+          };
+          return rect;
+        },
+      ),
+      circle: jest.fn((x: number, y: number, radius: number, fillColor?: number, fillAlpha?: number) => {
+        const circle: any = {
           x,
           y,
-          width,
-          height,
+          radius,
           fillColor,
           fillAlpha,
-          setStrokeStyle: jest.fn().mockReturnThis(),
+          data: new Map(),
+          setFillStyle: jest.fn().mockReturnThis(),
           setInteractive: jest.fn().mockReturnThis(),
-          setOrigin: jest.fn().mockReturnThis(),
+          setData: jest.fn(function (this: any, key: string, value: any) {
+            this.data.set(key, value);
+            return this;
+          }),
+          getData: jest.fn(function (this: any, key: string) {
+            return this.data.get(key);
+          }),
           on: jest.fn().mockReturnThis(),
-          emit: jest.fn().mockReturnThis(),
           destroy: jest.fn(),
-        }),
-      ),
+        };
+        return circle;
+      }),
     },
     load: {
       on: jest.fn(),
