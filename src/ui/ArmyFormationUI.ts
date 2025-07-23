@@ -29,9 +29,10 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     buttonHeight: 40,
     buttonWidth: 100,
     buttonSpacing: 20,
-    tableHeaderY: -120,
+    tableHeaderY: -105, // -120から調整（タイトルとの間隔を広げる）
     tableRowHeight: 25,
     tableWidth: 440,
+    buttonMarginTop: 0, // ボタン上のマージン
   };
 
   // メインコンテンツコンテナ
@@ -78,8 +79,8 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     this.add(this.modalBackground);
 
     // メインパネルの背景
-    const panelWidth = viewWidth * 0.9; // 画面の90%
-    const panelHeight = viewHeight * 0.85; // 画面の85%
+    const panelWidth = viewWidth * 0.9;
+    const panelHeight = viewHeight * 0.9;
     this.background = config.scene.add.rectangle(
       0, // コンテナの中心からの相対位置
       0,
@@ -103,6 +104,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
         color: '#ffffff',
         fontStyle: 'bold',
         resolution: 2,
+        padding: { x: 10, y: 5 },
       },
     );
     this.titleText.setOrigin(0.5, 0);
@@ -132,20 +134,20 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   }
 
   private createButtons(panelHeight: number): void {
-    // ボタンをパネルの下部に配置
+    // ボタンをパネルの下部に配置（テーブルとの間隔を広げる）
     const buttonY =
-      panelHeight / 2 - this.layoutConfig.buttonHeight - this.layoutConfig.panelPadding;
+      panelHeight / 2 - this.layoutConfig.buttonHeight + this.layoutConfig.buttonMarginTop;
 
-    // キャンセルボタン（左側）
+    // キャンセルボタン
     const buttonX = -this.layoutConfig.buttonWidth / 2 - this.layoutConfig.buttonSpacing / 2;
     this.cancelButton = this.createButton('キャンセル', buttonX, buttonY, () => {
       this.onCancel();
     });
     this.add(this.cancelButton);
 
-    // アイテム選択ボタン（右側）
+    // アイテム選択へ進むボタン
     const proceedButtonX = this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2;
-    this.proceedButton = this.createButton('アイテム選択', proceedButtonX, buttonY, () => {
+    this.proceedButton = this.createButton('決定', proceedButtonX, buttonY, () => {
       this.onProceed();
     });
     this.add(this.proceedButton);
@@ -269,6 +271,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
         color: '#ffffff',
         fontStyle: 'bold',
         resolution: 2,
+        padding: { x: 0, y: 4 },
       });
       this.contentContainer.add(text);
       currentX += header.width;

@@ -102,7 +102,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       expect(scene.add.text).toHaveBeenCalledWith(
         expect.any(Number),
         expect.any(Number),
-        'アイテム選択',
+        '決定',
         expect.any(Object),
       );
       expect(scene.add.text).toHaveBeenCalledWith(
