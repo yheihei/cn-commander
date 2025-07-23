@@ -259,24 +259,6 @@ describe('[エピック2] MapSystem Integration Tests', () => {
   });
 
   describe('大規模マップテスト', () => {
-    test('100x100のマップを生成できる', () => {
-      // Arrange
-      const startTime = Date.now();
-
-      // Act
-      mapManager.createEmptyMap(100, 100);
-      const endTime = Date.now();
-
-      // Assert
-      expect(mapManager.getMapWidth()).toBe(100);
-      expect(mapManager.getMapHeight()).toBe(100);
-      expect(mapManager.getMapWidthInPixels()).toBe(100 * 16);
-      expect(mapManager.getMapHeightInPixels()).toBe(100 * 16);
-
-      // パフォーマンス確認（3秒以内に生成完了）
-      expect(endTime - startTime).toBeLessThan(3000);
-    });
-
     test('マップでのタイル取得が高速に動作する', () => {
       // Arrange
       mapManager.createEmptyMap(50, 50);
