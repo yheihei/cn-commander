@@ -276,7 +276,7 @@ export class GameScene extends Phaser.Scene {
 
     // 待機兵士を作成
     const waitingSoldiers = [
-      CharacterFactory.createCharacter(this, 0, 0, 'wind', '疾風太郎', {
+      CharacterFactory.createCharacter(this, 0, 0, 'wind', 'ミタマ', {
         hp: 30,
         maxHp: 30,
         attack: 20,
@@ -285,7 +285,7 @@ export class GameScene extends Phaser.Scene {
         moveSpeed: 13,
         sight: 8,
       }),
-      CharacterFactory.createCharacter(this, 0, 0, 'iron', '鉄壁花子', {
+      CharacterFactory.createCharacter(this, 0, 0, 'iron', 'リーリー', {
         hp: 50,
         maxHp: 50,
         attack: 15,
@@ -294,7 +294,7 @@ export class GameScene extends Phaser.Scene {
         moveSpeed: 8,
         sight: 6,
       }),
-      CharacterFactory.createCharacter(this, 0, 0, 'shadow', '影丸', {
+      CharacterFactory.createCharacter(this, 0, 0, 'shadow', 'オロチ', {
         hp: 35,
         maxHp: 35,
         attack: 30,
@@ -303,7 +303,7 @@ export class GameScene extends Phaser.Scene {
         moveSpeed: 12,
         sight: 11,
       }),
-      CharacterFactory.createCharacter(this, 0, 0, 'medicine', '薬師梅', {
+      CharacterFactory.createCharacter(this, 0, 0, 'medicine', 'ルナ', {
         hp: 40,
         maxHp: 40,
         attack: 12,
@@ -312,7 +312,16 @@ export class GameScene extends Phaser.Scene {
         moveSpeed: 10,
         sight: 9,
       }),
-      CharacterFactory.createCharacter(this, 0, 0, 'wind', '風小僧', {
+      CharacterFactory.createCharacter(this, 0, 0, 'wind', 'ナルカミ', {
+        hp: 28,
+        maxHp: 28,
+        attack: 18,
+        defense: 9,
+        speed: 22,
+        moveSpeed: 14,
+        sight: 8,
+      }),
+      CharacterFactory.createCharacter(this, 0, 0, 'wind', 'ナルカミ2', {
         hp: 28,
         maxHp: 28,
         attack: 18,
