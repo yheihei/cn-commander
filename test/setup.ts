@@ -535,10 +535,20 @@ export const createMockScene = () => {
           list: [],
           data: new Map(),
           add: jest.fn(function (this: any, child: any) {
-            this.list.push(child);
-            // Set parentContainer reference
-            if (child && typeof child === 'object') {
-              child.parentContainer = this;
+            if (Array.isArray(child)) {
+              // 配列の場合は各要素を追加
+              child.forEach((item) => {
+                this.list.push(item);
+                if (item && typeof item === 'object') {
+                  item.parentContainer = this;
+                }
+              });
+            } else {
+              this.list.push(child);
+              // Set parentContainer reference
+              if (child && typeof child === 'object') {
+                child.parentContainer = this;
+              }
             }
             return this;
           }),
@@ -599,6 +609,7 @@ export const createMockScene = () => {
             setFillStyle: jest.fn().mockReturnThis(),
             setInteractive: jest.fn().mockReturnThis(),
             disableInteractive: jest.fn().mockReturnThis(),
+            removeInteractive: jest.fn().mockReturnThis(),
             setOrigin: jest.fn().mockReturnThis(),
             setData: jest.fn(function (this: any, key: string, value: any) {
               this.data.set(key, value);

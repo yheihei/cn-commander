@@ -44,6 +44,14 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   private selectedSoldiers: Character[] = [];
   private soldierRows: Map<string, Phaser.GameObjects.Container> = new Map();
 
+  // ページネーション
+  private currentPage: number = 0;
+  private readonly SOLDIERS_PER_PAGE = 5;
+  private paginationContainer?: Phaser.GameObjects.Container;
+  private prevButton?: Phaser.GameObjects.Container;
+  private nextButton?: Phaser.GameObjects.Container;
+  private pageText?: Phaser.GameObjects.Text;
+
   // ボタン
   private proceedButton!: Phaser.GameObjects.Container;
   private cancelButton!: Phaser.GameObjects.Container;
@@ -249,6 +257,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
 
     // 待機兵士の行を作成
     this.createSoldierRows();
+
+    // ページネーションコントロールを作成
+    this.createPaginationControls();
   }
 
   private createTableHeader(x: number, y: number): void {
@@ -295,22 +306,47 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
 
   public setWaitingSoldiers(soldiers: Character[]): void {
     this.waitingSoldiers = soldiers;
+    this.currentPage = 0; // ページをリセット
+    this.updateSoldierDisplay();
+    this.updatePaginationControls();
+  }
 
+  private updateSoldierDisplay(): void {
     // 既存の行をクリア
     this.soldierRows.forEach((row) => row.destroy());
     this.soldierRows.clear();
+
+    // 現在のページの兵士を計算
+    const startIndex = this.currentPage * this.SOLDIERS_PER_PAGE;
+    const endIndex = Math.min(startIndex + this.SOLDIERS_PER_PAGE, this.waitingSoldiers.length);
+    const soldiersToShow = this.waitingSoldiers.slice(startIndex, endIndex);
 
     // 新しい行を作成
     const tableX = -this.layoutConfig.tableWidth / 2; // 中央揃え
     const tableY = this.layoutConfig.tableHeaderY + 30;
 
-    this.waitingSoldiers.forEach((soldier, index) => {
+    soldiersToShow.forEach((soldier, index) => {
       this.createSoldierRow(
         soldier,
         tableX,
         tableY + index * this.layoutConfig.tableRowHeight,
         index,
       );
+    });
+
+    // 選択状態を復元
+    this.restoreSelectionDisplay();
+  }
+
+  private restoreSelectionDisplay(): void {
+    // 現在のページに表示されている行の選択状態を復元
+    this.soldierRows.forEach((row) => {
+      const soldier = row.getData('soldier') as Character;
+      if (this.selectedCommander === soldier) {
+        this.updateSoldierRowSelection(soldier, 'commander');
+      } else if (this.selectedSoldiers.includes(soldier)) {
+        this.updateSoldierRowSelection(soldier, 'soldier');
+      }
     });
   }
 
@@ -510,6 +546,126 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     }
   }
 
+  private createPaginationControls(): void {
+    // ページネーションコンテナがすでに存在する場合は削除
+    if (this.paginationContainer) {
+      this.paginationContainer.destroy();
+    }
+
+    // ページネーションコンテナを作成
+    this.paginationContainer = this.scene.add.container(0, 0);
+
+    // テーブルの最下部に配置（5行分の高さ + 余白）
+    const paginationY =
+      this.layoutConfig.tableHeaderY +
+      30 +
+      this.SOLDIERS_PER_PAGE * this.layoutConfig.tableRowHeight +
+      20;
+
+    // 前へボタン
+    this.prevButton = this.createPageButton('<', -200, paginationY, 40, 30, () => {
+      if (this.currentPage > 0) {
+        this.currentPage--;
+        this.updateSoldierDisplay();
+        this.updatePaginationControls();
+      }
+    });
+    this.paginationContainer.add(this.prevButton);
+
+    // ページ表示テキスト
+    this.pageText = this.scene.add.text(200, -134, '', {
+      fontSize: '14px',
+      color: '#ffffff',
+      resolution: 2,
+    });
+    this.pageText.setOrigin(0.5, 0.5);
+    this.paginationContainer.add(this.pageText);
+
+    // 次へボタン
+    this.nextButton = this.createPageButton('>', 200, paginationY, 40, 30, () => {
+      const totalPages = Math.ceil(this.waitingSoldiers.length / this.SOLDIERS_PER_PAGE);
+      if (this.currentPage < totalPages - 1) {
+        this.currentPage++;
+        this.updateSoldierDisplay();
+        this.updatePaginationControls();
+      }
+    });
+    this.paginationContainer.add(this.nextButton);
+
+    this.contentContainer.add(this.paginationContainer);
+    this.updatePaginationControls();
+  }
+
+  private createPageButton(
+    text: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
+    const button = this.scene.add.container(x, y);
+
+    const bg = this.scene.add.rectangle(0, 0, width, height, 0x4682b4);
+    bg.setOrigin(0.5, 0.5);
+    bg.setInteractive({ useHandCursor: true });
+
+    const label = this.scene.add.text(0, 0, text, {
+      fontSize: '16px',
+      color: '#ffffff',
+      resolution: 2,
+    });
+    label.setOrigin(0.5, 0.5);
+
+    button.add([bg, label]);
+
+    bg.on('pointerdown', onClick);
+    bg.on('pointerover', () => bg.setFillStyle(0x5f9fd3));
+    bg.on('pointerout', () => bg.setFillStyle(0x4682b4));
+
+    return button;
+  }
+
+  private updatePaginationControls(): void {
+    if (!this.paginationContainer) return;
+
+    const totalPages = Math.ceil(this.waitingSoldiers.length / this.SOLDIERS_PER_PAGE) || 1;
+
+    // ページテキストを更新
+    if (this.pageText) {
+      this.pageText.setText(`${this.currentPage + 1} / ${totalPages} ページ`);
+    }
+
+    // ボタンの有効/無効を更新
+    if (this.prevButton) {
+      const prevBg = this.prevButton.getAt(0) as Phaser.GameObjects.Rectangle;
+      const prevText = this.prevButton.getAt(1) as Phaser.GameObjects.Text;
+      if (this.currentPage === 0) {
+        prevBg.setFillStyle(0x444444);
+        prevText.setColor('#888888');
+        prevBg.removeInteractive();
+      } else {
+        prevBg.setFillStyle(0x4682b4);
+        prevText.setColor('#ffffff');
+        prevBg.setInteractive({ useHandCursor: true });
+      }
+    }
+
+    if (this.nextButton) {
+      const nextBg = this.nextButton.getAt(0) as Phaser.GameObjects.Rectangle;
+      const nextText = this.nextButton.getAt(1) as Phaser.GameObjects.Text;
+      if (this.currentPage === totalPages - 1) {
+        nextBg.setFillStyle(0x444444);
+        nextText.setColor('#888888');
+        nextBg.removeInteractive();
+      } else {
+        nextBg.setFillStyle(0x4682b4);
+        nextText.setColor('#ffffff');
+        nextBg.setInteractive({ useHandCursor: true });
+      }
+    }
+  }
+
   public destroy(): void {
     // イベントリスナーのクリーンアップ
     this.removeAllListeners();
@@ -517,6 +673,11 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     // 行のクリーンアップ
     this.soldierRows.forEach((row) => row.destroy());
     this.soldierRows.clear();
+
+    // ページネーションコンテナのクリーンアップ
+    if (this.paginationContainer) {
+      this.paginationContainer.destroy();
+    }
 
     // 親クラスのdestroy
     super.destroy();

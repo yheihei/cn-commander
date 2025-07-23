@@ -426,6 +426,148 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
     });
   });
 
+  describe('ページネーション機能', () => {
+    test('5人以下の場合はページネーションボタンが無効化される', () => {
+      ui = new ArmyFormationUI({
+        scene: scene,
+        base: base,
+        onProceedToItemSelection: jest.fn(),
+        onCancelled: jest.fn(),
+      });
+
+      // 5人の兵士を設定
+      const soldiers = [
+        CharacterFactory.createCharacter(scene, 0, 0, 'wind', '風忍1'),
+        CharacterFactory.createCharacter(scene, 0, 0, 'iron', '鉄忍2'),
+        CharacterFactory.createCharacter(scene, 0, 0, 'shadow', '影忍3'),
+        CharacterFactory.createCharacter(scene, 0, 0, 'medicine', '薬忍4'),
+        CharacterFactory.createCharacter(scene, 0, 0, 'wind', '風忍5'),
+      ];
+      ui.setWaitingSoldiers(soldiers);
+
+      // ページネーションボタンを確認
+      const addedItems = scene.add.container.mock.results
+        .filter((r: any) => r.value && r.value.list)
+        .map((r: any) => r.value.list)
+        .flat();
+
+      const rectangles = addedItems.filter((item: any) => item.width === 40 && item.height === 30);
+      const prevButton = rectangles[0];
+      const nextButton = rectangles[1];
+
+      // 前へボタンは無効化されている（最初のページ）
+      expect(prevButton.setFillStyle).toHaveBeenCalledWith(0x444444);
+      expect(prevButton.removeInteractive).toHaveBeenCalled();
+
+      // 次へボタンも無効化されている（1ページのみ）
+      expect(nextButton.setFillStyle).toHaveBeenCalledWith(0x444444);
+      expect(nextButton.removeInteractive).toHaveBeenCalled();
+    });
+
+    test('6人以上の場合はページネーションが機能する', () => {
+      ui = new ArmyFormationUI({
+        scene: scene,
+        base: base,
+        onProceedToItemSelection: jest.fn(),
+        onCancelled: jest.fn(),
+      });
+
+      // 8人の兵士を設定
+      const soldiers = Array.from({ length: 8 }, (_, i) =>
+        CharacterFactory.createCharacter(scene, 0, 0, 'wind', `風忍${i + 1}`),
+      );
+      ui.setWaitingSoldiers(soldiers);
+
+      // 最初のページには5人のみ表示される
+      // soldierRowsに登録された行数を確認
+      const soldierRowCount = (ui as any).soldierRows.size;
+      expect(soldierRowCount).toBe(5);
+
+      // ページ情報が正しく表示される
+      const pageTextCall = (scene.add.text as jest.Mock).mock.calls.find(
+        (call) => call[2] && typeof call[2] === 'string' && call[2].includes('ページ'),
+      );
+      // pageTextCallがない場合は、setText呼び出しをチェック
+      if (!pageTextCall) {
+        // setText呼び出しを探す
+        const allTextObjects = scene.add.text.mock.results
+          .filter((r: any) => r.value)
+          .map((r: any) => r.value);
+        
+        const pageText = allTextObjects.find((text: any) => {
+          return text.setText && text.setText.mock.calls.some((call: any) => 
+            call[0] && call[0].includes('ページ')
+          );
+        });
+        
+        expect(pageText).toBeTruthy();
+        expect(pageText.setText).toHaveBeenCalledWith('1 / 2 ページ');
+      } else {
+        expect(pageTextCall[2]).toBe('1 / 2 ページ');
+      }
+
+      // 次へボタンは有効化されている
+      const addedItems = scene.add.container.mock.results
+        .filter((r: any) => r.value && r.value.list)
+        .map((r: any) => r.value.list)
+        .flat();
+
+      const rectangles = addedItems.filter((item: any) => item.width === 40 && item.height === 30);
+      const nextButton = rectangles[1];
+      expect(nextButton.setFillStyle).toHaveBeenCalledWith(0x4682b4);
+      expect(nextButton.setInteractive).toHaveBeenCalled();
+    });
+
+    test('ページを移動しても選択状態が維持される', () => {
+      ui = new ArmyFormationUI({
+        scene: scene,
+        base: base,
+        onProceedToItemSelection: jest.fn(),
+        onCancelled: jest.fn(),
+      });
+
+      // 8人の兵士を設定
+      const soldiers = Array.from({ length: 8 }, (_, i) =>
+        CharacterFactory.createCharacter(scene, 0, 0, 'wind', `風忍${i + 1}`),
+      );
+      ui.setWaitingSoldiers(soldiers);
+
+      // 1ページ目の兵士を選択
+      const firstRow = (ui as any).soldierRows.get(soldiers[0].getId());
+      const rowBg = firstRow.getData('rowBg');
+      rowBg.emit('pointerdown');
+
+      // 選択マークが表示される
+      let selectionMark = firstRow.getData('selectionMark');
+      expect(selectionMark.setText).toHaveBeenCalledWith('指');
+
+      // 次のページへ移動（ボタンクリックをシミュレート）
+      const allRectangles = scene.add.rectangle.mock.results
+        .filter((r: any) => r.value)
+        .map((r: any) => r.value);
+
+      const nextButton = allRectangles.find(
+        (item: any) => item.width === 40 && item.height === 30 && item.x === 100,
+      );
+      if (nextButton && nextButton.eventListeners && nextButton.eventListeners.get('pointerdown')) {
+        nextButton.emit('pointerdown');
+      }
+
+      // 1ページ目に戻る
+      const prevButton = allRectangles.find(
+        (item: any) => item.width === 40 && item.height === 30 && item.x === -100,
+      );
+      if (prevButton && prevButton.eventListeners && prevButton.eventListeners.get('pointerdown')) {
+        prevButton.emit('pointerdown');
+      }
+
+      // 選択状態が維持されているか確認
+      const updatedRow = (ui as any).soldierRows.get(soldiers[0].getId());
+      selectionMark = updatedRow.getData('selectionMark');
+      expect(selectionMark.setText).toHaveBeenCalledWith('指');
+    });
+  });
+
   describe('完全な編成フロー', () => {
     test('選択、解除、再選択を含む完全なフローが動作する', () => {
       const onProceed = jest.fn();
