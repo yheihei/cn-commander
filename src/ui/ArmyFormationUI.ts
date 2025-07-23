@@ -23,6 +23,17 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   private modalBackground: Phaser.GameObjects.Rectangle;
   private titleText: Phaser.GameObjects.Text;
 
+  // レイアウト設定（中央集約管理）
+  private readonly layoutConfig = {
+    panelPadding: 20,
+    buttonHeight: 40,
+    buttonWidth: 100,
+    buttonSpacing: 20,
+    tableHeaderY: -120,
+    tableRowHeight: 25,
+    tableWidth: 440,
+  };
+
   // メインコンテンツコンテナ
   private contentContainer!: Phaser.GameObjects.Container;
 
@@ -42,42 +53,40 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     const zoom = cam.zoom || 2.25;
     const viewWidth = 1280 / zoom;
     const viewHeight = 720 / zoom;
-    
-    // worldViewの左上を基準にコンテナを配置
+
+    // 他の固定UIと同じパターンでワールド座標系に配置
     const viewLeft = cam.worldView.x;
     const viewTop = cam.worldView.y;
-    
-    // 全体的な座標オフセット
-    const xOffset = 70;   // 左右方向への移動（正の値で右へ、負の値で左へ）
-    const yOffset = 184; // 下方向へ移動
+    const centerX = viewLeft + viewWidth / 2;
+    const centerY = viewTop + viewHeight / 2;
 
-    super(config.scene, viewLeft, viewTop);
+    super(config.scene, centerX, centerY);
 
     this.onCancelledCallback = config.onCancelled;
     this.onProceedCallback = config.onProceedToItemSelection;
 
-    // 画面全体を覆う半透明の背景（viewWidthの2倍幅で試す）
+    // 画面全体を覆う半透明の背景
     this.modalBackground = config.scene.add.rectangle(
-      viewWidth / 2 + xOffset,  // 中央に配置 + xOffset
-      viewHeight / 2 + yOffset,
-      viewWidth * 2,  // 2倍幅
-      viewHeight,
+      0, // コンテナの中心からの相対位置
+      0,
+      viewWidth, // ビューポート全体をカバー
+      viewHeight, // ビューポート全体をカバー
       0x000000,
       0.5,
     );
     this.modalBackground.setOrigin(0.5);
     this.add(this.modalBackground);
 
-    // メインパネルの背景（画面の90%×85%）
-    const panelWidth = viewWidth;
-    const panelHeight = viewHeight;
+    // メインパネルの背景
+    const panelWidth = viewWidth * 0.9; // 画面の90%
+    const panelHeight = viewHeight * 0.85; // 画面の85%
     this.background = config.scene.add.rectangle(
-      viewWidth + xOffset ,  // 画面中央に配置 + xOffset
-      viewHeight / 2 + yOffset,
-      panelWidth, 
-      panelHeight, 
-      0x222222, 
-      0.95
+      0, // コンテナの中心からの相対位置
+      0,
+      panelWidth,
+      panelHeight,
+      0x222222,
+      0.95,
     );
     this.background.setStrokeStyle(3, 0xffffff);
     this.background.setOrigin(0.5);
@@ -86,21 +95,21 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     // タイトル
     const titleText = `軍団編成`;
     this.titleText = config.scene.add.text(
-      viewWidth / 2 + xOffset + 60, 
-      viewHeight / 2 - panelHeight / 2 + 20 + yOffset, 
-      titleText, 
+      0,
+      -panelHeight / 2 + this.layoutConfig.panelPadding,
+      titleText,
       {
         fontSize: '20px',
         color: '#ffffff',
         fontStyle: 'bold',
         resolution: 2,
-      }
+      },
     );
     this.titleText.setOrigin(0.5, 0);
     this.add(this.titleText);
 
     // コンテンツコンテナを作成
-    this.contentContainer = config.scene.add.container(viewWidth / 2 + xOffset, viewHeight / 2 + 20 + yOffset);
+    this.contentContainer = config.scene.add.container(0, this.layoutConfig.panelPadding);
     this.add(this.contentContainer);
 
     // ボタンの作成
@@ -118,46 +127,29 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     // 入力イベントの設定
     this.setupInputHandlers();
 
-    // スクロール可能にする
-    this.setScrollFactor(0);
+    // 他のUIと同じく、updateで位置を更新するパターンを使用
+    // setScrollFactorは使用しない
   }
 
   private createButtons(panelHeight: number): void {
-    // カメラのズーム値を考慮
-    const cam = this.scene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewWidth = 1280 / zoom;
-    const viewHeight = 720 / zoom;
-    
-    // 全体的な座標オフセット
-    const xOffset = 42;   // 左右方向への移動（正の値で右へ、負の値で左へ）
-    const yOffset = 180; // 下方向へ移動（constructorと同じ値を使用）
-    
     // ボタンをパネルの下部に配置
-    const buttonY = viewHeight / 2 + panelHeight / 2 - 40 + yOffset;
+    const buttonY =
+      panelHeight / 2 - this.layoutConfig.buttonHeight - this.layoutConfig.panelPadding;
 
     // キャンセルボタン（左側）
-    this.cancelButton = this.createButton(
-      'キャンセル', 
-      viewWidth / 2 + 100 + xOffset + 120, 
-      buttonY, 
-      () => {
-        this.onCancel();
-      }
-    );
+    const buttonX = -this.layoutConfig.buttonWidth / 2 - this.layoutConfig.buttonSpacing / 2;
+    this.cancelButton = this.createButton('キャンセル', buttonX, buttonY, () => {
+      this.onCancel();
+    });
     this.add(this.cancelButton);
 
     // アイテム選択ボタン（右側）
-    this.proceedButton = this.createButton(
-      'アイテム選択', 
-      viewWidth / 2 + 100 + xOffset, 
-      buttonY, 
-      () => {
-        this.onProceed();
-      }
-    );
+    const proceedButtonX = this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2;
+    this.proceedButton = this.createButton('アイテム選択', proceedButtonX, buttonY, () => {
+      this.onProceed();
+    });
     this.add(this.proceedButton);
-    
+
     // 初期状態では無効化
     this.updateButtonState();
   }
@@ -170,7 +162,13 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
-    const buttonBg = this.scene.add.rectangle(0, 0, 100, 40, 0x555555);
+    const buttonBg = this.scene.add.rectangle(
+      0,
+      0,
+      this.layoutConfig.buttonWidth,
+      this.layoutConfig.buttonHeight,
+      0x555555,
+    );
     buttonBg.setStrokeStyle(1, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
 
@@ -182,7 +180,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     buttonText.setOrigin(0.5);
 
     button.add([buttonBg, buttonText]);
-    
+
     // Store references for later access
     button.setData('background', buttonBg);
     button.setData('text', buttonText);
@@ -240,13 +238,13 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   }
 
   private createSoldierTable(): void {
-    // テーブルの基準位置（contentContainerは既に適切なオフセットで配置されている）
-    const tableX = 21;  // 右寄りに配置
-    const tableY = -120;
-    
+    // テーブルの基準位置（contentContainer内での相対位置）
+    const tableX = -this.layoutConfig.tableWidth / 2; // 中央揃え
+    const tableY = this.layoutConfig.tableHeaderY;
+
     // ヘッダーの作成
     this.createTableHeader(tableX, tableY);
-    
+
     // 待機兵士の行を作成
     this.createSoldierRows();
   }
@@ -263,9 +261,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       { text: '視界', width: 40 },
       { text: '選択', width: 50 },
     ];
-    
+
     let currentX = x;
-    headers.forEach(header => {
+    headers.forEach((header) => {
       const text = this.scene.add.text(currentX, y, header.text, {
         fontSize: '12px',
         color: '#ffffff',
@@ -275,9 +273,15 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       this.contentContainer.add(text);
       currentX += header.width;
     });
-    
-    // ヘッダー下線（テーブル幅440pxの中央に配置）
-    const line = this.scene.add.rectangle(x + 220, y + 15, 440, 1, 0xffffff);
+
+    // ヘッダー下線
+    const line = this.scene.add.rectangle(
+      x + this.layoutConfig.tableWidth / 2,
+      y + 15,
+      this.layoutConfig.tableWidth,
+      1,
+      0xffffff,
+    );
     line.setOrigin(0.5, 0.5);
     this.contentContainer.add(line);
   }
@@ -288,36 +292,54 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
 
   public setWaitingSoldiers(soldiers: Character[]): void {
     this.waitingSoldiers = soldiers;
-    
+
     // 既存の行をクリア
-    this.soldierRows.forEach(row => row.destroy());
+    this.soldierRows.forEach((row) => row.destroy());
     this.soldierRows.clear();
-    
+
     // 新しい行を作成
-    const tableX = 21;  // 右寄りに配置
-    const tableY = -90;
-    
+    const tableX = -this.layoutConfig.tableWidth / 2; // 中央揃え
+    const tableY = this.layoutConfig.tableHeaderY + 30;
+
     this.waitingSoldiers.forEach((soldier, index) => {
-      this.createSoldierRow(soldier, tableX, tableY + index * 25, index);
+      this.createSoldierRow(
+        soldier,
+        tableX,
+        tableY + index * this.layoutConfig.tableRowHeight,
+        index,
+      );
     });
   }
 
   private createSoldierRow(soldier: Character, x: number, y: number, index: number): void {
     const rowContainer = this.scene.add.container(0, 0);
-    
+
     // 偶数行の背景
     if (index % 2 === 0) {
-      const bg = this.scene.add.rectangle(x + 220, y + 10, 440, 24, 0x333333);
+      const bg = this.scene.add.rectangle(
+        x + this.layoutConfig.tableWidth / 2,
+        y + 10,
+        this.layoutConfig.tableWidth,
+        24,
+        0x333333,
+      );
       bg.setOrigin(0.5, 0.5);
       rowContainer.add(bg);
     }
-    
+
     // 行の枠（インタラクティブ領域）
-    const rowBg = this.scene.add.rectangle(x + 220, y + 10, 440, 24, 0x000000, 0);
+    const rowBg = this.scene.add.rectangle(
+      x + this.layoutConfig.tableWidth / 2,
+      y + 10,
+      this.layoutConfig.tableWidth,
+      24,
+      0x000000,
+      0,
+    );
     rowBg.setOrigin(0.5, 0.5);
     rowBg.setInteractive({ useHandCursor: true });
     rowContainer.add(rowBg);
-    
+
     // 兵士データの表示
     const stats = soldier.getStats();
     const columns = [
@@ -330,9 +352,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       { text: stats.moveSpeed.toString(), width: 40 },
       { text: stats.sight.toString(), width: 40 },
     ];
-    
+
     let currentX = x;
-    columns.forEach(column => {
+    columns.forEach((column) => {
       const text = this.scene.add.text(currentX, y, column.text, {
         fontSize: '11px',
         color: '#ffffff',
@@ -341,7 +363,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       rowContainer.add(text);
       currentX += column.width;
     });
-    
+
     // 選択マーク用のテキスト（初期は空）
     const selectionMark = this.scene.add.text(currentX + 15, y, '', {
       fontSize: '14px',
@@ -350,7 +372,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     });
     selectionMark.setOrigin(0.5, 0);
     rowContainer.add(selectionMark);
-    
+
     // 行のクリックイベント
     rowBg.on('pointerdown', (pointer?: Phaser.Input.Pointer) => {
       if (pointer && pointer.rightButtonDown && pointer.rightButtonDown()) {
@@ -369,10 +391,10 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
         rowBg.setFillStyle(0x000000, 0);
       }
     });
-    
+
     this.contentContainer.add(rowContainer);
     this.soldierRows.set(soldier.getId(), rowContainer);
-    
+
     // データを保存
     rowContainer.setData('soldier', soldier);
     rowContainer.setData('selectionMark', selectionMark);
@@ -384,12 +406,12 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     if (this.isSelected(soldier)) {
       return;
     }
-    
+
     // 最大選択数チェック
     if (this.selectedCommander && this.selectedSoldiers.length >= 3) {
       return;
     }
-    
+
     // 選択処理
     if (!this.selectedCommander) {
       // 最初の選択は指揮官
@@ -400,7 +422,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       this.selectedSoldiers.push(soldier);
       this.updateSoldierRowSelection(soldier, 'soldier');
     }
-    
+
     this.updateButtonState();
   }
 
@@ -409,9 +431,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
       // 指揮官の選択解除 = 全選択解除
       this.selectedCommander = null;
       this.selectedSoldiers = [];
-      
+
       // 全ての選択表示をクリア
-      this.soldierRows.forEach(row => {
+      this.soldierRows.forEach((row) => {
         const mark = row.getData('selectionMark') as Phaser.GameObjects.Text;
         const bg = row.getData('rowBg') as Phaser.GameObjects.Rectangle;
         mark.setText('');
@@ -425,7 +447,7 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
         this.updateSoldierRowSelection(soldier, null);
       }
     }
-    
+
     this.updateButtonState();
   }
 
@@ -433,13 +455,16 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
     return this.selectedCommander === soldier || this.selectedSoldiers.includes(soldier);
   }
 
-  private updateSoldierRowSelection(soldier: Character, type: 'commander' | 'soldier' | null): void {
+  private updateSoldierRowSelection(
+    soldier: Character,
+    type: 'commander' | 'soldier' | null,
+  ): void {
     const row = this.soldierRows.get(soldier.getId());
     if (!row) return;
-    
+
     const mark = row.getData('selectionMark') as Phaser.GameObjects.Text;
     const bg = row.getData('rowBg') as Phaser.GameObjects.Rectangle;
-    
+
     if (type === 'commander') {
       mark.setText('指');
       mark.setColor('#ff0000');
@@ -456,11 +481,11 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
 
   private updateButtonState(): void {
     if (!this.proceedButton) return;
-    
+
     const hasSelection = this.selectedCommander !== null;
     const buttonBg = this.proceedButton.getData('background') as Phaser.GameObjects.Rectangle;
     const buttonText = this.proceedButton.getData('text') as Phaser.GameObjects.Text;
-    
+
     if (hasSelection) {
       buttonBg.setFillStyle(0x555555);
       buttonBg.setInteractive({ useHandCursor: true });
@@ -485,9 +510,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   public destroy(): void {
     // イベントリスナーのクリーンアップ
     this.removeAllListeners();
-    
+
     // 行のクリーンアップ
-    this.soldierRows.forEach(row => row.destroy());
+    this.soldierRows.forEach((row) => row.destroy());
     this.soldierRows.clear();
 
     // 親クラスのdestroy

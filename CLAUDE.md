@@ -270,9 +270,40 @@ public update(): void {
 - **update()での更新**：カメラ移動時もUIが正しく表示されるよう更新
 - **初期位置**：作成時は画面外（-1000, -1000）に配置し、表示時に正しい位置へ移動
 
+#### UI配置の統一パターン
+固定UIの配置には、以下の統一パターンを使用してください：
+
+1. **ワールド座標系で配置**
+```typescript
+const viewLeft = cam.worldView.x;
+const viewTop = cam.worldView.y;
+const centerX = viewLeft + viewWidth / 2;
+const centerY = viewTop + viewHeight / 2;
+super(config.scene, centerX, centerY);
+```
+
+2. **UIManagerのupdate()で位置更新**
+```typescript
+if (this.myUI) {
+  const cam = this.scene.cameras.main;
+  const zoom = cam.zoom || 2.25;
+  const viewWidth = 1280 / zoom;
+  const viewHeight = 720 / zoom;
+  const viewLeft = cam.worldView.x;
+  const viewTop = cam.worldView.y;
+  const centerX = viewLeft + viewWidth / 2;
+  const centerY = viewTop + viewHeight / 2;
+  
+  this.myUI.setPosition(centerX, centerY);
+}
+```
+
+**注意**: setScrollFactor(0)は使用しないでください。全てのUIはワールド座標系で配置し、update()で位置を更新する方式で統一します。
+
 #### 参考実装
 - `src/ui/UIManager.ts`の`showArmyInfo()`メソッド
 - `src/ui/UIManager.ts`の`update()`メソッド内のUI位置更新処理
+- `src/ui/ArmyFormationUI.ts`の配置方法（レイアウト設定の中央集約管理）
 
 ### マネージャーパターン
 本プロジェクトは各システムごとにマネージャークラスを配置し、責務を明確に分離：

@@ -131,7 +131,7 @@ describe('[エピック3] Army Formation Integration Tests', () => {
         commander,
         soldiers,
         items: new Map(),
-        deployPosition: { x: 11, y: 11, isValid: true }, // 拠点の隣
+        deployPosition: { x: 11, y: 11 }, // 拠点の隣
       };
 
       // Act
@@ -190,7 +190,7 @@ describe('[エピック3] Army Formation Integration Tests', () => {
         commander: newCommander,
         soldiers: [],
         items: new Map(),
-        deployPosition: { x: 11, y: 11, isValid: true },
+        deployPosition: { x: 11, y: 11 },
       };
 
       // Act
@@ -308,7 +308,7 @@ describe('[エピック3] Army Formation Integration Tests', () => {
         commander,
         soldiers: selectedSoldiers,
         items: new Map(), // アイテムは別タスクで実装
-        deployPosition: { x: 12, y: 10, isValid: true }, // 拠点の右側
+        deployPosition: { x: 12, y: 10 }, // 拠点の右側
       };
 
       // Act

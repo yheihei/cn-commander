@@ -312,7 +312,7 @@ jest.mock('phaser', () => ({
     },
     Rectangle: class MockRectangle {
       private eventListeners: Map<string, Function[]> = new Map();
-      
+
       constructor(
         public scene: any,
         public x: number,
@@ -322,13 +322,13 @@ jest.mock('phaser', () => ({
         public fillColor?: number,
         public fillAlpha?: number,
       ) {}
-      
+
       setStrokeStyle = jest.fn().mockReturnThis();
       setInteractive = jest.fn().mockReturnThis();
       setOrigin = jest.fn().mockReturnThis();
       setFillStyle = jest.fn().mockReturnThis();
       disableInteractive = jest.fn().mockReturnThis();
-      
+
       on = jest.fn((event: string, handler: Function) => {
         if (!this.eventListeners.has(event)) {
           this.eventListeners.set(event, []);
@@ -336,15 +336,15 @@ jest.mock('phaser', () => ({
         this.eventListeners.get(event)!.push(handler);
         return this;
       });
-      
+
       emit = jest.fn((event: string, ...args: any[]) => {
         const handlers = this.eventListeners.get(event);
         if (handlers) {
-          handlers.forEach(handler => handler(...args));
+          handlers.forEach((handler) => handler(...args));
         }
         return this;
       });
-      
+
       destroy = jest.fn();
     },
     Container: class MockContainer {
@@ -626,28 +626,30 @@ export const createMockScene = () => {
           return rect;
         },
       ),
-      circle: jest.fn((x: number, y: number, radius: number, fillColor?: number, fillAlpha?: number) => {
-        const circle: any = {
-          x,
-          y,
-          radius,
-          fillColor,
-          fillAlpha,
-          data: new Map(),
-          setFillStyle: jest.fn().mockReturnThis(),
-          setInteractive: jest.fn().mockReturnThis(),
-          setData: jest.fn(function (this: any, key: string, value: any) {
-            this.data.set(key, value);
-            return this;
-          }),
-          getData: jest.fn(function (this: any, key: string) {
-            return this.data.get(key);
-          }),
-          on: jest.fn().mockReturnThis(),
-          destroy: jest.fn(),
-        };
-        return circle;
-      }),
+      circle: jest.fn(
+        (x: number, y: number, radius: number, fillColor?: number, fillAlpha?: number) => {
+          const circle: any = {
+            x,
+            y,
+            radius,
+            fillColor,
+            fillAlpha,
+            data: new Map(),
+            setFillStyle: jest.fn().mockReturnThis(),
+            setInteractive: jest.fn().mockReturnThis(),
+            setData: jest.fn(function (this: any, key: string, value: any) {
+              this.data.set(key, value);
+              return this;
+            }),
+            getData: jest.fn(function (this: any, key: string) {
+              return this.data.get(key);
+            }),
+            on: jest.fn().mockReturnThis(),
+            destroy: jest.fn(),
+          };
+          return circle;
+        },
+      ),
     },
     load: {
       on: jest.fn(),

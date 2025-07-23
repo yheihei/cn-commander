@@ -468,6 +468,20 @@ export class UIManager {
       this.baseActionMenu.updateFixedPosition(80, 120);
     }
 
+    // ArmyFormationUIの位置更新
+    if (this.armyFormationUI) {
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const centerX = viewLeft + viewWidth / 2;
+      const centerY = viewTop + viewHeight / 2;
+
+      this.armyFormationUI.setPosition(centerX, centerY);
+    }
+
     // BarracksSubMenuの位置更新
     if (this.barracksSubMenu) {
       this.barracksSubMenu.updateFixedPosition(100, 140);
@@ -505,18 +519,18 @@ export class UIManager {
       base,
       onProceedToItemSelection: (formationData: FormationData) => {
         console.log('編成データ:', formationData);
-        
+
         // TODO: アイテム選択画面への遷移
         // ここでアイテム選択画面を表示し、アイテム選択後に
         // 出撃位置選択、軍団作成を行う
-        
+
         // 仮の実装：アイテムをスキップして直接軍団を作成
         if (formationData.commander) {
-          const soldiers = formationData.soldiers.filter(s => s !== null) as Character[];
+          const soldiers = formationData.soldiers.filter((s) => s !== null) as Character[];
           const basePos = base.getPosition();
           const deployPosition = { x: basePos.x + 2, y: basePos.y + 1 };
           const items = new Map<Character, IItem[]>();
-          
+
           const completeFormationData: ArmyFormationData = {
             commander: formationData.commander,
             soldiers,
@@ -535,7 +549,10 @@ export class UIManager {
 
             if (army) {
               // 待機兵士から削除
-              const soldiersToRemove = [completeFormationData.commander, ...completeFormationData.soldiers];
+              const soldiersToRemove = [
+                completeFormationData.commander,
+                ...completeFormationData.soldiers,
+              ];
               baseManager.removeWaitingSoldiers(base.getId(), soldiersToRemove);
 
               console.log('軍団が出撃しました:', army.getName());

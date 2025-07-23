@@ -17,7 +17,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
   beforeEach(() => {
     scene = createMockScene();
-    
+
     // カメラの設定
     scene.cameras.main.zoom = 2.25;
     scene.cameras.main.worldView = {
@@ -95,7 +95,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
         expect.any(Number),
         expect.any(Number),
         '軍団編成',
-        expect.any(Object)
+        expect.any(Object),
       );
 
       // ボタンが作成されている
@@ -103,13 +103,13 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
         expect.any(Number),
         expect.any(Number),
         'アイテム選択',
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(scene.add.text).toHaveBeenCalledWith(
         expect.any(Number),
         expect.any(Number),
         'キャンセル',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -123,12 +123,12 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
       // ヘッダーテキストが作成されている
       const headers = ['名前', '職業', 'HP', '攻撃', '防御', '速さ', '移動', '視界', '選択'];
-      headers.forEach(header => {
+      headers.forEach((header) => {
         expect(scene.add.text).toHaveBeenCalledWith(
           expect.any(Number),
           expect.any(Number),
           header,
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -142,12 +142,12 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       ui.setWaitingSoldiers(mockCharacters);
 
       // 各キャラクターの情報が表示されている
-      mockCharacters.forEach(char => {
+      mockCharacters.forEach((char) => {
         expect(scene.add.text).toHaveBeenCalledWith(
           expect.any(Number),
           expect.any(Number),
           char.getName(),
-          expect.any(Object)
+          expect.any(Object),
         );
       });
 
@@ -155,14 +155,14 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       expect(scene.add.text).toHaveBeenCalledWith(
         expect.any(Number),
         expect.any(Number),
-        '風忍',  // windが風忍に変換
-        expect.any(Object)
+        '風忍', // windが風忍に変換
+        expect.any(Object),
       );
       expect(scene.add.text).toHaveBeenCalledWith(
         expect.any(Number),
         expect.any(Number),
-        '鉄忍',  // ironが鉄忍に変換
-        expect.any(Object)
+        '鉄忍', // ironが鉄忍に変換
+        expect.any(Object),
       );
     });
 
@@ -176,7 +176,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
       // 偶数行（0, 2, 4）に背景が作成される
       const backgroundCalls = scene.add.rectangle.mock.calls.filter(
-        (call: any[]) => call[4] === 0x333333
+        (call: any[]) => call[4] === 0x333333,
       );
       expect(backgroundCalls.length).toBeGreaterThanOrEqual(3);
     });
@@ -298,7 +298,9 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       expect(mark.setText).toHaveBeenLastCalledWith('');
 
       // 他の兵士は選択されたまま
-      const commanderMark = (ui as any).soldierRows.get(mockCharacters[0].getId()).getData('selectionMark');
+      const commanderMark = (ui as any).soldierRows
+        .get(mockCharacters[0].getId())
+        .getData('selectionMark');
       expect(commanderMark.setText).toHaveBeenLastCalledWith('指');
     });
   });
@@ -312,7 +314,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
       // 初期状態でボタンの背景を取得
       const buttonBg = (ui as any).proceedButton.getData('background');
-      
+
       // 無効化状態
       expect(buttonBg.setFillStyle).toHaveBeenCalledWith(0x333333);
       expect(buttonBg.disableInteractive).toHaveBeenCalled();
@@ -340,7 +342,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
   describe('コールバック処理', () => {
     test('アイテム選択ボタンで正しいFormationDataが渡される', () => {
       const onProceed = jest.fn();
-      
+
       ui = new ArmyFormationUI({
         scene,
         base,
@@ -367,7 +369,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
     test('キャンセルボタンでコールバックが呼ばれる', () => {
       const onCancel = jest.fn();
-      
+
       ui = new ArmyFormationUI({
         scene,
         base,
@@ -427,7 +429,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
   describe('完全な編成フロー', () => {
     test('選択、解除、再選択を含む完全なフローが動作する', () => {
       const onProceed = jest.fn();
-      
+
       ui = new ArmyFormationUI({
         scene,
         base,
