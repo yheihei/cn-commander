@@ -139,6 +139,7 @@ jest.mock('phaser', () => ({
           fillColor,
           fillAlpha,
           data: new Map(),
+          eventListeners: new Map(),
           setStrokeStyle: jest.fn().mockReturnThis(),
           setFillStyle: jest.fn().mockReturnThis(),
           setInteractive: jest.fn().mockReturnThis(),
@@ -151,8 +152,20 @@ jest.mock('phaser', () => ({
           getData: jest.fn(function (this: any, key: string) {
             return this.data.get(key);
           }),
-          on: jest.fn().mockReturnThis(),
-          emit: jest.fn().mockReturnThis(),
+          on: jest.fn(function (this: any, event: string, handler: Function) {
+            if (!this.eventListeners.has(event)) {
+              this.eventListeners.set(event, []);
+            }
+            this.eventListeners.get(event).push(handler);
+            return this;
+          }),
+          emit: jest.fn(function (this: any, event: string, ...args: any[]) {
+            const handlers = this.eventListeners.get(event);
+            if (handlers) {
+              handlers.forEach((handler: any) => handler(...args));
+            }
+            return this;
+          }),
           destroy: jest.fn(),
         };
         return rect;
@@ -293,9 +306,13 @@ jest.mock('phaser', () => ({
       ) {}
       setOrigin = jest.fn().mockReturnThis();
       setText = jest.fn().mockReturnThis();
+      setAlpha = jest.fn().mockReturnThis();
+      setColor = jest.fn().mockReturnThis();
       destroy = jest.fn();
     },
     Rectangle: class MockRectangle {
+      private eventListeners: Map<string, Function[]> = new Map();
+      
       constructor(
         public scene: any,
         public x: number,
@@ -305,11 +322,29 @@ jest.mock('phaser', () => ({
         public fillColor?: number,
         public fillAlpha?: number,
       ) {}
+      
       setStrokeStyle = jest.fn().mockReturnThis();
       setInteractive = jest.fn().mockReturnThis();
       setOrigin = jest.fn().mockReturnThis();
-      on = jest.fn().mockReturnThis();
-      emit = jest.fn().mockReturnThis();
+      setFillStyle = jest.fn().mockReturnThis();
+      disableInteractive = jest.fn().mockReturnThis();
+      
+      on = jest.fn((event: string, handler: Function) => {
+        if (!this.eventListeners.has(event)) {
+          this.eventListeners.set(event, []);
+        }
+        this.eventListeners.get(event)!.push(handler);
+        return this;
+      });
+      
+      emit = jest.fn((event: string, ...args: any[]) => {
+        const handlers = this.eventListeners.get(event);
+        if (handlers) {
+          handlers.forEach(handler => handler(...args));
+        }
+        return this;
+      });
+      
       destroy = jest.fn();
     },
     Container: class MockContainer {
@@ -417,6 +452,7 @@ export const createMockScene = () => {
           setVisible: jest.fn().mockReturnThis(),
           setStyle: jest.fn().mockReturnThis(),
           setColor: jest.fn().mockReturnThis(),
+          setAlpha: jest.fn().mockReturnThis(),
           setData: jest.fn(function (this: any, key: string, value: any) {
             this.data.set(key, value);
             return this;
@@ -558,6 +594,7 @@ export const createMockScene = () => {
             fillColor,
             fillAlpha,
             data: new Map(),
+            eventListeners: new Map(),
             setStrokeStyle: jest.fn().mockReturnThis(),
             setFillStyle: jest.fn().mockReturnThis(),
             setInteractive: jest.fn().mockReturnThis(),
@@ -570,8 +607,20 @@ export const createMockScene = () => {
             getData: jest.fn(function (this: any, key: string) {
               return this.data.get(key);
             }),
-            on: jest.fn().mockReturnThis(),
-            emit: jest.fn().mockReturnThis(),
+            on: jest.fn(function (this: any, event: string, handler: Function) {
+              if (!this.eventListeners.has(event)) {
+                this.eventListeners.set(event, []);
+              }
+              this.eventListeners.get(event).push(handler);
+              return this;
+            }),
+            emit: jest.fn(function (this: any, event: string, ...args: any[]) {
+              const handlers = this.eventListeners.get(event);
+              if (handlers) {
+                handlers.forEach((handler: any) => handler(...args));
+              }
+              return this;
+            }),
             destroy: jest.fn(),
           };
           return rect;

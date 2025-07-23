@@ -559,6 +559,8 @@ export class UIManager {
     // BaseManagerから待機兵士を取得してUIに設定
     const baseManager = (this.scene as any).baseManager;
     if (baseManager) {
+      const waitingSoldiers = baseManager.getWaitingSoldiers(base.getId());
+      this.armyFormationUI.setWaitingSoldiers(waitingSoldiers);
     }
 
     // 全画面モーダルなのでshowを呼ぶだけ

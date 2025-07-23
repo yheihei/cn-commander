@@ -25,6 +25,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       y: 0,
       width: 1280 / 2.25,
       height: 720 / 2.25,
+      right: 1280 / 2.25,
     };
 
     // MapManagerのモック
@@ -55,6 +56,7 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       CharacterFactory.createCharacter(scene, 0, 0, 'iron', '鉄忍B'),
       CharacterFactory.createCharacter(scene, 0, 0, 'shadow', '影忍C'),
       CharacterFactory.createCharacter(scene, 0, 0, 'medicine', '薬忍D'),
+      CharacterFactory.createCharacter(scene, 0, 0, 'wind', '風忍E'),
     ];
   });
 
@@ -82,31 +84,62 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
       expect(ui.depth).toBe(1000);
     });
 
-    test('左右分割レイアウトが正しく構成される', () => {
+    test('タイトルとボタンが正しく表示される', () => {
       ui = new ArmyFormationUI({
         scene,
         base,
       });
 
-      // 背景とタイトルが作成されている
-      expect(scene.add.rectangle).toHaveBeenCalled();
+      // タイトルが表示されている
       expect(scene.add.text).toHaveBeenCalledWith(
         expect.any(Number),
         expect.any(Number),
         '軍団編成',
         expect.any(Object)
       );
+
+      // ボタンが作成されている
+      expect(scene.add.text).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Number),
+        'アイテム選択',
+        expect.any(Object)
+      );
+      expect(scene.add.text).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Number),
+        'キャンセル',
+        expect.any(Object)
+      );
     });
   });
 
-  describe('待機兵士リスト', () => {
+  describe('待機兵士テーブル', () => {
+    test('テーブルヘッダーが正しく表示される', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      // ヘッダーテキストが作成されている
+      const headers = ['名前', '職業', 'HP', '攻撃', '防御', '速さ', '移動', '視界', '選択'];
+      headers.forEach(header => {
+        expect(scene.add.text).toHaveBeenCalledWith(
+          expect.any(Number),
+          expect.any(Number),
+          header,
+          expect.any(Object)
+        );
+      });
+    });
+
     test('待機兵士が正しく表示される', () => {
       ui = new ArmyFormationUI({
         scene,
         base,
       });
 
-      ui.updateWaitingSoldiers(mockCharacters);
+      ui.setWaitingSoldiers(mockCharacters);
 
       // 各キャラクターの情報が表示されている
       mockCharacters.forEach(char => {
@@ -116,132 +149,196 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
           char.getName(),
           expect.any(Object)
         );
-        expect(scene.add.text).toHaveBeenCalledWith(
-          expect.any(Number),
-          expect.any(Number),
-          char.getJobType(),
-          expect.any(Object)
-        );
-      });
-    });
-
-    test('割り当て済み兵士がグレーアウトされる', () => {
-      ui = new ArmyFormationUI({
-        scene,
-        base,
       });
 
-      ui.updateWaitingSoldiers(mockCharacters);
-
-      // 最初の兵士を指揮官スロットに割り当て
-      ui.selectSlot('commander', 0);
-      ui.assignSoldier(mockCharacters[0]);
-
-      // updateWaitingSoldiersDisplayが再度呼ばれる
-      expect(scene.add.container).toHaveBeenCalled();
-    });
-  });
-
-  describe('スロット選択と兵士割り当て', () => {
-    test('スロット選択が正しく動作する', () => {
-      ui = new ArmyFormationUI({
-        scene,
-        base,
-      });
-
-      // 指揮官スロットを選択
-      ui.selectSlot('commander', 0);
-      expect(ui.getSelectedSlot()).toEqual({ type: 'commander', index: 0 });
-
-      // 一般兵スロットを選択
-      ui.selectSlot('soldier', 1);
-      expect(ui.getSelectedSlot()).toEqual({ type: 'soldier', index: 1 });
-    });
-
-    test('兵士の割り当てが正しく動作する', () => {
-      ui = new ArmyFormationUI({
-        scene,
-        base,
-      });
-
-      ui.updateWaitingSoldiers(mockCharacters);
-
-      // 指揮官スロットに兵士を割り当て
-      ui.selectSlot('commander', 0);
-      ui.assignSoldier(mockCharacters[0]);
-
-      // 一般兵スロットに兵士を割り当て
-      ui.selectSlot('soldier', 0);
-      ui.assignSoldier(mockCharacters[1]);
-
-      // スロット表示が更新される
+      // 職業名が正しく変換されて表示される
       expect(scene.add.text).toHaveBeenCalledWith(
         expect.any(Number),
         expect.any(Number),
-        mockCharacters[0].getName(),
+        '風忍',  // windが風忍に変換
+        expect.any(Object)
+      );
+      expect(scene.add.text).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Number),
+        '鉄忍',  // ironが鉄忍に変換
         expect.any(Object)
       );
     });
 
-    test('兵士の解除が正しく動作する', () => {
+    test('偶数行に背景色が設定される', () => {
       ui = new ArmyFormationUI({
         scene,
         base,
       });
 
-      ui.updateWaitingSoldiers(mockCharacters);
+      ui.setWaitingSoldiers(mockCharacters);
 
-      // 兵士を割り当て
-      ui.selectSlot('commander', 0);
-      ui.assignSoldier(mockCharacters[0]);
+      // 偶数行（0, 2, 4）に背景が作成される
+      const backgroundCalls = scene.add.rectangle.mock.calls.filter(
+        (call: any[]) => call[4] === 0x333333
+      );
+      expect(backgroundCalls.length).toBeGreaterThanOrEqual(3);
+    });
+  });
 
-      // 兵士を解除
-      ui.removeSoldier('commander', 0);
+  describe('兵士選択機能', () => {
+    test('最初の選択で指揮官になる', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
 
-      // 待機兵士リストが更新される
-      expect(scene.add.container).toHaveBeenCalled();
+      ui.setWaitingSoldiers(mockCharacters);
+
+      // 最初の兵士をクリック
+      const soldierRow = (ui as any).soldierRows.get(mockCharacters[0].getId());
+      const rowBg = soldierRow.getData('rowBg');
+      rowBg.emit('pointerdown');
+
+      // 指揮官マークが表示される
+      const selectionMark = soldierRow.getData('selectionMark');
+      expect(selectionMark.setText).toHaveBeenCalledWith('指');
+      expect(selectionMark.setColor).toHaveBeenCalledWith('#ff0000');
+    });
+
+    test('2人目以降の選択で一般兵になる', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      ui.setWaitingSoldiers(mockCharacters);
+
+      // 最初の兵士を指揮官として選択
+      const commanderRow = (ui as any).soldierRows.get(mockCharacters[0].getId());
+      commanderRow.getData('rowBg').emit('pointerdown');
+
+      // 2人目を選択
+      const soldierRow = (ui as any).soldierRows.get(mockCharacters[1].getId());
+      soldierRow.getData('rowBg').emit('pointerdown');
+
+      // 一般兵マークが表示される
+      const selectionMark = soldierRow.getData('selectionMark');
+      expect(selectionMark.setText).toHaveBeenCalledWith('兵');
+      expect(selectionMark.setColor).toHaveBeenCalledWith('#0088ff');
+    });
+
+    test('最大4人まで選択可能', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      ui.setWaitingSoldiers(mockCharacters);
+
+      // 4人選択
+      for (let i = 0; i < 4; i++) {
+        const row = (ui as any).soldierRows.get(mockCharacters[i].getId());
+        row.getData('rowBg').emit('pointerdown');
+      }
+
+      // 5人目を選択しようとする
+      const fifthRow = (ui as any).soldierRows.get(mockCharacters[4].getId());
+      const fifthMark = fifthRow.getData('selectionMark');
+      fifthRow.getData('rowBg').emit('pointerdown');
+
+      // 5人目は選択されない（マークが空のまま）
+      expect(fifthMark.setText).not.toHaveBeenCalledWith('兵');
+    });
+  });
+
+  describe('兵士選択解除機能', () => {
+    test('指揮官を右クリックで全選択解除', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      ui.setWaitingSoldiers(mockCharacters);
+
+      // 3人選択
+      for (let i = 0; i < 3; i++) {
+        const row = (ui as any).soldierRows.get(mockCharacters[i].getId());
+        row.getData('rowBg').emit('pointerdown');
+      }
+
+      // 指揮官を右クリック
+      const commanderRow = (ui as any).soldierRows.get(mockCharacters[0].getId());
+      commanderRow.getData('rowBg').emit('pointerdown', { rightButtonDown: () => true });
+
+      // 全員の選択が解除される
+      for (let i = 0; i < 3; i++) {
+        const row = (ui as any).soldierRows.get(mockCharacters[i].getId());
+        const mark = row.getData('selectionMark');
+        expect(mark.setText).toHaveBeenCalledWith('');
+      }
+    });
+
+    test('一般兵を右クリックで個別解除', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      ui.setWaitingSoldiers(mockCharacters);
+
+      // 3人選択
+      for (let i = 0; i < 3; i++) {
+        const row = (ui as any).soldierRows.get(mockCharacters[i].getId());
+        row.getData('rowBg').emit('pointerdown');
+      }
+
+      // 2人目（一般兵）を右クリック
+      const soldierRow = (ui as any).soldierRows.get(mockCharacters[1].getId());
+      soldierRow.getData('rowBg').emit('pointerdown', { rightButtonDown: () => true });
+
+      // 2人目だけ選択解除される
+      const mark = soldierRow.getData('selectionMark');
+      expect(mark.setText).toHaveBeenLastCalledWith('');
+
+      // 他の兵士は選択されたまま
+      const commanderMark = (ui as any).soldierRows.get(mockCharacters[0].getId()).getData('selectionMark');
+      expect(commanderMark.setText).toHaveBeenLastCalledWith('指');
     });
   });
 
   describe('ボタン制御', () => {
-    test('指揮官未選択時は出撃準備ボタンが無効化される', () => {
-      const onProceed = jest.fn();
-      
+    test('兵士未選択時はアイテム選択ボタンが無効化される', () => {
       ui = new ArmyFormationUI({
         scene,
         base,
-        onProceedToItemSelection: onProceed,
       });
 
-      // 初期状態ではボタンが無効化されている
-      const proceedButton = scene.add.rectangle.mock.calls.find(
-        (call: any[]) => call[4] === 0x333333  // 無効化時の色
-      );
-      expect(proceedButton).toBeDefined();
+      // 初期状態でボタンの背景を取得
+      const buttonBg = (ui as any).proceedButton.getData('background');
+      
+      // 無効化状態
+      expect(buttonBg.setFillStyle).toHaveBeenCalledWith(0x333333);
+      expect(buttonBg.disableInteractive).toHaveBeenCalled();
     });
 
-    test('指揮官選択後は出撃準備ボタンが有効化される', () => {
-      const onProceed = jest.fn();
-      
+    test('兵士選択後はアイテム選択ボタンが有効化される', () => {
       ui = new ArmyFormationUI({
         scene,
         base,
-        onProceedToItemSelection: onProceed,
       });
 
-      ui.updateWaitingSoldiers(mockCharacters);
+      ui.setWaitingSoldiers(mockCharacters);
 
-      // 指揮官を選択
-      ui.selectSlot('commander', 0);
-      ui.assignSoldier(mockCharacters[0]);
+      // 兵士を選択
+      const row = (ui as any).soldierRows.get(mockCharacters[0].getId());
+      row.getData('rowBg').emit('pointerdown');
 
-      // ボタンが有効化される（setFillStyleが呼ばれる）
-      expect(scene.add.rectangle).toHaveBeenCalled();
+      // ボタンが有効化される
+      const buttonBg = (ui as any).proceedButton.getData('background');
+      expect(buttonBg.setFillStyle).toHaveBeenCalledWith(0x555555);
+      expect(buttonBg.setInteractive).toHaveBeenCalledWith({ useHandCursor: true });
     });
   });
 
   describe('コールバック処理', () => {
-    test('出撃準備ボタンで正しいデータがコールバックされる', () => {
+    test('アイテム選択ボタンで正しいFormationDataが渡される', () => {
       const onProceed = jest.fn();
       
       ui = new ArmyFormationUI({
@@ -250,25 +347,21 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
         onProceedToItemSelection: onProceed,
       });
 
-      ui.updateWaitingSoldiers(mockCharacters);
+      ui.setWaitingSoldiers(mockCharacters);
 
-      // 軍団を編成
-      ui.selectSlot('commander', 0);
-      ui.assignSoldier(mockCharacters[0]);
-      
-      ui.selectSlot('soldier', 0);
-      ui.assignSoldier(mockCharacters[1]);
-      
-      ui.selectSlot('soldier', 1);
-      ui.assignSoldier(mockCharacters[2]);
+      // 軍団を編成（指揮官1 + 一般兵2）
+      for (let i = 0; i < 3; i++) {
+        const row = (ui as any).soldierRows.get(mockCharacters[i].getId());
+        row.getData('rowBg').emit('pointerdown');
+      }
 
-      // 出撃準備を実行（内部メソッドを直接呼ぶ）
+      // アイテム選択を実行
       (ui as any).onProceed();
 
-      // コールバックが呼ばれる
+      // 正しいデータ構造でコールバックが呼ばれる
       expect(onProceed).toHaveBeenCalledWith({
         commander: mockCharacters[0],
-        soldiers: [mockCharacters[1], mockCharacters[2], null],
+        soldiers: [mockCharacters[1], mockCharacters[2]],
       });
     });
 
@@ -281,15 +374,58 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
         onCancelled: onCancel,
       });
 
-      // キャンセルを実行（内部メソッドを直接呼ぶ）
+      // キャンセルを実行
       (ui as any).onCancel();
 
       expect(onCancel).toHaveBeenCalled();
     });
   });
 
-  describe('相互作用の統合テスト', () => {
-    test('完全な軍団編成フローが動作する', () => {
+  describe('ホバーエフェクト', () => {
+    test('未選択行にホバーすると背景色が変わる', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      ui.setWaitingSoldiers(mockCharacters);
+
+      const row = (ui as any).soldierRows.get(mockCharacters[0].getId());
+      const rowBg = row.getData('rowBg');
+
+      // ホバー開始
+      rowBg.emit('pointerover');
+      expect(rowBg.setFillStyle).toHaveBeenCalledWith(0x444444, 0.3);
+
+      // ホバー終了
+      rowBg.emit('pointerout');
+      expect(rowBg.setFillStyle).toHaveBeenCalledWith(0x000000, 0);
+    });
+
+    test('選択済み行にホバーしても背景色は変わらない', () => {
+      ui = new ArmyFormationUI({
+        scene,
+        base,
+      });
+
+      ui.setWaitingSoldiers(mockCharacters);
+
+      // 兵士を選択
+      const row = (ui as any).soldierRows.get(mockCharacters[0].getId());
+      const rowBg = row.getData('rowBg');
+      rowBg.emit('pointerdown');
+
+      // 選択後の色をクリア
+      rowBg.setFillStyle.mockClear();
+
+      // ホバーしても色が変わらない
+      rowBg.emit('pointerover');
+      expect(rowBg.setFillStyle).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('完全な編成フロー', () => {
+    test('選択、解除、再選択を含む完全なフローが動作する', () => {
       const onProceed = jest.fn();
       
       ui = new ArmyFormationUI({
@@ -298,34 +434,29 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
         onProceedToItemSelection: onProceed,
       });
 
-      // 待機兵士を設定
-      ui.updateWaitingSoldiers(mockCharacters);
+      ui.setWaitingSoldiers(mockCharacters);
 
-      // 指揮官を選択して割り当て
-      ui.selectSlot('commander', 0);
-      ui.assignSoldier(mockCharacters[0]);
+      // 4人選択
+      for (let i = 0; i < 4; i++) {
+        const row = (ui as any).soldierRows.get(mockCharacters[i].getId());
+        row.getData('rowBg').emit('pointerdown');
+      }
 
-      // 一般兵を選択して割り当て
-      ui.selectSlot('soldier', 0);
-      ui.assignSoldier(mockCharacters[1]);
+      // 3人目を解除
+      const thirdRow = (ui as any).soldierRows.get(mockCharacters[2].getId());
+      thirdRow.getData('rowBg').emit('pointerdown', { rightButtonDown: () => true });
 
-      ui.selectSlot('soldier', 1);
-      ui.assignSoldier(mockCharacters[2]);
+      // 5人目を新たに選択
+      const fifthRow = (ui as any).soldierRows.get(mockCharacters[4].getId());
+      fifthRow.getData('rowBg').emit('pointerdown');
 
-      // 一人解除
-      ui.removeSoldier('soldier', 1);
-
-      // 別の兵士を割り当て
-      ui.selectSlot('soldier', 1);
-      ui.assignSoldier(mockCharacters[3]);
-
-      // 出撃準備
+      // アイテム選択へ
       (ui as any).onProceed();
 
       // 最終的な編成が正しい
       expect(onProceed).toHaveBeenCalledWith({
         commander: mockCharacters[0],
-        soldiers: [mockCharacters[1], mockCharacters[3], null],
+        soldiers: [mockCharacters[1], mockCharacters[3], mockCharacters[4]],
       });
     });
   });
