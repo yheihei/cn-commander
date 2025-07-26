@@ -6,11 +6,10 @@ import { BaseInfoPanel } from './BaseInfoPanel';
 import { BaseActionMenu } from './BaseActionMenu';
 import { BarracksSubMenu } from './BarracksSubMenu';
 import { ArmyFormationUI, FormationData } from './ArmyFormationUI';
+import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
-import { Character } from '../character/Character';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
-import { IItem } from '../types/ItemTypes';
 
 export class UIManager {
   private scene: Phaser.Scene;
@@ -21,6 +20,7 @@ export class UIManager {
   private baseActionMenu: BaseActionMenu | null = null;
   private barracksSubMenu: BarracksSubMenu | null = null;
   private armyFormationUI: ArmyFormationUI | null = null;
+  private itemSelectionUI: ItemSelectionUI | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
@@ -482,6 +482,20 @@ export class UIManager {
       this.armyFormationUI.setPosition(centerX, centerY);
     }
 
+    // ItemSelectionUIの位置更新
+    if (this.itemSelectionUI) {
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const centerX = viewLeft + viewWidth / 2;
+      const centerY = viewTop + viewHeight / 2;
+
+      this.itemSelectionUI.setPosition(centerX, centerY);
+    }
+
     // BarracksSubMenuの位置更新
     if (this.barracksSubMenu) {
       this.barracksSubMenu.updateFixedPosition(100, 140);
@@ -520,49 +534,9 @@ export class UIManager {
       onProceedToItemSelection: (formationData: FormationData) => {
         console.log('編成データ:', formationData);
 
-        // TODO: アイテム選択画面への遷移
-        // ここでアイテム選択画面を表示し、アイテム選択後に
-        // 出撃位置選択、軍団作成を行う
-
-        // 仮の実装：アイテムをスキップして直接軍団を作成
-        if (formationData.commander) {
-          const soldiers = formationData.soldiers.filter((s) => s !== null) as Character[];
-          const basePos = base.getPosition();
-          const deployPosition = { x: basePos.x + 2, y: basePos.y + 1 };
-          const items = new Map<Character, IItem[]>();
-
-          const completeFormationData: ArmyFormationData = {
-            commander: formationData.commander,
-            soldiers,
-            items,
-            deployPosition,
-          };
-
-          this.hideArmyFormationUI();
-
-          // ArmyManagerを使って軍団を作成
-          const armyManager = (this.scene as any).armyManager;
-          const baseManager = (this.scene as any).baseManager;
-
-          if (armyManager && baseManager) {
-            const army = armyManager.createArmyFromBase(completeFormationData, base);
-
-            if (army) {
-              // 待機兵士から削除
-              const soldiersToRemove = [
-                completeFormationData.commander,
-                ...completeFormationData.soldiers,
-              ];
-              baseManager.removeWaitingSoldiers(base.getId(), soldiersToRemove);
-
-              console.log('軍団が出撃しました:', army.getName());
-            }
-          }
-
-          if (onArmyFormed) {
-            onArmyFormed(completeFormationData);
-          }
-        }
+        // アイテム選択画面へ遷移
+        this.hideArmyFormationUI();
+        this.showItemSelectionUI(base, formationData, onArmyFormed);
       },
       onCancelled: () => {
         this.hideArmyFormationUI();
@@ -595,6 +569,97 @@ export class UIManager {
     return this.armyFormationUI !== null;
   }
 
+  public showItemSelectionUI(
+    base: Base,
+    formationData: FormationData,
+    onArmyFormed?: (data: ArmyFormationData) => void,
+  ): void {
+    console.log('showItemSelectionUI called');
+    
+    // 既存のアイテム選択UIがあれば削除
+    if (this.itemSelectionUI) {
+      this.itemSelectionUI.destroy();
+      this.itemSelectionUI = null;
+    }
+
+    // アイテム選択UIを作成
+    this.itemSelectionUI = new ItemSelectionUI({
+      scene: this.scene,
+      base,
+      formationData,
+      onProceedToDeployment: (itemEquippedData: ItemEquippedFormationData) => {
+        console.log('アイテム装備データ:', itemEquippedData);
+
+        // TODO: 出撃位置選択画面への遷移
+        // 一旦、デフォルト位置で軍団を作成
+        const basePos = base.getPosition();
+        const deployPosition = { x: basePos.x + 2, y: basePos.y + 1 };
+
+        const completeFormationData: ArmyFormationData = {
+          commander: itemEquippedData.commander,
+          soldiers: itemEquippedData.soldiers,
+          items: itemEquippedData.items,
+          deployPosition,
+        };
+
+        this.hideItemSelectionUI();
+
+        // ArmyManagerを使って軍団を作成
+        const armyManager = (this.scene as any).armyManager;
+        const baseManager = (this.scene as any).baseManager;
+
+        if (armyManager && baseManager) {
+          const army = armyManager.createArmyFromBase(completeFormationData, base);
+
+          if (army) {
+            // 待機兵士から削除
+            const soldiersToRemove = [
+              completeFormationData.commander,
+              ...completeFormationData.soldiers,
+            ];
+            baseManager.removeWaitingSoldiers(base.getId(), soldiersToRemove);
+
+            console.log('軍団が出撃しました:', army.getName());
+          }
+        }
+
+        if (onArmyFormed) {
+          onArmyFormed(completeFormationData);
+        }
+      },
+      onBack: () => {
+        // アイテム選択画面から兵士選択画面に戻る
+        this.hideItemSelectionUI();
+        this.showArmyFormationUI(base, onArmyFormed);
+      },
+      onCancelled: () => {
+        this.hideItemSelectionUI();
+        // 拠点情報を再表示
+        if (this.currentSelectedBase) {
+          this.showBaseInfo(this.currentSelectedBase);
+        }
+      },
+    });
+
+    // BaseManagerから倉庫アイテムを取得
+    const baseManager = (this.scene as any).baseManager;
+    if (baseManager) {
+      const warehouseItems = baseManager.getWarehouseItems();
+      this.itemSelectionUI.updateInventory(warehouseItems);
+    } else {
+      this.itemSelectionUI.updateInventory([]);
+    }
+
+    this.itemSelectionUI.show();
+  }
+
+  public hideItemSelectionUI(): void {
+    if (this.itemSelectionUI) {
+      this.itemSelectionUI.destroy();
+      this.itemSelectionUI = null;
+    }
+  }
+
   private hideAllUI(): void {
     console.log('hideAllUI called');
     this.hideActionMenu();
@@ -616,6 +681,7 @@ export class UIManager {
     this.hideBarracksSubMenu();
     this.hideGuideMessage();
     this.hideArmyFormationUI();
+    this.hideItemSelectionUI();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();
       this.armyInfoPanel = null;

@@ -4,6 +4,10 @@ import { BaseData, BaseType } from '../types/MapTypes';
 import { MapManager } from '../map/MapManager';
 import { Character } from '../character/Character';
 import { Army } from '../army/Army';
+import { IItem } from '../types/ItemTypes';
+import { Weapon } from '../item/Weapon';
+import { Consumable } from '../item/Consumable';
+import { WeaponType } from '../types/ItemTypes';
 
 /**
  * 拠点管理クラス
@@ -19,6 +23,9 @@ export class BaseManager {
 
   // 駐留軍団管理（拠点ID => 軍団リスト）
   private stationedArmies: Map<string, Army[]> = new Map();
+
+  // 倉庫アイテム管理（全拠点共通）
+  private warehouseItems: IItem[] = [];
 
   // 収入計算用
   private lastIncomeUpdate: number = 0;
@@ -211,6 +218,81 @@ export class BaseManager {
     if (index > -1) {
       armies.splice(index, 1);
       this.stationedArmies.set(baseId, armies);
+    }
+  }
+
+  /**
+   * 倉庫アイテムを取得
+   */
+  getWarehouseItems(): IItem[] {
+    return this.warehouseItems;
+  }
+
+  /**
+   * 倉庫にアイテムを追加
+   */
+  addWarehouseItem(item: IItem): void {
+    this.warehouseItems.push(item);
+  }
+
+  /**
+   * 倉庫からアイテムを削除
+   */
+  removeWarehouseItem(item: IItem): boolean {
+    const index = this.warehouseItems.indexOf(item);
+    if (index > -1) {
+      this.warehouseItems.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 倉庫アイテムの初期化（デバッグ用）
+   */
+  initializeWarehouse(): void {
+    // 武器を追加
+    for (let i = 0; i < 12; i++) {
+      const ninjaSword = new Weapon({
+        id: `ninja_sword_${i}`,
+        name: '忍者刀',
+        weaponType: WeaponType.SWORD,
+        attackBonus: 15,
+        minRange: 1,
+        maxRange: 3,
+        maxDurability: 100,
+        price: 300,
+        description: '標準的な忍者刀',
+      });
+      this.warehouseItems.push(ninjaSword);
+    }
+
+    for (let i = 0; i < 25; i++) {
+      const shuriken = new Weapon({
+        id: `shuriken_${i}`,
+        name: '手裏剣',
+        weaponType: WeaponType.PROJECTILE,
+        attackBonus: 5,
+        minRange: 1,
+        maxRange: 6,
+        maxDurability: 100,
+        price: 200,
+        description: '投擲武器',
+      });
+      this.warehouseItems.push(shuriken);
+    }
+
+    // 消耗品を追加
+    for (let i = 0; i < 30; i++) {
+      const foodPill = new Consumable({
+        id: `food_pill_${i}`,
+        name: '兵糧丸',
+        effect: 'HP全快',
+        maxUses: 1,
+        price: 50,
+        description: 'HPを全回復する',
+      });
+      this.warehouseItems.push(foodPill);
     }
   }
 

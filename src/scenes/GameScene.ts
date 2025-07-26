@@ -122,6 +122,9 @@ export class GameScene extends Phaser.Scene {
     // テスト用の待機兵士を追加
     this.createTestWaitingSoldiers();
 
+    // テスト用の倉庫アイテムを初期化
+    this.baseManager.initializeWarehouse();
+
     // 初期カメラ位置を設定（プレイヤー軍団の中心）
     const cameraX = 10 * 16 + 16;
     const cameraY = 10 * 16 + 16;
