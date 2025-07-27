@@ -35,25 +35,32 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     buttonHeight: 40,
     buttonWidth: 100,
     buttonSpacing: 20,
-    soldierListWidth: 200,
+    soldierAreaWidth: 200,
     itemListWidth: 240,
     centerGap: 20,
-    soldierRowHeight: 30,
-    itemRowHeight: 45,
+    itemRowHeight: 35,
     headerHeight: 30,
+    faceImageSize: 64,
+    navButtonSize: 25,
   };
 
   // コンテンツコンテナ
   private contentContainer!: Phaser.GameObjects.Container;
-  private soldierListContainer!: Phaser.GameObjects.Container;
+  private currentSoldierContainer!: Phaser.GameObjects.Container;
   private itemListContainer!: Phaser.GameObjects.Container;
 
   // データ管理
-  private selectedSoldier: Character | null = null;
+  private currentSoldierIndex: number = 0;
+  private allSoldiers: Character[] = [];
   private soldierItemsMap: Map<Character, IItem[]> = new Map();
   private availableItems: IItem[] = [];
-  private soldierRows: Map<string, Phaser.GameObjects.Container> = new Map();
   private itemRows: Map<string, Phaser.GameObjects.Container> = new Map();
+
+  // UI要素
+  private prevButton!: Phaser.GameObjects.Container;
+  private nextButton!: Phaser.GameObjects.Container;
+  private soldierNameText!: Phaser.GameObjects.Text;
+  private itemsContainer!: Phaser.GameObjects.Container;
 
   // ボタン
   private backButton!: Phaser.GameObjects.Container;
@@ -73,7 +80,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     const centerY = viewTop + viewHeight / 2;
 
     super(config.scene, centerX, centerY);
-    
+
     // テスト環境での互換性のため、sceneを明示的に設定
     if (!this.scene) {
       (this as any).scene = config.scene;
@@ -84,28 +91,14 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.onBackCallback = config.onBack;
 
     // 画面全体を覆う半透明の背景
-    this.modalBackground = config.scene.add.rectangle(
-      0,
-      0,
-      viewWidth,
-      viewHeight,
-      0x000000,
-      0.5,
-    );
+    this.modalBackground = config.scene.add.rectangle(0, 0, viewWidth, viewHeight, 0x000000, 0.5);
     this.modalBackground.setOrigin(0.5);
     this.add(this.modalBackground);
 
     // メインパネルの背景
     const panelWidth = viewWidth * 0.9;
     const panelHeight = viewHeight * 0.9;
-    this.background = config.scene.add.rectangle(
-      0,
-      0,
-      panelWidth,
-      panelHeight,
-      0x222222,
-      0.95,
-    );
+    this.background = config.scene.add.rectangle(0, 0, panelWidth, panelHeight, 0x222222, 0.95);
     this.background.setStrokeStyle(3, 0xffffff);
     this.background.setOrigin(0.5);
     this.add(this.background);
@@ -117,7 +110,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       -panelHeight / 2 + this.layoutConfig.panelPadding,
       titleText,
       {
-        fontSize: '18px',
+        fontSize: '14px',
         color: '#ffffff',
         fontStyle: 'bold',
         resolution: 2,
@@ -128,8 +121,8 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.add(this.titleText);
 
     // コンテンツコンテナを作成（タイトルの下に適切なスペースを設ける）
-    const titleHeight = 30;  // タイトルテキストの高さ（概算）
-    const contentY = -panelHeight / 2 + this.layoutConfig.panelPadding + titleHeight + 20;  // 20は追加のマージン
+    const titleHeight = 30; // タイトルテキストの高さ（概算）
+    const contentY = -panelHeight / 2 + this.layoutConfig.panelPadding + titleHeight + 20; // 20は追加のマージン
     this.contentContainer = config.scene.add.container(0, contentY);
     this.add(this.contentContainer);
 
@@ -142,6 +135,9 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     // データの初期化
     this.initializeData();
 
+    // 最初の兵士を表示
+    this.displayCurrentSoldier();
+
     // コンテナをシーンに追加
     config.scene.add.existing(this as any);
 
@@ -153,63 +149,101 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   }
 
   private createListContainers(): void {
-    // 左側：兵士リストコンテナ
-    const soldierListX = -(this.layoutConfig.centerGap / 2 + this.layoutConfig.soldierListWidth / 2);
-    this.soldierListContainer = this.scene.add.container(soldierListX, 0);
-    this.contentContainer.add(this.soldierListContainer);
+    // 左側：現在の兵士コンテナ
+    const soldierAreaX = -(
+      this.layoutConfig.centerGap / 2 +
+      this.layoutConfig.soldierAreaWidth / 2
+    );
+    this.currentSoldierContainer = this.scene.add.container(soldierAreaX, 0);
+    this.contentContainer.add(this.currentSoldierContainer);
 
     // 右側：アイテムリストコンテナ
     const itemListX = this.layoutConfig.centerGap / 2 + this.layoutConfig.itemListWidth / 2;
     this.itemListContainer = this.scene.add.container(itemListX, 0);
     this.contentContainer.add(this.itemListContainer);
 
-    // 兵士リストのヘッダー
-    this.createSoldierListHeader();
+    // 兵士エリアのヘッダーとナビゲーション
+    this.createSoldierHeader();
 
     // アイテムリストのヘッダー
     this.createItemListHeader();
   }
 
-  private createSoldierListHeader(): void {
-    const headerText = this.scene.add.text(0, 0, '選択した兵士', {
-      fontSize: '14px',
+  private createSoldierHeader(): void {
+    // ナビゲーションボタンとヘッダーのコンテナ
+    const headerY = 0;
+
+    // 前へボタン
+    this.prevButton = this.createNavigationButton(
+      '◀',
+      -this.layoutConfig.soldierAreaWidth / 2 + 20,
+      headerY,
+      () => {
+        this.navigateToPreviousSoldier();
+      },
+    );
+    this.currentSoldierContainer.add(this.prevButton);
+
+    // 兵士名表示
+    this.soldierNameText = this.scene.add.text(0, headerY, '', {
+      fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
+      padding: { x: 0, y: 5 },
     });
-    headerText.setOrigin(0.5, 0);
-    this.soldierListContainer.add(headerText);
+    this.soldierNameText.setOrigin(0.5, 0.5);
+    this.currentSoldierContainer.add(this.soldierNameText);
+
+    // 次へボタン
+    this.nextButton = this.createNavigationButton(
+      '▶',
+      this.layoutConfig.soldierAreaWidth / 2 - 20,
+      headerY,
+      () => {
+        this.navigateToNextSoldier();
+      },
+    );
+    this.currentSoldierContainer.add(this.nextButton);
 
     // ヘッダー下線
-    const line = this.scene.add.rectangle(
-      0,
-      20,
-      this.layoutConfig.soldierListWidth,
-      1,
-      0xffffff,
-    );
+    const line = this.scene.add.rectangle(0, 20, this.layoutConfig.soldierAreaWidth, 1, 0xffffff);
     line.setOrigin(0.5, 0.5);
-    this.soldierListContainer.add(line);
+    this.currentSoldierContainer.add(line);
+
+    // 兵士詳細表示エリア
+    const soldierDetailsY = 30;
+
+    // アイテムリストコンテナ
+    this.itemsContainer = this.scene.add.container(
+      -this.layoutConfig.soldierAreaWidth / 2,
+      soldierDetailsY,
+    );
+    this.currentSoldierContainer.add(this.itemsContainer);
+
+    // 「所持アイテム:」ラベル
+    const itemsLabel = this.scene.add.text(0, -20, '所持アイテム:', {
+      fontSize: '12px',
+      color: '#ffffff',
+      resolution: 2,
+    });
+    itemsLabel.setOrigin(0, 0);
+    this.itemsContainer.add(itemsLabel);
   }
 
   private createItemListHeader(): void {
     const headerText = this.scene.add.text(0, 0, '倉庫アイテム', {
-      fontSize: '14px',
+      fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
+      padding: { x: 0, y: 5 },
     });
     headerText.setOrigin(0.5, 0);
     this.itemListContainer.add(headerText);
 
     // ヘッダー下線
-    const line = this.scene.add.rectangle(
-      0,
-      20,
-      this.layoutConfig.itemListWidth,
-      1,
-      0xffffff,
-    );
+    const line = this.scene.add.rectangle(0, 20, this.layoutConfig.itemListWidth, 1, 0xffffff);
     line.setOrigin(0.5, 0.5);
     this.itemListContainer.add(line);
   }
@@ -252,7 +286,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     buttonBg.setInteractive({ useHandCursor: true });
 
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontSize: '14px',
+      fontSize: '12px',
       color: '#ffffff',
       resolution: 2,
     });
@@ -289,22 +323,22 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
   private initializeData(): void {
     // FormationDataから兵士リストを作成
-    const allSoldiers: Character[] = [];
+    this.allSoldiers = [];
     if (this.formationData.commander) {
-      allSoldiers.push(this.formationData.commander);
+      this.allSoldiers.push(this.formationData.commander);
     }
-    allSoldiers.push(...this.formationData.soldiers);
+    this.allSoldiers.push(...this.formationData.soldiers);
 
     // 各兵士の初期アイテムリストを作成（空）
-    allSoldiers.forEach((soldier) => {
+    this.allSoldiers.forEach((soldier) => {
       this.soldierItemsMap.set(soldier, []);
     });
 
     // 倉庫アイテムを取得（後でBaseManagerから取得）
     this.loadInventoryItems();
 
-    // 兵士リストを作成
-    this.createSoldierRows(allSoldiers);
+    // 現在のインデックスを初期化
+    this.currentSoldierIndex = 0;
   }
 
   private loadInventoryItems(): void {
@@ -314,161 +348,84 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.updateItemList();
   }
 
-  private createSoldierRows(soldiers: Character[]): void {
-    const startY = this.layoutConfig.headerHeight + 10;
+  private displayCurrentSoldier(): void {
+    if (this.allSoldiers.length === 0) return;
 
-    soldiers.forEach((soldier, index) => {
-      const isCommander = soldier === this.formationData.commander;
-      this.createSoldierRow(soldier, 0, startY + index * this.layoutConfig.soldierRowHeight * 3, isCommander);
-    });
+    const currentSoldier = this.allSoldiers[this.currentSoldierIndex];
+
+    // 兵士名を更新
+    this.soldierNameText.setText(currentSoldier.getName());
+
+    // アイテムリストを更新
+    this.updateCurrentSoldierItems();
   }
 
-  private createSoldierRow(soldier: Character, x: number, y: number, isCommander: boolean): void {
-    const rowContainer = this.scene.add.container(x, y);
+  private navigateToPreviousSoldier(): void {
+    if (this.allSoldiers.length <= 1) return;
 
-    // 兵士の基本情報を表示
-    const roleText = isCommander ? '（指揮官）' : '（一般兵）';
-    const nameText = this.scene.add.text(-this.layoutConfig.soldierListWidth / 2 + 10, 0, 
-      `▶ ${soldier.getName()}${roleText}`, {
-      fontSize: '12px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      resolution: 2,
-    });
-    nameText.setOrigin(0, 0);
-    rowContainer.add(nameText);
-
-    // 選択可能な領域
-    const selectArea = this.scene.add.rectangle(
-      0,
-      0,
-      this.layoutConfig.soldierListWidth,
-      this.layoutConfig.soldierRowHeight,
-      0x000000,
-      0,
-    );
-    selectArea.setOrigin(0.5, 0);
-    selectArea.setInteractive({ useHandCursor: true });
-    rowContainer.add(selectArea);
-
-    selectArea.on('pointerdown', () => {
-      this.selectSoldier(soldier);
-    });
-
-    selectArea.on('pointerover', () => {
-      if (this.selectedSoldier !== soldier) {
-        selectArea.setFillStyle(0x444444, 0.3);
-      }
-    });
-
-    selectArea.on('pointerout', () => {
-      if (this.selectedSoldier !== soldier) {
-        selectArea.setFillStyle(0x000000, 0);
-      }
-    });
-
-    // 所持アイテム数
-    const itemCount = this.soldierItemsMap.get(soldier)?.length || 0;
-    const itemCountText = this.scene.add.text(
-      this.layoutConfig.soldierListWidth / 2 - 10, 0,
-      `${itemCount}/4`, {
-      fontSize: '12px',
-      color: '#ffffff',
-      resolution: 2,
-    });
-    itemCountText.setOrigin(1, 0);
-    rowContainer.add(itemCountText);
-
-    // アイテムリスト（初期は非表示）
-    const itemListContainer = this.scene.add.container(0, this.layoutConfig.soldierRowHeight);
-    rowContainer.add(itemListContainer);
-
-    this.soldierListContainer.add(rowContainer);
-    this.soldierRows.set(soldier.getId(), rowContainer);
-
-    // データを保存
-    rowContainer.setData('soldier', soldier);
-    rowContainer.setData('selectArea', selectArea);
-    rowContainer.setData('itemCountText', itemCountText);
-    rowContainer.setData('itemListContainer', itemListContainer);
-    rowContainer.setData('nameText', nameText);
-  }
-
-  private selectSoldier(soldier: Character): void {
-    // 前の選択をクリア
-    if (this.selectedSoldier) {
-      const prevRow = this.soldierRows.get(this.selectedSoldier.getId());
-      if (prevRow) {
-        const selectArea = prevRow.getData('selectArea') as Phaser.GameObjects.Rectangle;
-        const nameText = prevRow.getData('nameText') as Phaser.GameObjects.Text;
-        const itemListContainer = prevRow.getData('itemListContainer') as Phaser.GameObjects.Container;
-        
-        selectArea.setFillStyle(0x000000, 0);
-        nameText.setText(nameText.text.replace('▼', '▶'));
-        itemListContainer.setVisible(false);
-      }
+    this.currentSoldierIndex--;
+    if (this.currentSoldierIndex < 0) {
+      this.currentSoldierIndex = this.allSoldiers.length - 1;
     }
 
-    // 新しい選択
-    this.selectedSoldier = soldier;
-    const row = this.soldierRows.get(soldier.getId());
-    if (row) {
-      const selectArea = row.getData('selectArea') as Phaser.GameObjects.Rectangle;
-      const nameText = row.getData('nameText') as Phaser.GameObjects.Text;
-      const itemListContainer = row.getData('itemListContainer') as Phaser.GameObjects.Container;
-      
-      selectArea.setFillStyle(0x444444, 0.5);
-      nameText.setText(nameText.text.replace('▶', '▼'));
-      itemListContainer.setVisible(true);
-      
-      // アイテムリストを更新
-      this.updateSoldierItemList(soldier, itemListContainer);
-    }
+    this.displayCurrentSoldier();
   }
 
-  private updateSoldierItemList(soldier: Character, container: Phaser.GameObjects.Container): void {
+  private navigateToNextSoldier(): void {
+    if (this.allSoldiers.length <= 1) return;
+
+    this.currentSoldierIndex++;
+    if (this.currentSoldierIndex >= this.allSoldiers.length) {
+      this.currentSoldierIndex = 0;
+    }
+
+    this.displayCurrentSoldier();
+  }
+
+  private updateCurrentSoldierItems(): void {
     // 既存のアイテムをクリア
-    container.removeAll(true);
+    this.itemsContainer.removeAll(true);
 
-    const items = this.soldierItemsMap.get(soldier) || [];
+    const currentSoldier = this.allSoldiers[this.currentSoldierIndex];
+    const items = this.soldierItemsMap.get(currentSoldier) || [];
     const maxItems = 4;
 
     for (let i = 0; i < maxItems; i++) {
       const item = items[i];
-      const itemY = i * 20;
+      const itemY = i * 25;
 
       if (item) {
         // アイテム情報を表示
-        this.createItemSlot(container, item, i, itemY, soldier);
+        this.createItemSlot(this.itemsContainer, item, i, itemY, currentSoldier);
       } else {
         // 空きスロット
-        const emptyText = this.scene.add.text(-this.layoutConfig.soldierListWidth / 2 + 20, itemY, `${i + 1}.[空きスロット]`, {
+        const emptyText = this.scene.add.text(0, itemY, `${i + 1}.[空きスロット]`, {
           fontSize: '11px',
           color: '#888888',
           resolution: 2,
         });
         emptyText.setOrigin(0, 0);
-        container.add(emptyText);
+        this.itemsContainer.add(emptyText);
       }
     }
   }
 
   private createItemSlot(
-    container: Phaser.GameObjects.Container, 
-    item: IItem, 
-    index: number, 
+    container: Phaser.GameObjects.Container,
+    item: IItem,
+    index: number,
     y: number,
-    soldier: Character
+    soldier: Character,
   ): void {
-    const itemContainer = this.scene.add.container(-this.layoutConfig.soldierListWidth / 2 + 20, y);
+    const itemContainer = this.scene.add.container(0, y);
 
     // アイテム番号と名前
     let itemText = `${index + 1}.${item.name}`;
-    
+
     // 武器の場合は耐久度を表示
     if (item.type === ItemType.WEAPON) {
       const weapon = item as IWeapon;
-      itemText += `（耐久${weapon.durability}/${weapon.maxDurability}）`;
+      itemText += `（${weapon.durability}/${weapon.maxDurability}）`;
     }
 
     const textColor = this.isEquipped(soldier, item) ? '#ff0000' : '#ffffff';
@@ -482,7 +439,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     // 装備中表示
     if (this.isEquipped(soldier, item)) {
-      const equippedText = this.scene.add.text(120, 0, '装備中', {
+      const equippedText = this.scene.add.text(150, 0, '装備中', {
         fontSize: '10px',
         color: '#ff0000',
         resolution: 2,
@@ -491,14 +448,14 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       itemContainer.add(equippedText);
     } else if (item.type === ItemType.WEAPON && !this.isEquipped(soldier, item)) {
       // 装備ボタン
-      const equipButton = this.createSmallButton('[装備]', 120, 0, () => {
+      const equipButton = this.createSmallButton('[装備]', 150, 0, () => {
         this.equipWeapon(soldier, item as IWeapon);
       });
       itemContainer.add(equipButton);
     }
 
     // 削除ボタン
-    const removeButton = this.createSmallButton('[✗]', 150, 0, () => {
+    const removeButton = this.createSmallButton('[✗]', 200, 0, () => {
       this.removeItem(soldier, index);
     });
     itemContainer.add(removeButton);
@@ -506,11 +463,16 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     container.add(itemContainer);
   }
 
-  private createSmallButton(text: string, x: number, y: number, onClick: () => void): Phaser.GameObjects.Container {
+  private createSmallButton(
+    text: string,
+    x: number,
+    y: number,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontSize: '11px',
+      fontSize: '10px',
       color: '#88ccff',
       resolution: 2,
     });
@@ -531,6 +493,46 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     return button;
   }
 
+  private createNavigationButton(
+    text: string,
+    x: number,
+    y: number,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
+    const button = this.scene.add.container(x, y);
+
+    const buttonBg = this.scene.add.rectangle(
+      0,
+      0,
+      this.layoutConfig.navButtonSize,
+      this.layoutConfig.navButtonSize,
+      0x555555,
+    );
+    buttonBg.setStrokeStyle(1, 0xaaaaaa);
+    buttonBg.setInteractive({ useHandCursor: true });
+
+    const buttonText = this.scene.add.text(0, 0, text, {
+      fontSize: '10px',
+      color: '#ffffff',
+      resolution: 2,
+    });
+    buttonText.setOrigin(0.5);
+
+    button.add([buttonBg, buttonText]);
+
+    buttonBg.on('pointerover', () => {
+      buttonBg.setFillStyle(0x777777);
+    });
+
+    buttonBg.on('pointerout', () => {
+      buttonBg.setFillStyle(0x555555);
+    });
+
+    buttonBg.on('pointerdown', onClick);
+
+    return button;
+  }
+
   private isEquipped(soldier: Character, item: IItem): boolean {
     // 兵士の現在の装備武器を確認
     const equippedWeapon = soldier.getItemHolder().getEquippedWeapon();
@@ -539,14 +541,10 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
   private equipWeapon(soldier: Character, weapon: IWeapon): void {
     soldier.getItemHolder().equipWeapon(weapon);
-    
+
     // 表示を更新
-    if (this.selectedSoldier === soldier) {
-      const row = this.soldierRows.get(soldier.getId());
-      if (row) {
-        const itemListContainer = row.getData('itemListContainer') as Phaser.GameObjects.Container;
-        this.updateSoldierItemList(soldier, itemListContainer);
-      }
+    if (this.allSoldiers[this.currentSoldierIndex] === soldier) {
+      this.updateCurrentSoldierItems();
     }
   }
 
@@ -554,29 +552,25 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     const items = this.soldierItemsMap.get(soldier);
     if (items && items[index]) {
       const removedItem = items.splice(index, 1)[0];
-      
+
+      // 兵士のItemHolderからも削除
+      soldier.getItemHolder().removeItem(removedItem);
+
       // アイテムを倉庫に戻す
       this.availableItems.push(removedItem);
       this.updateItemList();
-      
+
       // 表示を更新
-      this.updateSoldierDisplay(soldier);
+      if (this.allSoldiers[this.currentSoldierIndex] === soldier) {
+        this.updateCurrentSoldierItems();
+      }
     }
   }
 
   private updateSoldierDisplay(soldier: Character): void {
-    const row = this.soldierRows.get(soldier.getId());
-    if (row) {
-      // アイテム数を更新
-      const itemCountText = row.getData('itemCountText') as Phaser.GameObjects.Text;
-      const itemCount = this.soldierItemsMap.get(soldier)?.length || 0;
-      itemCountText.setText(`${itemCount}/4`);
-
-      // アイテムリストを更新（選択中の場合）
-      if (this.selectedSoldier === soldier) {
-        const itemListContainer = row.getData('itemListContainer') as Phaser.GameObjects.Container;
-        this.updateSoldierItemList(soldier, itemListContainer);
-      }
+    // 現在表示中の兵士の場合のみ更新
+    if (this.allSoldiers[this.currentSoldierIndex] === soldier) {
+      this.updateCurrentSoldierItems();
     }
   }
 
@@ -586,12 +580,16 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.itemRows.clear();
 
     if (this.availableItems.length === 0) {
-      const noItemText = this.scene.add.text(0, this.layoutConfig.headerHeight + 20, 
-        'アイテムがありません', {
-        fontSize: '12px',
-        color: '#888888',
-        resolution: 2,
-      });
+      const noItemText = this.scene.add.text(
+        0,
+        this.layoutConfig.headerHeight + 20,
+        '',
+        {
+          fontSize: '10px',
+          color: '#888888',
+          resolution: 2,
+        },
+      );
       noItemText.setOrigin(0.5, 0);
       this.itemListContainer.add(noItemText);
       return;
@@ -599,7 +597,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     // アイテムを種類別にグループ化
     const itemGroups = new Map<string, { item: IItem; count: number }>();
-    
+
     this.availableItems.forEach((item) => {
       const key = `${item.name}_${item.type}`;
       const existing = itemGroups.get(key);
@@ -610,7 +608,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       }
     });
 
-    let currentY = this.layoutConfig.headerHeight + 20;
+    let currentY = this.layoutConfig.headerHeight;
 
     // アイテムグループを表示
     itemGroups.forEach((group) => {
@@ -624,9 +622,8 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     // アイテム名と在庫数
     const itemName = `${item.name} x${count}`;
-    const nameText = this.scene.add.text(-this.layoutConfig.itemListWidth / 2 + 10, 0, 
-      itemName, {
-      fontSize: '12px',
+    const nameText = this.scene.add.text(-this.layoutConfig.itemListWidth / 2 + 10, 0, itemName, {
+      fontSize: '10px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
@@ -644,24 +641,18 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       detailText = `${consumable.effect}、使用回数${consumable.maxUses}`;
     }
 
-    const detailsText = this.scene.add.text(-this.layoutConfig.itemListWidth / 2 + 10, 15, 
-      detailText, {
-      fontSize: '10px',
-      color: '#aaaaaa',
-      resolution: 2,
-    });
+    const detailsText = this.scene.add.text(
+      -this.layoutConfig.itemListWidth / 2 + 10,
+      15,
+      detailText,
+      {
+        fontSize: '10px',
+        color: '#aaaaaa',
+        resolution: 2,
+      },
+    );
     detailsText.setOrigin(0, 0);
     rowContainer.add(detailsText);
-
-    // 操作ヒント
-    const hintText = this.scene.add.text(-this.layoutConfig.itemListWidth / 2 + 10, 28, 
-      '（左クリックで追加）', {
-      fontSize: '9px',
-      color: '#888888',
-      resolution: 2,
-    });
-    hintText.setOrigin(0, 0);
-    rowContainer.add(hintText);
 
     // クリック領域
     const clickArea = this.scene.add.rectangle(
@@ -686,7 +677,9 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     clickArea.on('pointerdown', () => {
       // 同じ種類のアイテムから1つを取得
-      const availableItem = this.availableItems.find(i => i.name === item.name && i.type === item.type);
+      const availableItem = this.availableItems.find(
+        (i) => i.name === item.name && i.type === item.type,
+      );
       if (availableItem) {
         this.onItemClick(availableItem);
       }
@@ -697,12 +690,8 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   }
 
   private onItemClick(item: IItem): void {
-    if (!this.selectedSoldier) {
-      // 兵士が選択されていない場合は何もしない
-      return;
-    }
-
-    const soldierItems = this.soldierItemsMap.get(this.selectedSoldier);
+    const currentSoldier = this.allSoldiers[this.currentSoldierIndex];
+    const soldierItems = this.soldierItemsMap.get(currentSoldier);
     if (!soldierItems) return;
 
     // アイテム数上限チェック
@@ -712,32 +701,35 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     }
 
     // アイテムを兵士に追加
-    this.assignItem(this.selectedSoldier, item);
+    this.assignItem(currentSoldier, item);
   }
 
   public assignItem(soldier: Character, item: IItem): void {
     const soldierItems = this.soldierItemsMap.get(soldier);
     if (!soldierItems || soldierItems.length >= 4 || !item) return;
 
-    // アイテムを兵士に追加
+    // アイテムを兵士のItemHolderに追加
+    const added = soldier.getItemHolder().addItem(item);
+    if (!added) {
+      // アイテムの追加に失敗（上限に達している等）
+      return;
+    }
+
+    // UIの状態管理用マップにも追加
     soldierItems.push(item);
-    
+
     // 倉庫から削除
     const index = this.availableItems.indexOf(item);
     if (index > -1) {
       this.availableItems.splice(index, 1);
     }
 
-    // 最初の武器は自動装備
-    if (item.type === ItemType.WEAPON && soldierItems.filter(i => i.type === ItemType.WEAPON).length === 1) {
-      soldier.getItemHolder().equipWeapon(item as IWeapon);
-    }
+    // 注：ItemHolderのaddItemメソッドが自動的に最初の武器を装備してくれる
 
     // 表示を更新
     this.updateSoldierDisplay(soldier);
     this.updateItemList();
   }
-
 
   private onBack(): void {
     if (this.onBackCallback) {
@@ -768,11 +760,10 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   public setFormationData(data: FormationData): void {
     this.formationData = data;
     // データを再初期化
-    this.soldierRows.forEach((row) => row.destroy());
-    this.soldierRows.clear();
     this.soldierItemsMap.clear();
-    this.selectedSoldier = null;
+    this.currentSoldierIndex = 0;
     this.initializeData();
+    this.displayCurrentSoldier();
   }
 
   public updateInventory(items: IItem[]): void {
@@ -785,9 +776,6 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.removeAllListeners();
 
     // 行のクリーンアップ
-    this.soldierRows.forEach((row) => row.destroy());
-    this.soldierRows.clear();
-
     this.itemRows.forEach((row) => row.destroy());
     this.itemRows.clear();
 
