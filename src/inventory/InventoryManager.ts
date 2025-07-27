@@ -3,7 +3,7 @@ import { IItem } from '../types/ItemTypes';
 /**
  * 倉庫システムのスタブ実装
  * 全拠点共通のアイテム在庫を管理する
- * 
+ *
  * TODO: task-10-3で本格実装に置き換える
  */
 export class InventoryManager {

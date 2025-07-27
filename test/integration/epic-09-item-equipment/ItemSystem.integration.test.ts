@@ -32,7 +32,7 @@ describe('[エピック9] ItemSystem Integration Tests', () => {
         expect(shuriken.name).toBe('手裏剣');
         expect(shuriken.weaponType).toBe(WeaponType.PROJECTILE);
         expect(shuriken.attackBonus).toBe(5);
-        expect(shuriken.minRange).toBe(2);
+        expect(shuriken.minRange).toBe(1);
         expect(shuriken.maxRange).toBe(6);
         expect(shuriken.durability).toBe(100);
         expect(shuriken.price).toBe(200);
@@ -217,13 +217,13 @@ describe('[エピック9] ItemSystem Integration Tests', () => {
       test('手裏剣の射程判定が正しく動作する', () => {
         const attackerPos = { x: 5, y: 5 };
 
-        // 射程内（2-6マス）
+        // 射程内（1-6マス）
+        expect(rangeChecker.isInRange(attackerPos, { x: 6, y: 5 }, shuriken)).toBe(true); // 1マス
         expect(rangeChecker.isInRange(attackerPos, { x: 7, y: 5 }, shuriken)).toBe(true); // 2マス
         expect(rangeChecker.isInRange(attackerPos, { x: 8, y: 7 }, shuriken)).toBe(true); // 3マス（斜め）
         expect(rangeChecker.isInRange(attackerPos, { x: 11, y: 5 }, shuriken)).toBe(true); // 6マス
 
         // 射程外
-        expect(rangeChecker.isInRange(attackerPos, { x: 6, y: 5 }, shuriken)).toBe(false); // 1マス（近すぎ）
         expect(rangeChecker.isInRange(attackerPos, { x: 12, y: 5 }, shuriken)).toBe(false); // 7マス（遠すぎ）
       });
 
@@ -238,10 +238,10 @@ describe('[エピック9] ItemSystem Integration Tests', () => {
         expect(swordPositions.some((pos) => pos.x === 6 && pos.y === 5)).toBe(true);
         expect(swordPositions.some((pos) => pos.x === 5 && pos.y === 5)).toBe(false); // 自分の位置は含まない
 
-        // 手裏剣：射程2-6の範囲
+        // 手裏剣：射程1-6の範囲
         expect(shurikenPositions.length).toBeGreaterThan(swordPositions.length);
         expect(shurikenPositions.some((pos) => pos.x === 7 && pos.y === 5)).toBe(true);
-        expect(shurikenPositions.some((pos) => pos.x === 6 && pos.y === 5)).toBe(false); // 射程1は含まない
+        expect(shurikenPositions.some((pos) => pos.x === 6 && pos.y === 5)).toBe(true); // 射程1も含む
       });
     });
 

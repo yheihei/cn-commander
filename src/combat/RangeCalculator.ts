@@ -1,5 +1,5 @@
 import { Character } from '../character/Character';
-import { IWeapon, WeaponType } from '../types/ItemTypes';
+import { IWeapon } from '../types/ItemTypes';
 import { MapManager } from '../map/MapManager';
 
 interface GridPosition {
@@ -13,11 +13,6 @@ export interface WeaponRange {
 }
 
 export class RangeCalculator {
-  private static readonly WEAPON_RANGES: Record<string, WeaponRange> = {
-    sword: { min: 1, max: 3 },
-    shuriken: { min: 1, max: 6 },
-  };
-
   constructor(private mapManager: MapManager) {}
 
   isInRange(attacker: Character, target: Character): boolean {
@@ -77,8 +72,10 @@ export class RangeCalculator {
   }
 
   getWeaponRange(weapon: IWeapon): WeaponRange {
-    const weaponType = this.getWeaponType(weapon);
-    return RangeCalculator.WEAPON_RANGES[weaponType] || { min: 1, max: 1 };
+    return {
+      min: weapon.minRange,
+      max: weapon.maxRange,
+    };
   }
 
   private calculateDistance(char1: Character, char2: Character): number {
@@ -105,15 +102,6 @@ export class RangeCalculator {
 
     const distance = Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
     return distance;
-  }
-
-  private getWeaponType(weapon: IWeapon): string {
-    if (weapon.weaponType === WeaponType.SWORD) {
-      return 'sword';
-    } else if (weapon.weaponType === WeaponType.PROJECTILE) {
-      return 'shuriken';
-    }
-    return 'unknown';
   }
 
   calculateGridDistance(pos1: GridPosition, pos2: GridPosition): number {

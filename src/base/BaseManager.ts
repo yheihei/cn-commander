@@ -4,10 +4,9 @@ import { BaseData, BaseType } from '../types/MapTypes';
 import { MapManager } from '../map/MapManager';
 import { Character } from '../character/Character';
 import { Army } from '../army/Army';
-import { IItem } from '../types/ItemTypes';
+import { IItem, WeaponType } from '../types/ItemTypes';
 import { Weapon } from '../item/Weapon';
 import { Consumable } from '../item/Consumable';
-import { WeaponType } from '../types/ItemTypes';
 
 /**
  * 拠点管理クラス

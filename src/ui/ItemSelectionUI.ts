@@ -260,7 +260,8 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.add(this.backButton);
 
     // 出撃位置選択へ進むボタン
-    const proceedButtonX = this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2 + 15;
+    const proceedButtonX =
+      this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2 + 15;
     this.proceedButton = this.createButton('出撃位置選択', proceedButtonX, buttonY, () => {
       this.onProceed();
     });
@@ -585,16 +586,11 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.itemRows.clear();
 
     if (this.availableItems.length === 0) {
-      const noItemText = this.scene.add.text(
-        0,
-        this.layoutConfig.headerHeight + 20,
-        '',
-        {
-          fontSize: '10px',
-          color: '#888888',
-          resolution: 2,
-        },
-      );
+      const noItemText = this.scene.add.text(0, this.layoutConfig.headerHeight + 20, '', {
+        fontSize: '10px',
+        color: '#888888',
+        resolution: 2,
+      });
       noItemText.setOrigin(0.5, 0);
       this.itemListContainer.add(noItemText);
       return;

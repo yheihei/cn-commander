@@ -19,11 +19,22 @@ export class WeaponFactory {
       name: '手裏剣',
       weaponType: WeaponType.PROJECTILE,
       attackBonus: 5,
-      minRange: 2,
+      minRange: 1,
       maxRange: 6,
       maxDurability: 100,
       price: 200,
       description: '遠距離攻撃用の投擲武器。威力は低いが射程が長い。',
+    },
+    bow: {
+      id: 'bow',
+      name: '弓',
+      weaponType: WeaponType.PROJECTILE,
+      attackBonus: 2,
+      minRange: 4,
+      maxRange: 12,
+      maxDurability: 100,
+      price: 400,
+      description: '長距離攻撃用の弓。威力は低いが射程が非常に長い。',
     },
   };
 
