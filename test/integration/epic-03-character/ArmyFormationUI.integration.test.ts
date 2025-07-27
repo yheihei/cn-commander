@@ -493,13 +493,14 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
         const allTextObjects = scene.add.text.mock.results
           .filter((r: any) => r.value)
           .map((r: any) => r.value);
-        
+
         const pageText = allTextObjects.find((text: any) => {
-          return text.setText && text.setText.mock.calls.some((call: any) => 
-            call[0] && call[0].includes('ページ')
+          return (
+            text.setText &&
+            text.setText.mock.calls.some((call: any) => call[0] && call[0].includes('ページ'))
           );
         });
-        
+
         expect(pageText).toBeTruthy();
         expect(pageText.setText).toHaveBeenCalledWith('1 / 2 ページ');
       } else {

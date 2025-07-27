@@ -575,7 +575,7 @@ export class UIManager {
     onArmyFormed?: (data: ArmyFormationData) => void,
   ): void {
     console.log('showItemSelectionUI called');
-    
+
     // 既存のアイテム選択UIがあれば削除
     if (this.itemSelectionUI) {
       this.itemSelectionUI.destroy();

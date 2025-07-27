@@ -104,12 +104,25 @@ jest.mock('phaser', () => {
 const createMockScene = (): any => {
   const mockScene: any = {
     add: {
-      container: jest.fn((x: number, y: number) => new (jest.requireMock('phaser').GameObjects.Container)(mockScene, x, y)),
-      rectangle: jest.fn((x: number, y: number, width: number, height: number, color?: number, alpha?: number) =>
-        new (jest.requireMock('phaser').GameObjects.Rectangle)(mockScene, x, y, width, height, color, alpha)
+      container: jest.fn(
+        (x: number, y: number) =>
+          new (jest.requireMock('phaser').GameObjects.Container)(mockScene, x, y),
       ),
-      text: jest.fn((x: number, y: number, text: string, style?: any) =>
-        new (jest.requireMock('phaser').GameObjects.Text)(mockScene, x, y, text, style)
+      rectangle: jest.fn(
+        (x: number, y: number, width: number, height: number, color?: number, alpha?: number) =>
+          new (jest.requireMock('phaser').GameObjects.Rectangle)(
+            mockScene,
+            x,
+            y,
+            width,
+            height,
+            color,
+            alpha,
+          ),
+      ),
+      text: jest.fn(
+        (x: number, y: number, text: string, style?: any) =>
+          new (jest.requireMock('phaser').GameObjects.Text)(mockScene, x, y, text, style),
       ),
       existing: jest.fn(),
     },
@@ -132,7 +145,9 @@ const createMockScene = (): any => {
 const createMockCharacter = (id: string, name: string, jobType: string): Character => {
   const mockEquippedWeapon = jest.fn(() => null);
   const mockEquipWeapon = jest.fn();
-  
+  const mockAddItem = jest.fn(() => true);
+  const mockRemoveItem = jest.fn(() => true);
+
   const character = {
     getId: jest.fn(() => id),
     getName: jest.fn(() => name),
@@ -149,12 +164,15 @@ const createMockCharacter = (id: string, name: string, jobType: string): Charact
     getItemHolder: jest.fn(() => ({
       getEquippedWeapon: mockEquippedWeapon,
       equipWeapon: mockEquipWeapon,
+      addItem: mockAddItem,
+      removeItem: mockRemoveItem,
     })),
   } as any;
-  
+
   // テスト用にモック関数への参照を保持
   (character as any)._mockEquipWeapon = mockEquipWeapon;
-  
+  (character as any)._mockAddItem = mockAddItem;
+
   return character;
 };
 
@@ -187,7 +205,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
   beforeEach(() => {
     scene = createMockScene();
     mockBase = createMockBase();
-    
+
     // フォーメーションデータの作成
     formationData = {
       commander: createMockCharacter('commander-1', '咲耶', 'wind'),
@@ -274,7 +292,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       ];
 
       itemSelectionUI.updateInventory(items);
-      
+
       // アイテムが倉庫に設定されているか確認
       const availableItems = (itemSelectionUI as any).availableItems;
       expect(availableItems).toHaveLength(3);
@@ -310,13 +328,43 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       ];
 
       itemSelectionUI.updateInventory(items);
-      
+
       // updateItemListを直接呼び出してテスト
       (itemSelectionUI as any).updateItemList();
-      
+
       // itemRowsのサイズでグループ化を確認
       const itemRows = (itemSelectionUI as any).itemRows;
       expect(itemRows.size).toBe(1); // 2つのアイテムが1つのグループになる
+    });
+  });
+
+  describe('兵士ナビゲーション機能', () => {
+    test('初期状態で最初の兵士が表示される', () => {
+      const currentSoldierIndex = (itemSelectionUI as any).currentSoldierIndex;
+      expect(currentSoldierIndex).toBe(0);
+
+      const soldierNameText = (itemSelectionUI as any).soldierNameText;
+      expect(soldierNameText.setText).toHaveBeenCalledWith('咲耶');
+    });
+
+    test('次へボタンで兵士が切り替わる', () => {
+      (itemSelectionUI as any).navigateToNextSoldier();
+
+      const currentSoldierIndex = (itemSelectionUI as any).currentSoldierIndex;
+      expect(currentSoldierIndex).toBe(1);
+
+      const soldierNameText = (itemSelectionUI as any).soldierNameText;
+      expect(soldierNameText.setText).toHaveBeenCalledWith('風太郎');
+    });
+
+    test('前へボタンで兵士が切り替わる', () => {
+      (itemSelectionUI as any).navigateToPreviousSoldier();
+
+      const currentSoldierIndex = (itemSelectionUI as any).currentSoldierIndex;
+      expect(currentSoldierIndex).toBe(3); // 0から-1でループして3になる
+
+      const soldierNameText = (itemSelectionUI as any).soldierNameText;
+      expect(soldierNameText.setText).toHaveBeenCalledWith('影丸');
     });
   });
 
@@ -335,7 +383,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       });
 
       itemSelectionUI.updateInventory([item]);
-      
+
       const commander = formationData.commander!;
       itemSelectionUI.assignItem(commander, item);
 
@@ -343,7 +391,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       const soldierItems = (itemSelectionUI as any).soldierItemsMap.get(commander);
       expect(soldierItems).toHaveLength(1);
       expect(soldierItems[0]).toBe(item);
-      
+
       // 倉庫から削除されているか確認
       const availableItems = (itemSelectionUI as any).availableItems;
       expect(availableItems).toHaveLength(0);
@@ -363,12 +411,12 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       });
 
       itemSelectionUI.updateInventory([weapon]);
-      
+
       const commander = formationData.commander!;
       itemSelectionUI.assignItem(commander, weapon);
 
-      // 武器が装備されているか確認
-      expect((commander as any)._mockEquipWeapon).toHaveBeenCalledWith(weapon);
+      // addItemが呼ばれたか確認（ItemHolderが自動装備を行う）
+      expect((commander as any)._mockAddItem).toHaveBeenCalledWith(weapon);
     });
 
     test('アイテム上限（4個）を超えて追加できない', () => {
@@ -385,14 +433,14 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
             maxDurability: 100,
             price: 300,
             description: '標準的な忍者刀',
-          })
+          }),
         );
       }
 
       itemSelectionUI.updateInventory(items);
-      
+
       const commander = formationData.commander!;
-      
+
       // 4個まで追加（availableItemsから取得するので常に最初のアイテムを取る）
       for (let i = 0; i < 4; i++) {
         const availableItems = (itemSelectionUI as any).availableItems;
@@ -400,16 +448,16 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
           itemSelectionUI.assignItem(commander, availableItems[0]);
         }
       }
-      
+
       const soldierItemsBefore = (itemSelectionUI as any).soldierItemsMap.get(commander);
       expect(soldierItemsBefore).toHaveLength(4);
-      
+
       // 5個目は追加されない（上限に達しているため）
       const availableItems = (itemSelectionUI as any).availableItems;
       if (availableItems.length > 0) {
         itemSelectionUI.assignItem(commander, availableItems[0]);
       }
-      
+
       const soldierItems = (itemSelectionUI as any).soldierItemsMap.get(commander);
       expect(soldierItems).toHaveLength(4);
     });
@@ -441,7 +489,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
           commander: formationData.commander,
           soldiers: formationData.soldiers,
           items: expect.any(Map),
-        })
+        }),
       );
     });
 
@@ -458,16 +506,14 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
     test('新しいFormationDataで内容が更新される', () => {
       const newFormationData: FormationData = {
         commander: createMockCharacter('new-commander', '新指揮官', 'iron'),
-        soldiers: [
-          createMockCharacter('new-soldier-1', '新兵士1', 'medicine'),
-        ],
+        soldiers: [createMockCharacter('new-soldier-1', '新兵士1', 'medicine')],
       };
 
       itemSelectionUI.setFormationData(newFormationData);
 
       // 兵士リストが更新されているか確認
       const soldierItemsMap = (itemSelectionUI as any).soldierItemsMap as Map<Character, IItem[]>;
-      
+
       expect(soldierItemsMap.has(newFormationData.commander!)).toBe(true);
       expect(soldierItemsMap.has(newFormationData.soldiers[0])).toBe(true);
       expect(soldierItemsMap.size).toBe(2); // 新しい指揮官 + 新しい兵士1名
