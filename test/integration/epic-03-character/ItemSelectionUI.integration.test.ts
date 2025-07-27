@@ -3,10 +3,9 @@ import { FormationData } from '../../../src/ui/ArmyFormationUI';
 import { Character } from '../../../src/character/Character';
 import { Base } from '../../../src/base/Base';
 import { BaseData, BaseType } from '../../../src/types/MapTypes';
-import { IItem } from '../../../src/types/ItemTypes';
+import { IItem, WeaponType } from '../../../src/types/ItemTypes';
 import { Weapon } from '../../../src/item/Weapon';
 import { Consumable } from '../../../src/item/Consumable';
-import { WeaponType } from '../../../src/types/ItemTypes';
 
 // Phaserモック
 jest.mock('phaser', () => {
