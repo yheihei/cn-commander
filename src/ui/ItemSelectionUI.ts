@@ -41,7 +41,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     itemRowHeight: 35,
     headerHeight: 30,
     faceImageSize: 64,
-    navButtonSize: 25,
+    navButtonSize: 15,
   };
 
   // コンテンツコンテナ
@@ -176,7 +176,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     // 前へボタン
     this.prevButton = this.createNavigationButton(
       '◀',
-      -this.layoutConfig.soldierAreaWidth / 2 + 20,
+      -this.layoutConfig.soldierAreaWidth / 2 + 8,
       headerY,
       () => {
         this.navigateToPreviousSoldier();
@@ -198,7 +198,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     // 次へボタン
     this.nextButton = this.createNavigationButton(
       '▶',
-      this.layoutConfig.soldierAreaWidth / 2 - 20,
+      this.layoutConfig.soldierAreaWidth / 2 - 8,
       headerY,
       () => {
         this.navigateToNextSoldier();
