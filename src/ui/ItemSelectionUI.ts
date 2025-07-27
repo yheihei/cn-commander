@@ -190,7 +190,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
-      padding: { x: 0, y: 5 },
+      padding: { x: 0, top: 5 },
     });
     this.soldierNameText.setOrigin(0.5, 0.5);
     this.currentSoldierContainer.add(this.soldierNameText);
@@ -289,6 +289,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       fontSize: '12px',
       color: '#ffffff',
       resolution: 2,
+      padding: { x: 0, top: 5 },
     });
     buttonText.setOrigin(0.5);
 
@@ -392,7 +393,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     for (let i = 0; i < maxItems; i++) {
       const item = items[i];
-      const itemY = i * 25;
+      const itemY = i * 20;
 
       if (item) {
         // アイテム情報を表示
@@ -400,9 +401,10 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       } else {
         // 空きスロット
         const emptyText = this.scene.add.text(0, itemY, `${i + 1}.[空きスロット]`, {
-          fontSize: '11px',
+          fontSize: '8px',
           color: '#888888',
           resolution: 2,
+          padding: { x: 0, top: 2 },
         });
         emptyText.setOrigin(0, 0);
         this.itemsContainer.add(emptyText);
@@ -430,9 +432,10 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     const textColor = this.isEquipped(soldier, item) ? '#ff0000' : '#ffffff';
     const itemNameText = this.scene.add.text(0, 0, itemText, {
-      fontSize: '11px',
+      fontSize: '8px',
       color: textColor,
       resolution: 2,
+      padding: { x: 0, top: 2 },
     });
     itemNameText.setOrigin(0, 0);
     itemContainer.add(itemNameText);
@@ -440,9 +443,10 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     // 装備中表示
     if (this.isEquipped(soldier, item)) {
       const equippedText = this.scene.add.text(150, 0, '装備中', {
-        fontSize: '10px',
+        fontSize: '8px',
         color: '#ff0000',
         resolution: 2,
+        padding: { x: 0, top: 2 },
       });
       equippedText.setOrigin(0, 0);
       itemContainer.add(equippedText);
@@ -472,7 +476,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontSize: '10px',
+      fontSize: '8px',
       color: '#88ccff',
       resolution: 2,
     });
@@ -623,10 +627,11 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     // アイテム名と在庫数
     const itemName = `${item.name} x${count}`;
     const nameText = this.scene.add.text(-this.layoutConfig.itemListWidth / 2 + 10, 0, itemName, {
-      fontSize: '10px',
+      fontSize: '8px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
+      padding: { x: 0, top: 2 },
     });
     nameText.setOrigin(0, 0);
     rowContainer.add(nameText);
@@ -646,9 +651,10 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       15,
       detailText,
       {
-        fontSize: '10px',
+        fontSize: '8px',
         color: '#aaaaaa',
         resolution: 2,
+        padding: { x: 0, top: 2 },
       },
     );
     detailsText.setOrigin(0, 0);
