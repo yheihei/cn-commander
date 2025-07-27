@@ -281,6 +281,22 @@ export class BaseManager {
       this.warehouseItems.push(shuriken);
     }
 
+    // 弓を追加
+    for (let i = 0; i < 10; i++) {
+      const bow = new Weapon({
+        id: `bow_${i}`,
+        name: '弓',
+        weaponType: WeaponType.PROJECTILE,
+        attackBonus: 2,
+        minRange: 4,
+        maxRange: 12,
+        maxDurability: 100,
+        price: 400,
+        description: '長距離飛び道具',
+      });
+      this.warehouseItems.push(bow);
+    }
+
     // 消耗品を追加
     for (let i = 0; i < 30; i++) {
       const foodPill = new Consumable({
