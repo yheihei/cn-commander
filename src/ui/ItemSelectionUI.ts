@@ -354,8 +354,9 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
     const currentSoldier = this.allSoldiers[this.currentSoldierIndex];
 
-    // 兵士名を更新
-    this.soldierNameText.setText(currentSoldier.getName());
+    // 兵士名を更新（職業名付き）
+    const jobName = this.getJobDisplayName(currentSoldier.getJobType());
+    this.soldierNameText.setText(`${currentSoldier.getName()}（${jobName}）`);
 
     // アイテムリストを更新
     this.updateCurrentSoldierItems();
@@ -775,6 +776,16 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   public updateInventory(items: IItem[]): void {
     this.availableItems = items;
     this.updateItemList();
+  }
+
+  private getJobDisplayName(jobType: string): string {
+    const jobNames: { [key: string]: string } = {
+      wind: '風忍',
+      iron: '鉄忍',
+      shadow: '影忍',
+      medicine: '薬忍',
+    };
+    return jobNames[jobType] || jobType;
   }
 
   public destroy(): void {

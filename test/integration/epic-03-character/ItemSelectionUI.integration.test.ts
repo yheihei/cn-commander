@@ -344,7 +344,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       expect(currentSoldierIndex).toBe(0);
 
       const soldierNameText = (itemSelectionUI as any).soldierNameText;
-      expect(soldierNameText.setText).toHaveBeenCalledWith('咲耶');
+      expect(soldierNameText.setText).toHaveBeenCalledWith('咲耶（風忍）');
     });
 
     test('次へボタンで兵士が切り替わる', () => {
@@ -354,7 +354,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       expect(currentSoldierIndex).toBe(1);
 
       const soldierNameText = (itemSelectionUI as any).soldierNameText;
-      expect(soldierNameText.setText).toHaveBeenCalledWith('風太郎');
+      expect(soldierNameText.setText).toHaveBeenCalledWith('風太郎（風忍）');
     });
 
     test('前へボタンで兵士が切り替わる', () => {
@@ -364,7 +364,7 @@ describe('[エピック3] ItemSelectionUI Integration Tests', () => {
       expect(currentSoldierIndex).toBe(3); // 0から-1でループして3になる
 
       const soldierNameText = (itemSelectionUI as any).soldierNameText;
-      expect(soldierNameText.setText).toHaveBeenCalledWith('影丸');
+      expect(soldierNameText.setText).toHaveBeenCalledWith('影丸（影忍）');
     });
   });
 
