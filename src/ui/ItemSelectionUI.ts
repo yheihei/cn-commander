@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { Base } from '../base/Base';
 import { Character } from '../character/Character';
-import { IItem, IWeapon, IConsumable, ItemType } from '../types/ItemTypes';
+import { IItem, IWeapon, IConsumable, ItemType, WeaponType } from '../types/ItemTypes';
 import { FormationData } from './ArmyFormationUI';
 
 export interface ItemSelectionUIConfig {
@@ -55,12 +55,17 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   private soldierItemsMap: Map<Character, IItem[]> = new Map();
   private availableItems: IItem[] = [];
   private itemRows: Map<string, Phaser.GameObjects.Container> = new Map();
+  private currentItemPage: number = 0;
+  private itemsPerPage: number = 3;
 
   // UI要素
   private prevButton!: Phaser.GameObjects.Container;
   private nextButton!: Phaser.GameObjects.Container;
   private soldierNameText!: Phaser.GameObjects.Text;
   private itemsContainer!: Phaser.GameObjects.Container;
+  private itemPrevButton!: Phaser.GameObjects.Container;
+  private itemNextButton!: Phaser.GameObjects.Container;
+  private itemHeaderText!: Phaser.GameObjects.Text;
 
   // ボタン
   private backButton!: Phaser.GameObjects.Container;
@@ -232,15 +237,40 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   }
 
   private createItemListHeader(): void {
-    const headerText = this.scene.add.text(0, 0, '倉庫アイテム', {
+    const headerY = 0;
+
+    // 前へボタン
+    this.itemPrevButton = this.createNavigationButton(
+      '◀',
+      -this.layoutConfig.itemListWidth / 2 + 8,
+      headerY,
+      () => {
+        this.navigateToPreviousItemPage();
+      },
+    );
+    this.itemListContainer.add(this.itemPrevButton);
+
+    // ヘッダーテキスト
+    this.itemHeaderText = this.scene.add.text(0, headerY, '', {
       fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
-      padding: { x: 0, y: 5 },
+      padding: { x: 0, top: 5 },
     });
-    headerText.setOrigin(0.5, 0);
-    this.itemListContainer.add(headerText);
+    this.itemHeaderText.setOrigin(0.5, 0.5);
+    this.itemListContainer.add(this.itemHeaderText);
+
+    // 次へボタン
+    this.itemNextButton = this.createNavigationButton(
+      '▶',
+      this.layoutConfig.itemListWidth / 2 - 8,
+      headerY,
+      () => {
+        this.navigateToNextItemPage();
+      },
+    );
+    this.itemListContainer.add(this.itemNextButton);
 
     // ヘッダー下線
     const line = this.scene.add.rectangle(0, 20, this.layoutConfig.itemListWidth, 1, 0xffffff);
@@ -346,7 +376,93 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   private loadInventoryItems(): void {
     // TODO: BaseManagerから倉庫アイテムを取得
     // 一時的にダミーデータを使用
-    this.availableItems = [];
+    const dummyItems: IItem[] = [];
+
+    // 忍者刀 x12
+    for (let i = 0; i < 12; i++) {
+      dummyItems.push({
+        id: `sword_${i}`,
+        name: '忍者刀',
+        type: ItemType.WEAPON,
+        stackable: false,
+        weaponType: WeaponType.SWORD,
+        attackBonus: 15,
+        minRange: 1,
+        maxRange: 3,
+        durability: 100,
+        maxDurability: 100,
+        price: 300,
+        getDisplayInfo: () => ({ name: '忍者刀', description: '基本的な刀剣' }),
+        use: () => {},
+        canUse: () => true,
+        getDurabilityPercentage: () => 100,
+        repair: () => {},
+      } as IWeapon);
+    }
+
+    // 手裏剣 x25
+    for (let i = 0; i < 25; i++) {
+      dummyItems.push({
+        id: `shuriken_${i}`,
+        name: '手裏剣',
+        type: ItemType.WEAPON,
+        stackable: false,
+        weaponType: WeaponType.PROJECTILE,
+        attackBonus: 5,
+        minRange: 1,
+        maxRange: 6,
+        durability: 100,
+        maxDurability: 100,
+        price: 200,
+        getDisplayInfo: () => ({ name: '手裏剣', description: '飛び道具' }),
+        use: () => {},
+        canUse: () => true,
+        getDurabilityPercentage: () => 100,
+        repair: () => {},
+      } as IWeapon);
+    }
+
+    // 弓 x10
+    for (let i = 0; i < 10; i++) {
+      dummyItems.push({
+        id: `bow_${i}`,
+        name: '弓',
+        type: ItemType.WEAPON,
+        stackable: false,
+        weaponType: WeaponType.PROJECTILE,
+        attackBonus: 2,
+        minRange: 4,
+        maxRange: 12,
+        durability: 100,
+        maxDurability: 100,
+        price: 400,
+        getDisplayInfo: () => ({ name: '弓', description: '長距離飛び道具' }),
+        use: () => {},
+        canUse: () => true,
+        getDurabilityPercentage: () => 100,
+        repair: () => {},
+      } as IWeapon);
+    }
+
+    // 兵糧丸 x30
+    for (let i = 0; i < 30; i++) {
+      dummyItems.push({
+        id: `food_${i}`,
+        name: '兵糧丸',
+        type: ItemType.CONSUMABLE,
+        stackable: true,
+        effect: 'HP全快',
+        uses: 1,
+        maxUses: 1,
+        price: 50,
+        getDisplayInfo: () => ({ name: '兵糧丸', description: 'HP全快アイテム' }),
+        use: () => true,
+        canUse: () => true,
+      } as IConsumable);
+    }
+
+    this.availableItems = dummyItems;
+    this.currentItemPage = 0;
     this.updateItemList();
   }
 
@@ -383,6 +499,54 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     }
 
     this.displayCurrentSoldier();
+  }
+
+  private navigateToPreviousItemPage(): void {
+    // アイテムを種類別にグループ化
+    const itemGroups = new Map<string, { item: IItem; count: number }>();
+    this.availableItems.forEach((item) => {
+      const key = `${item.name}_${item.type}`;
+      const existing = itemGroups.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        itemGroups.set(key, { item, count: 1 });
+      }
+    });
+
+    const totalPages = Math.ceil(itemGroups.size / this.itemsPerPage);
+    if (totalPages <= 1) return;
+
+    this.currentItemPage--;
+    if (this.currentItemPage < 0) {
+      this.currentItemPage = totalPages - 1;
+    }
+
+    this.updateItemList();
+  }
+
+  private navigateToNextItemPage(): void {
+    // アイテムを種類別にグループ化
+    const itemGroups = new Map<string, { item: IItem; count: number }>();
+    this.availableItems.forEach((item) => {
+      const key = `${item.name}_${item.type}`;
+      const existing = itemGroups.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        itemGroups.set(key, { item, count: 1 });
+      }
+    });
+
+    const totalPages = Math.ceil(itemGroups.size / this.itemsPerPage);
+    if (totalPages <= 1) return;
+
+    this.currentItemPage++;
+    if (this.currentItemPage >= totalPages) {
+      this.currentItemPage = 0;
+    }
+
+    this.updateItemList();
   }
 
   private updateCurrentSoldierItems(): void {
@@ -564,6 +728,23 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
       // アイテムを倉庫に戻す
       this.availableItems.push(removedItem);
+
+      // ページが範囲外になった場合は調整
+      const itemGroups = new Map<string, { item: IItem; count: number }>();
+      this.availableItems.forEach((item) => {
+        const key = `${item.name}_${item.type}`;
+        const existing = itemGroups.get(key);
+        if (existing) {
+          existing.count++;
+        } else {
+          itemGroups.set(key, { item, count: 1 });
+        }
+      });
+      const totalPages = Math.ceil(itemGroups.size / this.itemsPerPage);
+      if (this.currentItemPage >= totalPages && totalPages > 0) {
+        this.currentItemPage = totalPages - 1;
+      }
+
       this.updateItemList();
 
       // 表示を更新
@@ -585,17 +766,6 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.itemRows.forEach((row) => row.destroy());
     this.itemRows.clear();
 
-    if (this.availableItems.length === 0) {
-      const noItemText = this.scene.add.text(0, this.layoutConfig.headerHeight + 20, '', {
-        fontSize: '10px',
-        color: '#888888',
-        resolution: 2,
-      });
-      noItemText.setOrigin(0.5, 0);
-      this.itemListContainer.add(noItemText);
-      return;
-    }
-
     // アイテムを種類別にグループ化
     const itemGroups = new Map<string, { item: IItem; count: number }>();
 
@@ -609,13 +779,44 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       }
     });
 
+    // ページ情報を計算
+    const itemGroupsArray = Array.from(itemGroups.values());
+    const totalPages = Math.ceil(itemGroupsArray.length / this.itemsPerPage);
+
+    // ヘッダーテキストを更新
+    if (itemGroupsArray.length === 0) {
+      this.itemHeaderText.setText('倉庫アイテム（0/0）');
+    } else {
+      this.itemHeaderText.setText(`倉庫アイテム（${this.currentItemPage + 1}/${totalPages}）`);
+    }
+
+    if (itemGroupsArray.length === 0) {
+      const noItemText = this.scene.add.text(
+        0,
+        this.layoutConfig.headerHeight + 20,
+        'アイテムがありません',
+        {
+          fontSize: '10px',
+          color: '#888888',
+          resolution: 2,
+        },
+      );
+      noItemText.setOrigin(0.5, 0);
+      this.itemListContainer.add(noItemText);
+      return;
+    }
+
+    // 現在のページのアイテムのみ表示
+    const startIndex = this.currentItemPage * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, itemGroupsArray.length);
+
     let currentY = this.layoutConfig.headerHeight;
 
-    // アイテムグループを表示
-    itemGroups.forEach((group) => {
+    for (let i = startIndex; i < endIndex; i++) {
+      const group = itemGroupsArray[i];
       this.createItemGroupRow(group.item, group.count, currentY);
       currentY += this.layoutConfig.itemRowHeight;
-    });
+    }
   }
 
   private createItemGroupRow(item: IItem, count: number, y: number): void {
