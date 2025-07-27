@@ -260,7 +260,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.add(this.backButton);
 
     // 出撃位置選択へ進むボタン
-    const proceedButtonX = this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2;
+    const proceedButtonX = this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2 + 15;
     this.proceedButton = this.createButton('出撃位置選択', proceedButtonX, buttonY, () => {
       this.onProceed();
     });
@@ -459,7 +459,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     }
 
     // 削除ボタン
-    const removeButton = this.createSmallButton('[✗]', 200, 0, () => {
+    const removeButton = this.createSmallButton('[✗]', 180, 0, () => {
       this.removeItem(soldier, index);
     });
     itemContainer.add(removeButton);
