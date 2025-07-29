@@ -10,15 +10,17 @@
 ## 設計方針
 
 ### 全体アプローチ
-- アイテム選択完了後の最終確認画面
+- アイテム選択完了後の出撃位置選択画面
 - 拠点周囲2マス以内から出撃位置を選択
-- マップビューを表示して視覚的に位置選択
-- 選択完了後、軍団を生成して配置
+- シンプルなマップビューで視覚的に位置選択
+- 選択完了後、即座に軍団を生成して配置（確認ステップなし）
+- **画面遷移時に1秒の待機時間を設けて誤クリックを防止**
 
 ### 技術選定理由
-- マップの部分表示：拠点周辺のみ表示してパフォーマンス向上
-- グリッド表示：選択可能な位置を明確化
-- プレビュー機能：配置前に軍団の位置を確認可能
+- 固定位置UI：カメラに依存しない安定した表示
+- 赤色ハイライト：選択可能位置を明確に表示
+- 即座配置：操作の簡略化とレスポンス向上
+- 遷移時待機：アイテム選択のクリックイベントが配置に影響しないよう保護
 
 ## インターフェース定義
 
@@ -34,13 +36,11 @@ class DeploymentPositionUI extends Phaser.GameObjects.Container {
   // データ設定
   setItemEquippedFormationData(data: ItemEquippedFormationData): void;
   
-  // 選択可能位置の表示
+  // 選択可能位置の表示（自動的に赤色ハイライト）
   showDeployablePositions(): void;
-  highlightPosition(x: number, y: number): void;
   
-  // 位置選択
-  selectPosition(x: number, y: number): void;
-  getSelectedPosition(): Position | null;
+  // クリーンアップ
+  destroy(): void;
 }
 
 interface DeploymentPositionUIConfig {
@@ -50,8 +50,7 @@ interface DeploymentPositionUIConfig {
   armyManager: ArmyManager;
   itemEquippedFormationData: ItemEquippedFormationData;  // task-3-4-2から受け取る
   onDeploymentComplete?: (army: Army) => void;
-  onBack?: () => void;  // アイテム選択画面に戻る
-  onCancelled?: () => void;
+  onBack?: () => void;  // ItemSelectionUIに戻る
 }
 ```
 
@@ -67,61 +66,52 @@ interface Position {
 
 ### 選択可能位置の判定
 - 拠点の中心から2マス以内（マンハッタン距離）
-- 他の軍団が存在しない
-- 移動不可能な地形でない
-- 敵軍団の視界内でない（オプション）
+- 重複配置可能（他の軍団の存在を考慮しない）
+- 移動可能な地形である
 
 ### 軍団生成処理
 - ItemEquippedFormationDataから軍団を生成
-- ArmyFactoryを使用して適切に配置
+- ArmyFactoryを使用して即座に配置
 - BaseManagerから待機兵士を削除
 
 ## 実装の詳細
 
 ### レイアウト仕様
-- 画面中央：拠点周辺のマップビュー
-- 右側：編成内容の確認パネル
-- 下部：操作ボタン
+- 固定位置UI（画面中央に配置）
+- シンプルなメッセージとマップビューのみ
 
 #### 詳細レイアウト
 ```
 +-------------------------------------------------------------------------+
-|                        軍団編成 - 出撃位置選択                          |
+|                        出撃位置を選択してください                        |
 +-------------------------------------------------------------------------+
-| マップビュー（拠点周辺）      | 編成確認                                |
-|                               |-----------------------------------------|
-|    □ □ □ □ □               | 指揮官: 風太郎                          |
-|    □ ■ ■ □ □               |   装備: 忍者刀、兵糧丸                  |
-|    □ ■ 拠 □ □               |                                         |
-|    □ □ □ ○ □               | 一般兵:                                 |
-|    □ □ □ □ □               |   鉄壁花子 - 手裏剣×2                  |
-|                               |   影丸 - 忍者刀、手裏剣                 |
-|                               |                                         |
-| ■: 選択可能  ○: 選択中       | 軍団移動速度: 10.75                     |
-| 拠: 拠点                      | 視界範囲: 平均8.25マス                  |
-+-------------------------------------------------------------------------+
-|  [戻る]                                              [出撃]             |
+|                                                                         |
+|                          □ □ □ □ □                                    |
+|                          □ ■ ■ ■ □                                    |
+|                          □ ■ 拠 ■ □                                    |
+|                          □ ■ ■ ■ □                                    |
+|                          □ □ □ □ □                                    |
+|                                                                         |
+|                    ■: 選択可能（赤色ハイライト）                       |
+|                    拠: 拠点                                             |
+|                    □: 選択不可                                         |
+|                                                                         |
+|                    右クリック: キャンセル                               |
 +-------------------------------------------------------------------------+
 ```
 
 ### マップビュー仕様
 - 拠点を中心とした5×5マスを表示
-- 選択可能位置：青いハイライト（■）
-- 選択中の位置：黄色いハイライト（○）
-- 拠点：特別なマーカー（拠）
-- 既存軍団：赤いマーカー
-
-### 編成確認パネル
-- 指揮官と一般兵の名前
-- 各メンバーの装備アイテム
-- 軍団の平均移動速度
-- 軍団の平均視界範囲
+- 選択可能位置：赤色ハイライト（■）のみクリック可能
+- 拠点：特別なマーカー（拠）で表示
+- その他のタイル：グレーアウト表示
 
 ### インタラクション仕様
-1. **位置選択**: 青いハイライトされたマスをクリック
-2. **選択確認**: 選択したマスが黄色にハイライト
-3. **出撃実行**: 「出撃」ボタンで軍団生成・配置
-4. **キャンセル**: 「戻る」でアイテム選択画面へ
+1. **画面遷移**: ItemSelectionUIから遷移後、1秒間の入力無効化（誤クリック防止）
+2. **位置選択**: 赤色ハイライトされたマスを左クリック
+3. **即座配置**: クリックと同時に軍団生成・配置（確認なし）
+4. **キャンセル**: 右クリックでItemSelectionUIに戻る
+5. **完了後**: 軍団編成UIを閉じてマップ表示に戻る
 
 ## 画面遷移フロー
 
@@ -146,13 +136,13 @@ interface Position {
 
 ### 軍団生成の詳細
 ```typescript
-// 1. 位置の妥当性確認
-if (!isValidDeploymentPosition(selectedPosition)) {
-  showError("その位置には配置できません");
+// 1. 位置の妥当性確認（シンプル化）
+if (!isWithinDeploymentRange(selectedPosition, base)) {
+  // 赤色ハイライトされた位置のみクリック可能なので、この状況は起きない
   return;
 }
 
-// 2. 軍団生成
+// 2. 即座に軍団生成
 const army = ArmyFactory.createArmy(
   scene,
   itemEquippedFormationData,
@@ -169,19 +159,83 @@ const allMembers = [
 ];
 baseManager.removeWaitingSoldiers(base.getId(), allMembers);
 
-// 5. 完了通知
+// 5. 完了通知と画面クローズ
 onDeploymentComplete(army);
 ```
 
+### 右クリックキャンセル処理
+```typescript
+// 右クリックイベントハンドラ
+scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+  if (pointer.rightButtonDown()) {
+    onBack(); // ItemSelectionUIに戻る
+  }
+});
+```
+
+### 画面遷移時の待機処理
+```typescript
+// ItemSelectionUIから遷移時の処理
+show(): void {
+  this.setVisible(true);
+  
+  // 1秒間の入力無効化（誤クリック防止）
+  this.scene.input.enabled = false;
+  
+  this.scene.time.delayedCall(1000, () => {
+    this.scene.input.enabled = true;
+    this.showDeployablePositions(); // 選択可能位置を表示
+  });
+}
+```
+
 ## 他システムとの連携
-- **MapManager**: 地形情報の取得、配置可能判定
-- **ArmyManager**: 既存軍団の位置確認、新規軍団の登録
+- **MapManager**: 地形情報の取得
+- **ArmyManager**: 新規軍団の登録
 - **BaseManager**: 待機兵士の削除
 - **UIManager**: 全体のUI制御（task-7-5-3と連携）
+- **ItemSelectionUI**: onBackコールバックで遷移
 
-## 未解決事項
-- [ ] 敵の視界内への配置制限の実装
-- [ ] 配置アニメーション（軍団が拠点から出現する演出）
-- [ ] 最大同時軍団数（6軍団）の制限チェック
-- [ ] 配置後の自動的な初期行動（待機 or 移動）
-- [ ] マップビューのカメラ制御とスクロール
+## UI実装の重要ポイント
+
+### 固定位置UIの実装（CLAUDE.md準拠）
+```typescript
+// カメラのズーム値を考慮
+const zoom = this.scene.cameras.main.zoom || 2.25;
+const viewWidth = 1280 / zoom;
+const viewHeight = 720 / zoom;
+
+// 画面中央に配置
+const viewLeft = cam.worldView.x;
+const viewTop = cam.worldView.y;
+const centerX = viewLeft + viewWidth / 2;
+const centerY = viewTop + viewHeight / 2;
+
+// UIManagerのupdateで位置更新
+public update(): void {
+  if (this.deploymentPositionUI && this.deploymentPositionUI.visible) {
+    // カメラ移動に追従
+    const cam = this.scene.cameras.main;
+    const centerX = cam.worldView.x + viewWidth / 2;
+    const centerY = cam.worldView.y + viewHeight / 2;
+    this.deploymentPositionUI.setPosition(centerX, centerY);
+  }
+}
+```
+
+## テスト方針
+- 選択可能範囲（2マス）の正確な計算
+- 赤色ハイライトのクリック判定
+- 右クリックキャンセルの動作
+- 軍団生成と配置の確認
+- UI遷移（ItemSelectionUI ⇔ DeploymentPositionUI）
+
+## 簡略化された仕様
+- ❌ 敵の視界内への配置制限
+- ❌ 配置アニメーション
+- ❌ 最大同時軍団数チェック（別タスクで実装）
+- ❌ 配置後の初期行動選択
+- ❌ マップビューのスクロール
+- ✅ シンプルな固定UI
+- ✅ 即座配置
+- ✅ 右クリックキャンセル
