@@ -36,7 +36,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     buttonWidth: 100,
     buttonSpacing: 20,
     soldierAreaWidth: 200,
-    itemListWidth: 240,
+    itemListWidth: 200,
     centerGap: 20,
     itemRowHeight: 35,
     headerHeight: 30,
