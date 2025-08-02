@@ -246,9 +246,8 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
       // showDeployablePositions内で選択可能位置が計算される
       // 1秒後にshowDeployablePositionsが呼ばれる
       setTimeout(() => {
-        // マンハッタン距離2以内の位置数を確認
-        // 中心を除く位置: 距離1=4個、距離2=8個、合計12個
-        const expectedPositions = 12;
+        // 拠点の上下左右1マスのみ選択可能（4個）
+        const expectedPositions = 4;
 
         // mapManager.getTileAtが呼ばれた回数で確認
         expect(mapManager.getTileAt).toHaveBeenCalledTimes(expectedPositions);
@@ -283,7 +282,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
   });
 
   describe('軍団生成と配置', () => {
-    test('位置選択で軍団が正しく生成される', (done) => {
+    test('位置選択で軍団が正しく生成される（2マス先に配置）', (done) => {
       const onDeploymentComplete = jest.fn();
 
       deploymentUI = new DeploymentPositionUI({
@@ -300,22 +299,26 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
 
       // 選択可能位置が表示された後、位置を選択
       setTimeout(() => {
-        // armyManager.createArmyAtGridを直接呼び出すシミュレーション
-        const selectedX = 11;
-        const selectedY = 10;
+        // 選択位置は拠点の右1マス(11,10)、実際の配置は右2マス(12,10)
+        // const selectedX = 11;  // 拠点(10,10)の右1マス
+        // const selectedY = 10;
+        const actualX = 12; // 実際は右2マスに配置
+        const actualY = 10;
 
         // DeploymentPositionUIの内部処理をシミュレート
+        // 実際の配置位置で軍団を作成
         const army = armyManager.createArmyAtGrid(
           itemEquippedData.commander,
-          selectedX,
-          selectedY,
+          actualX,
+          actualY,
           'player',
         );
 
+        // 2マス先の位置で軍団が作成されることを確認
         expect(armyManager.createArmyAtGrid).toHaveBeenCalledWith(
           itemEquippedData.commander,
-          selectedX,
-          selectedY,
+          actualX,
+          actualY,
           'player',
         );
 

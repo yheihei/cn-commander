@@ -277,27 +277,28 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     const positions: Position[] = [];
     // base.getPosition()は既にタイル座標を返す
     const basePos = this.base.getPosition();
-    const deploymentRange = 2; // 拠点から2マス以内
 
-    // マンハッタン距離で2マス以内の位置を計算
-    for (let dy = -deploymentRange; dy <= deploymentRange; dy++) {
-      for (let dx = -deploymentRange; dx <= deploymentRange; dx++) {
-        const distance = Math.abs(dx) + Math.abs(dy);
-        if (distance > 0 && distance <= deploymentRange) {
-          const gridX = basePos.x + dx;
-          const gridY = basePos.y + dy;
+    // 拠点の上下左右1マスのみを選択可能位置とする
+    const directions = [
+      { dx: 0, dy: -1 }, // 上
+      { dx: 0, dy: 1 }, // 下
+      { dx: -1, dy: 0 }, // 左
+      { dx: 1, dy: 0 }, // 右
+    ];
 
-          // マップ範囲内かチェック
-          const mapWidth = this.mapManager.getMapWidth();
-          const mapHeight = this.mapManager.getMapHeight();
+    for (const dir of directions) {
+      const gridX = basePos.x + dir.dx;
+      const gridY = basePos.y + dir.dy;
 
-          if (gridX >= 0 && gridX < mapWidth && gridY >= 0 && gridY < mapHeight) {
-            // 移動可能な地形かチェック（基本的に全て許可）
-            const tile = this.mapManager.getTileAt(gridX, gridY);
-            if (tile && tile.isWalkable()) {
-              positions.push({ x: gridX, y: gridY });
-            }
-          }
+      // マップ範囲内かチェック
+      const mapWidth = this.mapManager.getMapWidth();
+      const mapHeight = this.mapManager.getMapHeight();
+
+      if (gridX >= 0 && gridX < mapWidth && gridY >= 0 && gridY < mapHeight) {
+        // 移動可能な地形かチェック（基本的に全て許可）
+        const tile = this.mapManager.getTileAt(gridX, gridY);
+        if (tile && tile.isWalkable()) {
+          positions.push({ x: gridX, y: gridY });
         }
       }
     }
@@ -354,11 +355,20 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
       }
     });
 
-    // ArmyManagerを使って軍団を作成
+    // 選択された位置から実際の配置位置を計算（2マス先）
+    const basePos = this.base.getPosition();
+    const dx = position.x - basePos.x;
+    const dy = position.y - basePos.y;
+
+    // 選択方向の2マス先に配置
+    const actualX = basePos.x + dx * 2;
+    const actualY = basePos.y + dy * 2;
+
+    // ArmyManagerを使って軍団を作成（2マス先の位置に）
     const army = this.armyManager.createArmyAtGrid(
       commander,
-      position.x,
-      position.y,
+      actualX,
+      actualY,
       this.base.getOwner(),
     );
 
@@ -369,7 +379,7 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
       });
 
       console.log(
-        `軍団が出撃しました: ${army.getName()} at grid(${position.x}, ${position.y}), pixel(${army.x}, ${army.y})`,
+        `軍団が出撃しました: ${army.getName()} at grid(${actualX}, ${actualY}), pixel(${army.x}, ${army.y})`,
       );
 
       // デバッグ：拠点の位置も確認（base.getPosition()は既にタイル座標）
@@ -380,6 +390,9 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
       };
       console.log(
         `拠点位置: grid(${baseTilePos.x}, ${baseTilePos.y}), pixel(${basePixelPos.x}, ${basePixelPos.y})`,
+      );
+      console.log(
+        `選択位置: grid(${position.x}, ${position.y}) → 実際の配置: grid(${actualX}, ${actualY})`,
       );
     }
 
