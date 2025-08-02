@@ -7,6 +7,7 @@ import { BaseActionMenu } from './BaseActionMenu';
 import { BarracksSubMenu } from './BarracksSubMenu';
 import { ArmyFormationUI, FormationData } from './ArmyFormationUI';
 import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
+import { DeploymentPositionUI } from './DeploymentPositionUI';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
@@ -21,6 +22,7 @@ export class UIManager {
   private barracksSubMenu: BarracksSubMenu | null = null;
   private armyFormationUI: ArmyFormationUI | null = null;
   private itemSelectionUI: ItemSelectionUI | null = null;
+  private deploymentPositionUI: DeploymentPositionUI | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
@@ -513,6 +515,20 @@ export class UIManager {
       this.guideMessage.setPosition(x, y);
     }
 
+    // DeploymentPositionUIの位置更新
+    if (this.deploymentPositionUI) {
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const centerX = viewLeft + viewWidth / 2;
+      const centerY = viewTop + viewHeight / 2;
+
+      this.deploymentPositionUI.setPosition(centerX, centerY);
+    }
+
     // ArmyFormationUIは全画面モーダルなので位置更新不要
   }
 
@@ -590,42 +606,9 @@ export class UIManager {
       onProceedToDeployment: (itemEquippedData: ItemEquippedFormationData) => {
         console.log('アイテム装備データ:', itemEquippedData);
 
-        // TODO: 出撃位置選択画面への遷移
-        // 一旦、デフォルト位置で軍団を作成
-        const basePos = base.getPosition();
-        const deployPosition = { x: basePos.x + 2, y: basePos.y + 1 };
-
-        const completeFormationData: ArmyFormationData = {
-          commander: itemEquippedData.commander,
-          soldiers: itemEquippedData.soldiers,
-          items: itemEquippedData.items,
-          deployPosition,
-        };
-
+        // 出撃位置選択画面へ遷移
         this.hideItemSelectionUI();
-
-        // ArmyManagerを使って軍団を作成
-        const armyManager = (this.scene as any).armyManager;
-        const baseManager = (this.scene as any).baseManager;
-
-        if (armyManager && baseManager) {
-          const army = armyManager.createArmyFromBase(completeFormationData, base);
-
-          if (army) {
-            // 待機兵士から削除
-            const soldiersToRemove = [
-              completeFormationData.commander,
-              ...completeFormationData.soldiers,
-            ];
-            baseManager.removeWaitingSoldiers(base.getId(), soldiersToRemove);
-
-            console.log('軍団が出撃しました:', army.getName());
-          }
-        }
-
-        if (onArmyFormed) {
-          onArmyFormed(completeFormationData);
-        }
+        this.showDeploymentPositionUI(base, itemEquippedData, onArmyFormed);
       },
       onBack: () => {
         // アイテム選択画面から兵士選択画面に戻る
@@ -660,6 +643,86 @@ export class UIManager {
     }
   }
 
+  public showDeploymentPositionUI(
+    base: Base,
+    itemEquippedData: ItemEquippedFormationData,
+    onArmyFormed?: (data: ArmyFormationData) => void,
+  ): void {
+    console.log('showDeploymentPositionUI called');
+
+    // 既存の出撃位置選択UIがあれば削除
+    if (this.deploymentPositionUI) {
+      this.deploymentPositionUI.destroy();
+      this.deploymentPositionUI = null;
+    }
+
+    // 必要なマネージャーを取得
+    const mapManager = (this.scene as any).mapManager;
+    const armyManager = (this.scene as any).armyManager;
+    const baseManager = (this.scene as any).baseManager;
+
+    if (!mapManager || !armyManager || !baseManager) {
+      console.error('Required managers not found');
+      return;
+    }
+
+    // 出撃位置選択UIを作成
+    this.deploymentPositionUI = new DeploymentPositionUI({
+      scene: this.scene,
+      base,
+      mapManager,
+      armyManager,
+      baseManager,
+      itemEquippedFormationData: itemEquippedData,
+      onDeploymentComplete: (army: Army) => {
+        console.log('軍団が出撃しました:', army.getName());
+
+        // UIを閉じる
+        this.hideDeploymentPositionUI();
+
+        // 拠点情報を再表示
+        if (this.currentSelectedBase) {
+          this.showBaseInfo(this.currentSelectedBase);
+        }
+
+        // コールバックを実行
+        if (onArmyFormed) {
+          // 軍団の現在位置をグリッド座標に変換
+          const armyPos = army.getPosition();
+          const tileSize = 16; // MAP_CONFIG.tileSize
+          const deployPosition = {
+            x: Math.floor(armyPos.x / tileSize),
+            y: Math.floor(armyPos.y / tileSize)
+          };
+          const completeFormationData: ArmyFormationData = {
+            commander: itemEquippedData.commander,
+            soldiers: itemEquippedData.soldiers,
+            items: itemEquippedData.items,
+            deployPosition,
+          };
+          onArmyFormed(completeFormationData);
+        }
+      },
+      onBack: () => {
+        // 出撃位置選択画面からアイテム選択画面に戻る
+        this.hideDeploymentPositionUI();
+        this.showItemSelectionUI(base, {
+          commander: itemEquippedData.commander,
+          soldiers: itemEquippedData.soldiers,
+        }, onArmyFormed);
+      },
+    });
+
+    this.deploymentPositionUI.show();
+  }
+
+  public hideDeploymentPositionUI(): void {
+    if (this.deploymentPositionUI) {
+      this.deploymentPositionUI.destroy();
+      this.deploymentPositionUI = null;
+    }
+  }
+
   private hideAllUI(): void {
     console.log('hideAllUI called');
     this.hideActionMenu();
@@ -682,6 +745,7 @@ export class UIManager {
     this.hideGuideMessage();
     this.hideArmyFormationUI();
     this.hideItemSelectionUI();
+    this.hideDeploymentPositionUI();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();
       this.armyInfoPanel = null;

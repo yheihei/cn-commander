@@ -239,3 +239,21 @@ public update(): void {
 - ✅ シンプルな固定UI
 - ✅ 即座配置
 - ✅ 右クリックキャンセル
+
+## 実装完了
+
+### 実装内容
+- DeploymentPositionUI.ts: 出撃位置選択UIコンポーネント
+- UIManager統合: showDeploymentPositionUI/hideDeploymentPositionUIメソッド追加
+- 統合テスト: DeploymentPositionUI.integration.test.ts
+
+### 主な実装ポイント
+- 固定位置UI（画面中央）として実装
+- 拠点周囲2マス以内の選択可能位置を赤色ハイライト
+- 右クリックでItemSelectionUIに戻る機能
+- 1秒間の入力無効化による誤クリック防止
+- 軍団生成後の待機兵士削除処理
+
+## 未解決事項
+- [ ] 拠点占領システム（task-7-3）実装後、占領コマンドとの連携
+- [ ] 最大同時軍団数チェック（現在はArmyManagerで警告のみ）

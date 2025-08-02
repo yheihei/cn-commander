@@ -15,10 +15,10 @@ export class ArmyManager {
   }
 
   /**
-   * グリッド座標に軍団を作成（2x2グリッドの中心に配置）
+   * グリッド座標に軍団を作成（指定グリッドの中心に配置）
    * @param commander 指揮官
-   * @param gridX 左上のグリッドX座標
-   * @param gridY 左上のグリッドY座標
+   * @param gridX グリッドX座標
+   * @param gridY グリッドY座標
    * @param owner 軍団の所属
    */
   createArmyAtGrid(
@@ -27,11 +27,10 @@ export class ArmyManager {
     gridY: number,
     owner: FactionType = 'neutral',
   ): Army | null {
-    // 2x2グリッドの中心に配置
-    // 各メンバーがグリッドの中央に来るように調整
+    // 指定グリッドの中心に配置
     const tileSize = 16;
-    const pixelX = gridX * tileSize + tileSize; // グリッドの交点
-    const pixelY = gridY * tileSize + tileSize;
+    const pixelX = gridX * tileSize + tileSize / 2; // グリッドの中心
+    const pixelY = gridY * tileSize + tileSize / 2;
     return this.createArmy(commander, pixelX, pixelY, owner);
   }
 
