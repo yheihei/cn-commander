@@ -39,7 +39,7 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
   private instructionText: Phaser.GameObjects.Text;
   private mapContainer: Phaser.GameObjects.Container;
   private tileHighlights: Map<string, Phaser.GameObjects.Rectangle> = new Map();
-  
+
   // レイアウト設定
   private readonly layoutConfig = {
     panelWidth: 400,
@@ -88,23 +88,29 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
 
     // メインパネルの背景
     this.background = config.scene.add.rectangle(
-      0, 0, 
-      this.layoutConfig.panelWidth, 
-      this.layoutConfig.panelHeight, 
-      0x222222, 0.95
+      0,
+      0,
+      this.layoutConfig.panelWidth,
+      this.layoutConfig.panelHeight,
+      0x222222,
+      0.95,
     );
     this.background.setStrokeStyle(3, 0xffffff);
     this.background.setOrigin(0.5);
     this.add(this.background);
 
     // タイトル
-    this.titleText = config.scene.add.text(0, -this.layoutConfig.panelHeight / 2 + 20, 
-      '出撃位置を選択してください', {
-      fontSize: '16px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      resolution: 2,
-    });
+    this.titleText = config.scene.add.text(
+      0,
+      -this.layoutConfig.panelHeight / 2 + 20,
+      '出撃位置を選択してください',
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        resolution: 2,
+      },
+    );
     this.titleText.setOrigin(0.5, 0);
     this.add(this.titleText);
 
@@ -113,12 +119,16 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     this.add(this.mapContainer);
 
     // 説明文
-    this.instructionText = config.scene.add.text(0, this.layoutConfig.panelHeight / 2 - 40,
-      '■: 選択可能    右クリック: キャンセル', {
-      fontSize: '12px',
-      color: '#ffffff',
-      resolution: 2,
-    });
+    this.instructionText = config.scene.add.text(
+      0,
+      this.layoutConfig.panelHeight / 2 - 40,
+      '■: 選択可能    右クリック: キャンセル',
+      {
+        fontSize: '12px',
+        color: '#ffffff',
+        resolution: 2,
+      },
+    );
     this.instructionText.setOrigin(0.5, 1);
     this.add(this.instructionText);
 
@@ -143,23 +153,23 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
         this.onBackCallback();
       }
     };
-    
+
     // ポインターダウンハンドラ
     this.pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown()) {
         this.rightClickHandler?.();
       }
     };
-    
+
     this.scene.input.on('pointerdown', this.pointerDownHandler);
   }
 
   public show(): void {
     this.setVisible(true);
-    
+
     // 1秒間の入力無効化（誤クリック防止）
     this.inputEnabled = false;
-    
+
     this.scene.time.delayedCall(1000, () => {
       this.inputEnabled = true;
       this.showDeployablePositions();
@@ -172,44 +182,40 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
 
   public showDeployablePositions(): void {
     // 既存のハイライトをクリア
-    this.tileHighlights.forEach(highlight => highlight.destroy());
+    this.tileHighlights.forEach((highlight) => highlight.destroy());
     this.tileHighlights.clear();
     this.mapContainer.removeAll(true);
 
-    // ピクセル座標をグリッド座標に変換
-    const pixelPos = this.base.getPosition();
-    const tileSize = MAP_CONFIG.tileSize;
-    const basePos = {
-      x: Math.floor(pixelPos.x / tileSize),
-      y: Math.floor(pixelPos.y / tileSize)
-    };
-    console.log(`showDeployablePositions - 拠点位置: grid(${basePos.x}, ${basePos.y}), pixel(${pixelPos.x}, ${pixelPos.y})`);
+    // base.getPosition()は既にタイル座標を返す
+    const basePos = this.base.getPosition();
+    console.log(`showDeployablePositions - 拠点位置: grid(${basePos.x}, ${basePos.y})`);
     const deployablePositions = this.getDeployablePositions();
-    
+
     // 5x5マップの中心を拠点位置に
     const centerOffset = Math.floor(this.layoutConfig.mapSize / 2);
-    
+
     for (let dy = -centerOffset; dy <= centerOffset; dy++) {
       for (let dx = -centerOffset; dx <= centerOffset; dx++) {
         const gridX = basePos.x + dx;
         const gridY = basePos.y + dy;
         const tileKey = `${gridX},${gridY}`;
-        
+
         // タイルの表示位置
         const displayX = dx * this.layoutConfig.tileSize;
         const displayY = dy * this.layoutConfig.tileSize;
-        
+
         // 拠点タイル
         if (dx === 0 && dy === 0) {
           const baseTile = this.scene.add.rectangle(
-            displayX, displayY,
+            displayX,
+            displayY,
             this.layoutConfig.tileSize - 4,
             this.layoutConfig.tileSize - 4,
-            0x4444ff
+            0x4444ff,
           );
           baseTile.setStrokeStyle(2, 0xffffff);
           this.mapContainer.add(baseTile);
-          
+
           const baseLabel = this.scene.add.text(displayX, displayY, '拠', {
             fontSize: '20px',
             color: '#ffffff',
@@ -220,41 +226,45 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
           this.mapContainer.add(baseLabel);
         }
         // 選択可能位置
-        else if (deployablePositions.some(pos => pos.x === gridX && pos.y === gridY)) {
+        else if (deployablePositions.some((pos) => pos.x === gridX && pos.y === gridY)) {
           const highlight = this.scene.add.rectangle(
-            displayX, displayY,
+            displayX,
+            displayY,
             this.layoutConfig.tileSize - 4,
             this.layoutConfig.tileSize - 4,
-            0xff0000, 0.5
+            0xff0000,
+            0.5,
           );
           highlight.setStrokeStyle(2, 0xff0000);
           highlight.setInteractive({ useHandCursor: true });
-          
+
           highlight.on('pointerover', () => {
             highlight.setFillStyle(0xff0000, 0.8);
           });
-          
+
           highlight.on('pointerout', () => {
             highlight.setFillStyle(0xff0000, 0.5);
           });
-          
+
           highlight.on('pointerdown', () => {
             if (this.inputEnabled) {
               console.log(`クリックされたタイル: grid(${gridX}, ${gridY}), 相対位置(${dx}, ${dy})`);
               this.onPositionSelected({ x: gridX, y: gridY });
             }
           });
-          
+
           this.mapContainer.add(highlight);
           this.tileHighlights.set(tileKey, highlight);
         }
         // その他のタイル
         else {
           const normalTile = this.scene.add.rectangle(
-            displayX, displayY,
+            displayX,
+            displayY,
             this.layoutConfig.tileSize - 4,
             this.layoutConfig.tileSize - 4,
-            0x444444, 0.3
+            0x444444,
+            0.3,
           );
           normalTile.setStrokeStyle(1, 0x666666);
           this.mapContainer.add(normalTile);
@@ -265,15 +275,10 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
 
   private getDeployablePositions(): Position[] {
     const positions: Position[] = [];
-    // ピクセル座標をグリッド座標に変換
-    const pixelPos = this.base.getPosition();
-    const tileSize = MAP_CONFIG.tileSize;
-    const basePos = {
-      x: Math.floor(pixelPos.x / tileSize),
-      y: Math.floor(pixelPos.y / tileSize)
-    };
+    // base.getPosition()は既にタイル座標を返す
+    const basePos = this.base.getPosition();
     const deploymentRange = 2; // 拠点から2マス以内
-    
+
     // マンハッタン距離で2マス以内の位置を計算
     for (let dy = -deploymentRange; dy <= deploymentRange; dy++) {
       for (let dx = -deploymentRange; dx <= deploymentRange; dx++) {
@@ -281,11 +286,11 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
         if (distance > 0 && distance <= deploymentRange) {
           const gridX = basePos.x + dx;
           const gridY = basePos.y + dy;
-          
+
           // マップ範囲内かチェック
           const mapWidth = this.mapManager.getMapWidth();
           const mapHeight = this.mapManager.getMapHeight();
-          
+
           if (gridX >= 0 && gridX < mapWidth && gridY >= 0 && gridY < mapHeight) {
             // 移動可能な地形かチェック（基本的に全て許可）
             const tile = this.mapManager.getTileAt(gridX, gridY);
@@ -296,7 +301,7 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
         }
       }
     }
-    
+
     return positions;
   }
 
@@ -304,18 +309,18 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     // 入力を無効化して二重実行を防ぐ
     this.inputEnabled = false;
     console.log(`選択された位置: grid(${position.x}, ${position.y})`);
-    
+
     // 軍団を生成
     const army = this.createArmyAtPosition(position);
-    
+
     if (army) {
       // 待機兵士から削除
       const allMembers = [
         this.itemEquippedFormationData.commander,
-        ...this.itemEquippedFormationData.soldiers
+        ...this.itemEquippedFormationData.soldiers,
       ];
       this.baseManager.removeWaitingSoldiers(this.base.getId(), allMembers);
-      
+
       // 完了コールバック
       if (this.onDeploymentCompleteCallback) {
         this.onDeploymentCompleteCallback(army);
@@ -325,55 +330,59 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
 
   private createArmyAtPosition(position: Position): Army | null {
     const { commander, soldiers } = this.itemEquippedFormationData;
-    
+
     // キャラクターをシーンから一旦削除（既にシーンに追加されているため）
     // Armyコンテナに追加されるときに、正しい位置で再配置される
     if (commander.scene) {
       commander.removeFromDisplayList();
       commander.removeFromUpdateList();
     }
-    soldiers.forEach(soldier => {
+    soldiers.forEach((soldier) => {
       if (soldier.scene) {
         soldier.removeFromDisplayList();
         soldier.removeFromUpdateList();
       }
     });
-    
+
     // キャラクターを表示状態にする（setVisibleメソッドがある場合のみ）
     if (typeof commander.setVisible === 'function') {
       commander.setVisible(true);
     }
-    soldiers.forEach(soldier => {
+    soldiers.forEach((soldier) => {
       if (typeof soldier.setVisible === 'function') {
         soldier.setVisible(true);
       }
     });
-    
+
     // ArmyManagerを使って軍団を作成
     const army = this.armyManager.createArmyAtGrid(
       commander,
       position.x,
       position.y,
-      this.base.getOwner()
+      this.base.getOwner(),
     );
-    
+
     if (army) {
       // 一般兵を追加
-      soldiers.forEach(soldier => {
+      soldiers.forEach((soldier) => {
         army.addSoldier(soldier);
       });
-      
-      console.log(`軍団が出撃しました: ${army.getName()} at grid(${position.x}, ${position.y}), pixel(${army.x}, ${army.y})`);
-      
-      // デバッグ：拠点の位置も確認
-      const basePixelPos = this.base.getPosition();
-      const baseTilePos = {
-        x: Math.floor(basePixelPos.x / MAP_CONFIG.tileSize),
-        y: Math.floor(basePixelPos.y / MAP_CONFIG.tileSize)
+
+      console.log(
+        `軍団が出撃しました: ${army.getName()} at grid(${position.x}, ${position.y}), pixel(${army.x}, ${army.y})`,
+      );
+
+      // デバッグ：拠点の位置も確認（base.getPosition()は既にタイル座標）
+      const baseTilePos = this.base.getPosition();
+      const basePixelPos = {
+        x: baseTilePos.x * MAP_CONFIG.tileSize,
+        y: baseTilePos.y * MAP_CONFIG.tileSize,
       };
-      console.log(`拠点位置: grid(${baseTilePos.x}, ${baseTilePos.y}), pixel(${basePixelPos.x}, ${basePixelPos.y})`);
+      console.log(
+        `拠点位置: grid(${baseTilePos.x}, ${baseTilePos.y}), pixel(${basePixelPos.x}, ${basePixelPos.y})`,
+      );
     }
-    
+
     return army;
   }
 
@@ -382,11 +391,11 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     if (this.pointerDownHandler) {
       this.scene.input.off('pointerdown', this.pointerDownHandler);
     }
-    
+
     // ハイライトのクリーンアップ
-    this.tileHighlights.forEach(highlight => highlight.destroy());
+    this.tileHighlights.forEach((highlight) => highlight.destroy());
     this.tileHighlights.clear();
-    
+
     super.destroy();
   }
 }

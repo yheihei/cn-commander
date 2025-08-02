@@ -692,7 +692,7 @@ export class UIManager {
           const tileSize = 16; // MAP_CONFIG.tileSize
           const deployPosition = {
             x: Math.floor(armyPos.x / tileSize),
-            y: Math.floor(armyPos.y / tileSize)
+            y: Math.floor(armyPos.y / tileSize),
           };
           const completeFormationData: ArmyFormationData = {
             commander: itemEquippedData.commander,
@@ -706,10 +706,14 @@ export class UIManager {
       onBack: () => {
         // 出撃位置選択画面からアイテム選択画面に戻る
         this.hideDeploymentPositionUI();
-        this.showItemSelectionUI(base, {
-          commander: itemEquippedData.commander,
-          soldiers: itemEquippedData.soldiers,
-        }, onArmyFormed);
+        this.showItemSelectionUI(
+          base,
+          {
+            commander: itemEquippedData.commander,
+            soldiers: itemEquippedData.soldiers,
+          },
+          onArmyFormed,
+        );
       },
     });
 

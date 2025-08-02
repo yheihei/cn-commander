@@ -1,4 +1,7 @@
-import { DeploymentPositionUI, DeploymentPositionUIConfig } from '../../../src/ui/DeploymentPositionUI';
+import {
+  DeploymentPositionUI,
+  DeploymentPositionUIConfig,
+} from '../../../src/ui/DeploymentPositionUI';
 import { ItemEquippedFormationData } from '../../../src/ui/ItemSelectionUI';
 import { Base } from '../../../src/base/Base';
 import { MapManager } from '../../../src/map/MapManager';
@@ -18,19 +21,19 @@ jest.mock('phaser', () => {
         list: any[] = [];
         visible = true;
         depth = 0;
-        
+
         constructor(_scene: any, x: number, y: number) {
           this.x = x;
           this.y = y;
         }
-        
+
         add = jest.fn((child) => {
           this.list.push(child);
           return this;
         });
         removeAll = jest.fn((destroyChild?: boolean) => {
           if (destroyChild) {
-            this.list.forEach(child => child.destroy?.());
+            this.list.forEach((child) => child.destroy?.());
           }
           this.list = [];
           return this;
@@ -63,8 +66,8 @@ jest.mock('phaser', () => {
         setOrigin = jest.fn(() => this);
         setText = jest.fn(() => this);
         destroy = jest.fn();
-      }
-    }
+      },
+    },
   };
 });
 
@@ -72,10 +75,12 @@ jest.mock('phaser', () => {
 const createMockScene = () => {
   return {
     add: {
-      container: jest.fn((x, y) => new (jest.requireMock('phaser').GameObjects.Container)(null, x, y)),
+      container: jest.fn(
+        (x, y) => new (jest.requireMock('phaser').GameObjects.Container)(null, x, y),
+      ),
       rectangle: jest.fn(() => new (jest.requireMock('phaser').GameObjects.Rectangle)()),
       text: jest.fn(() => new (jest.requireMock('phaser').GameObjects.Text)()),
-      existing: jest.fn()
+      existing: jest.fn(),
     },
     cameras: {
       main: {
@@ -84,22 +89,22 @@ const createMockScene = () => {
           x: 0,
           y: 0,
           width: 568.889,
-          height: 320
-        }
-      }
+          height: 320,
+        },
+      },
     },
     input: {
       on: jest.fn(),
       off: jest.fn(),
-      enabled: true
+      enabled: true,
     },
     time: {
       delayedCall: jest.fn((_delay, callback) => {
         // テストでは即座に実行
         setTimeout(callback, 0);
         return { remove: jest.fn() };
-      })
-    }
+      }),
+    },
   };
 };
 
@@ -110,8 +115,8 @@ const createMockCharacter = (name: string): Character => {
     getItemHolder: jest.fn(() => ({
       getItems: jest.fn(() => []),
       addItem: jest.fn(),
-      removeItem: jest.fn()
-    }))
+      removeItem: jest.fn(),
+    })),
   } as any;
 };
 
@@ -119,8 +124,8 @@ const createMockBase = (id: string, x: number, y: number): Base => {
   return {
     getId: jest.fn(() => id),
     getName: jest.fn(() => `Base ${id}`),
-    getPosition: jest.fn(() => ({ x: x * 16, y: y * 16 })),
-    getOwner: jest.fn(() => 'player')
+    getPosition: jest.fn(() => ({ x, y })),
+    getOwner: jest.fn(() => 'player'),
   } as any;
 };
 
@@ -128,7 +133,7 @@ const createMockArmy = (name: string, x: number, y: number): Army => {
   return {
     getName: jest.fn(() => name),
     getGridPosition: jest.fn(() => ({ x, y })),
-    addSoldier: jest.fn()
+    addSoldier: jest.fn(),
   } as any;
 };
 
@@ -143,27 +148,27 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     scene = createMockScene();
     base = createMockBase('base1', 10, 10);
-    
+
     // MapManagerのモック
     mapManager = {
       getMapWidth: jest.fn(() => 100),
       getMapHeight: jest.fn(() => 100),
       getTileAt: jest.fn(() => ({
-        isWalkable: jest.fn(() => true)
-      }))
+        isWalkable: jest.fn(() => true),
+      })),
     } as any;
 
     // ArmyManagerのモック
     armyManager = {
-      createArmyAtGrid: jest.fn((_commander, x, y) => createMockArmy('TestArmy', x, y))
+      createArmyAtGrid: jest.fn((_commander, x, y) => createMockArmy('TestArmy', x, y)),
     } as any;
 
     // BaseManagerのモック
     baseManager = {
-      removeWaitingSoldiers: jest.fn()
+      removeWaitingSoldiers: jest.fn(),
     } as any;
 
     // アイテム装備済みデータ
@@ -172,9 +177,9 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
       soldiers: [
         createMockCharacter('Soldier1'),
         createMockCharacter('Soldier2'),
-        createMockCharacter('Soldier3')
+        createMockCharacter('Soldier3'),
       ],
-      items: new Map()
+      items: new Map(),
     };
   });
 
@@ -192,7 +197,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         mapManager,
         armyManager,
         baseManager,
-        itemEquippedFormationData: itemEquippedData
+        itemEquippedFormationData: itemEquippedData,
       };
 
       deploymentUI = new DeploymentPositionUI(config);
@@ -210,13 +215,13 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         mapManager,
         armyManager,
         baseManager,
-        itemEquippedFormationData: itemEquippedData
+        itemEquippedFormationData: itemEquippedData,
       });
 
       const showDeployablePositionsSpy = jest.spyOn(deploymentUI, 'showDeployablePositions');
-      
+
       deploymentUI.show();
-      
+
       // 1秒後の処理を待つ
       setTimeout(() => {
         expect(showDeployablePositionsSpy).toHaveBeenCalled();
@@ -233,52 +238,27 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         mapManager,
         armyManager,
         baseManager,
-        itemEquippedFormationData: itemEquippedData
+        itemEquippedFormationData: itemEquippedData,
       });
 
       deploymentUI.show();
 
       // showDeployablePositions内で選択可能位置が計算される
+      // 1秒後にshowDeployablePositionsが呼ばれる
       setTimeout(() => {
         // マンハッタン距離2以内の位置数を確認
         // 中心を除く位置: 距離1=4個、距離2=8個、合計12個
         const expectedPositions = 12;
-        
+
         // mapManager.getTileAtが呼ばれた回数で確認
         expect(mapManager.getTileAt).toHaveBeenCalledTimes(expectedPositions);
-      }, 100);
+      }, 1100);
     });
 
     test('マップ範囲外の位置は除外される', () => {
       // 拠点をマップ端に配置
       base = createMockBase('edge-base', 0, 0);
-      
-      deploymentUI = new DeploymentPositionUI({
-        scene,
-        base,
-        mapManager,
-        armyManager,
-        baseManager,
-        itemEquippedFormationData: itemEquippedData
-      });
 
-      deploymentUI.show();
-
-      setTimeout(() => {
-        // (0,0)から2マス以内でマップ内の位置のみチェック
-        expect(mapManager.getTileAt).toHaveBeenCalled();
-        
-        // 負の座標では呼ばれないことを確認
-        expect(mapManager.getTileAt).not.toHaveBeenCalledWith(-1, expect.any(Number));
-        expect(mapManager.getTileAt).not.toHaveBeenCalledWith(expect.any(Number), -1);
-      }, 100);
-    });
-  });
-
-  describe('軍団生成と配置', () => {
-    test('位置選択で軍団が正しく生成される', (done) => {
-      const onDeploymentComplete = jest.fn();
-      
       deploymentUI = new DeploymentPositionUI({
         scene,
         base,
@@ -286,7 +266,34 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         armyManager,
         baseManager,
         itemEquippedFormationData: itemEquippedData,
-        onDeploymentComplete
+      });
+
+      deploymentUI.show();
+
+      // 1秒後にshowDeployablePositionsが呼ばれる
+      setTimeout(() => {
+        // (0,0)から2マス以内でマップ内の位置のみチェック
+        expect(mapManager.getTileAt).toHaveBeenCalled();
+
+        // 負の座標では呼ばれないことを確認
+        expect(mapManager.getTileAt).not.toHaveBeenCalledWith(-1, expect.any(Number));
+        expect(mapManager.getTileAt).not.toHaveBeenCalledWith(expect.any(Number), -1);
+      }, 1100);
+    });
+  });
+
+  describe('軍団生成と配置', () => {
+    test('位置選択で軍団が正しく生成される', (done) => {
+      const onDeploymentComplete = jest.fn();
+
+      deploymentUI = new DeploymentPositionUI({
+        scene,
+        base,
+        mapManager,
+        armyManager,
+        baseManager,
+        itemEquippedFormationData: itemEquippedData,
+        onDeploymentComplete,
       });
 
       deploymentUI.show();
@@ -296,28 +303,28 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         // armyManager.createArmyAtGridを直接呼び出すシミュレーション
         const selectedX = 11;
         const selectedY = 10;
-        
+
         // DeploymentPositionUIの内部処理をシミュレート
         const army = armyManager.createArmyAtGrid(
           itemEquippedData.commander,
           selectedX,
           selectedY,
-          'player'
+          'player',
         );
 
         expect(armyManager.createArmyAtGrid).toHaveBeenCalledWith(
           itemEquippedData.commander,
           selectedX,
           selectedY,
-          'player'
+          'player',
         );
 
         // 一般兵の追加
         if (army) {
-          itemEquippedData.soldiers.forEach(soldier => {
+          itemEquippedData.soldiers.forEach((soldier) => {
             army.addSoldier(soldier);
           });
-          
+
           expect(army.addSoldier).toHaveBeenCalledTimes(3);
         }
 
@@ -327,7 +334,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
 
     test('軍団生成後、待機兵士から削除される', (done) => {
       const onDeploymentComplete = jest.fn();
-      
+
       deploymentUI = new DeploymentPositionUI({
         scene,
         base,
@@ -335,7 +342,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         armyManager,
         baseManager,
         itemEquippedFormationData: itemEquippedData,
-        onDeploymentComplete
+        onDeploymentComplete,
       });
 
       // onPositionSelectedを直接テスト
@@ -343,10 +350,10 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
       onPositionSelected({ x: 11, y: 10 });
 
       setTimeout(() => {
-        expect(baseManager.removeWaitingSoldiers).toHaveBeenCalledWith(
-          'base1',
-          [itemEquippedData.commander, ...itemEquippedData.soldiers]
-        );
+        expect(baseManager.removeWaitingSoldiers).toHaveBeenCalledWith('base1', [
+          itemEquippedData.commander,
+          ...itemEquippedData.soldiers,
+        ]);
         done();
       }, 0);
     });
@@ -355,7 +362,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
   describe('UIインタラクション', () => {
     test('右クリックでonBackコールバックが呼ばれる', (done) => {
       const onBack = jest.fn();
-      
+
       deploymentUI = new DeploymentPositionUI({
         scene,
         base,
@@ -363,7 +370,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         armyManager,
         baseManager,
         itemEquippedFormationData: itemEquippedData,
-        onBack
+        onBack,
       });
 
       deploymentUI.show();
@@ -372,19 +379,19 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
       setTimeout(() => {
         // 右クリックイベントをシミュレート
         const rightClickEvent = {
-          rightButtonDown: () => true
+          rightButtonDown: () => true,
         };
-        
+
         // input.onで登録されたハンドラを取得して実行
         const pointerdownHandler = scene.input.on.mock.calls.find(
-          (call: any) => call[0] === 'pointerdown'
+          (call: any) => call[0] === 'pointerdown',
         )?.[1];
-        
+
         if (pointerdownHandler) {
           pointerdownHandler(rightClickEvent);
           expect(onBack).toHaveBeenCalled();
         }
-        
+
         done();
       }, 1100);
     });
@@ -396,7 +403,7 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         mapManager,
         armyManager,
         baseManager,
-        itemEquippedFormationData: itemEquippedData
+        itemEquippedFormationData: itemEquippedData,
       });
 
       deploymentUI.show();
@@ -414,20 +421,20 @@ describe('[エピック3] DeploymentPositionUI Integration Tests', () => {
         mapManager,
         armyManager,
         baseManager,
-        itemEquippedFormationData: itemEquippedData
+        itemEquippedFormationData: itemEquippedData,
       });
 
       deploymentUI.show();
-      
+
       // ハイライトタイルを作成してからdestroyを呼ぶ
       deploymentUI.showDeployablePositions();
-      
+
       const destroySpy = jest.spyOn(deploymentUI, 'destroy');
       deploymentUI.destroy();
 
       // destroyメソッドが呼ばれたことを確認
       expect(destroySpy).toHaveBeenCalled();
-      
+
       // コンテナのdestroyも呼ばれることを確認（親クラス）
       expect(deploymentUI.destroy).toHaveBeenCalled();
     });
