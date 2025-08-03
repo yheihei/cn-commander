@@ -77,16 +77,6 @@
       "owner": "enemy"
     },
     {
-      "id": "neutral-base-1",
-      "name": "中立拠点1",
-      "type": "normal_base",
-      "x": 20,
-      "y": 10,
-      "hp": 80,
-      "maxHp": 80,
-      "owner": "neutral"
-    },
-    {
       "id": "neutral-base-2",
       "name": "中立拠点2",
       "type": "normal_base",
