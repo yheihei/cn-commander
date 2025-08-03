@@ -144,7 +144,7 @@ export class Character extends Phaser.GameObjects.Sprite {
 
   setIsCommander(isCommander: boolean): void {
     this.isCommander = isCommander;
-    
+
     // 指揮官マークを作成または削除
     if (isCommander && !this.commanderMarker) {
       this.createCommanderMarker();

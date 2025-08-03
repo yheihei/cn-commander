@@ -43,9 +43,8 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
   // レイアウト設定
   private readonly layoutConfig = {
     panelWidth: 400,
-    panelHeight: 400,
-    tileSize: 48,
-    mapSize: 5, // 5x5マス表示
+    tileSize: 64,
+    mapSize: 3, // 3x3マス表示に縮小
   };
 
   // 入力制御
@@ -86,12 +85,13 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     this.modalBackground.setOrigin(0.5);
     this.add(this.modalBackground);
 
-    // メインパネルの背景
+    // メインパネルの背景（ItemSelectionUIと同じ高さ比率）
+    const panelHeight = viewHeight * 0.9;
     this.background = config.scene.add.rectangle(
       0,
       0,
       this.layoutConfig.panelWidth,
-      this.layoutConfig.panelHeight,
+      panelHeight,
       0x222222,
       0.95,
     );
@@ -100,17 +100,13 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     this.add(this.background);
 
     // タイトル
-    this.titleText = config.scene.add.text(
-      0,
-      -this.layoutConfig.panelHeight / 2 + 20,
-      '出撃位置を選択してください',
-      {
-        fontSize: '16px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-        resolution: 2,
-      },
-    );
+    this.titleText = config.scene.add.text(0, -panelHeight / 2 + 20, '出撃位置を選択してください', {
+      fontSize: '16px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      resolution: 2,
+      padding: { top: 5 },
+    });
     this.titleText.setOrigin(0.5, 0);
     this.add(this.titleText);
 
@@ -121,12 +117,13 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     // 説明文
     this.instructionText = config.scene.add.text(
       0,
-      this.layoutConfig.panelHeight / 2 - 40,
+      panelHeight / 2 - 20,
       '■: 選択可能    右クリック: キャンセル',
       {
         fontSize: '12px',
         color: '#ffffff',
         resolution: 2,
+        padding: { top: 5 },
       },
     );
     this.instructionText.setOrigin(0.5, 1);
@@ -191,7 +188,7 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
     console.log(`showDeployablePositions - 拠点位置: grid(${basePos.x}, ${basePos.y})`);
     const deployablePositions = this.getDeployablePositions();
 
-    // 5x5マップの中心を拠点位置に
+    // 3x3マップの中心を拠点位置に
     const centerOffset = Math.floor(this.layoutConfig.mapSize / 2);
 
     for (let dy = -centerOffset; dy <= centerOffset; dy++) {
@@ -217,7 +214,7 @@ export class DeploymentPositionUI extends Phaser.GameObjects.Container {
           this.mapContainer.add(baseTile);
 
           const baseLabel = this.scene.add.text(displayX, displayY, '拠', {
-            fontSize: '20px',
+            fontSize: '24px',
             color: '#ffffff',
             fontStyle: 'bold',
             resolution: 2,

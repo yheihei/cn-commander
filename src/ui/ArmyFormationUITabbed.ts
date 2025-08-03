@@ -509,7 +509,7 @@ export class ArmyFormationUITabbed extends Phaser.GameObjects.Container {
     if (commanderSlot && commanderSlot.character) {
       commanderSlot.character.setIsCommander(false);
     }
-    
+
     if (this.onCancelledCallback) {
       this.onCancelledCallback();
     }
