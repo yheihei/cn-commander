@@ -223,6 +223,11 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   }
 
   private onCancel(): void {
+    // 選択されていた指揮官のフラグを解除
+    if (this.selectedCommander) {
+      this.selectedCommander.setIsCommander(false);
+    }
+    
     if (this.onCancelledCallback) {
       this.onCancelledCallback();
     }
@@ -468,6 +473,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
   private onSoldierRightClick(soldier: Character): void {
     if (this.selectedCommander === soldier) {
       // 指揮官の選択解除 = 全選択解除
+      // 指揮官フラグを解除
+      this.selectedCommander.setIsCommander(false);
+      
       this.selectedCommander = null;
       this.selectedSoldiers = [];
 
@@ -538,6 +546,9 @@ export class ArmyFormationUI extends Phaser.GameObjects.Container {
 
   private onProceed(): void {
     if (this.selectedCommander && this.onProceedCallback) {
+      // 指揮官フラグを設定し、指揮官マークを作成
+      this.selectedCommander.setIsCommander(true);
+      
       const formationData: FormationData = {
         commander: this.selectedCommander,
         soldiers: this.selectedSoldiers,

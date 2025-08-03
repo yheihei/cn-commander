@@ -142,6 +142,22 @@ export class Character extends Phaser.GameObjects.Sprite {
     return this.isCommander;
   }
 
+  setIsCommander(isCommander: boolean): void {
+    this.isCommander = isCommander;
+    
+    // 指揮官マークを作成または削除
+    if (isCommander && !this.commanderMarker) {
+      this.createCommanderMarker();
+      // 指揮官はクリック可能にする
+      this.setInteractive({ useHandCursor: true });
+    } else if (!isCommander && this.commanderMarker) {
+      this.commanderMarker.destroy();
+      this.commanderMarker = undefined;
+      // 指揮官でなくなったらクリック不可にする
+      this.disableInteractive();
+    }
+  }
+
   getCommanderMarker(): Phaser.GameObjects.Graphics | undefined {
     return this.commanderMarker;
   }

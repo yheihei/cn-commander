@@ -480,6 +480,9 @@ export class ArmyFormationUITabbed extends Phaser.GameObjects.Container {
       return;
     }
 
+    // 指揮官フラグを設定し、指揮官マークを作成
+    commanderSlot.character.setIsCommander(true);
+
     // 軍団編成データを作成
     const soldiers = this.formationSlots
       .filter((slot) => slot.slotType === 'soldier' && slot.character !== null)
@@ -501,6 +504,12 @@ export class ArmyFormationUITabbed extends Phaser.GameObjects.Container {
   }
 
   private onCancel(): void {
+    // 選択されていた指揮官のフラグを解除
+    const commanderSlot = this.formationSlots.find((slot) => slot.slotType === 'commander');
+    if (commanderSlot && commanderSlot.character) {
+      commanderSlot.character.setIsCommander(false);
+    }
+    
     if (this.onCancelledCallback) {
       this.onCancelledCallback();
     }
