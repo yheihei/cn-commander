@@ -1,4 +1,5 @@
 import { UIManager } from '../../../src/ui/UIManager';
+import { createMockProductionManager } from '../../mocks/ProductionManagerMock';
 import { createMockScene } from '../../setup';
 
 describe('[エピック4] Movement Mode Selection Integration Tests', () => {
@@ -7,7 +8,8 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
 
   beforeEach(() => {
     scene = createMockScene();
-    uiManager = new UIManager(scene);
+    const productionManager = createMockProductionManager();
+    uiManager = new UIManager(scene, productionManager);
   });
 
   afterEach(() => {

@@ -1,4 +1,5 @@
 import { UIManager } from '../../../src/ui/UIManager';
+import { createMockProductionManager } from '../../mocks/ProductionManagerMock';
 import { Army } from '../../../src/army/Army';
 import { Character } from '../../../src/character/Character';
 import { createMockScene } from '../../setup';
@@ -16,7 +17,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
 
   beforeEach(() => {
     scene = createMockScene();
-    uiManager = new UIManager(scene);
+    const productionManager = createMockProductionManager();
+    uiManager = new UIManager(scene, productionManager);
   });
 
   afterEach(() => {
