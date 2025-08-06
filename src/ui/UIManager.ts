@@ -9,12 +9,14 @@ import { ArmyFormationUI, FormationData } from './ArmyFormationUI';
 import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
 import { DeploymentPositionUI } from './DeploymentPositionUI';
 import { ProductionFactoryMenu } from './ProductionFactoryMenu';
+import { ProductionManager } from '../production/ProductionManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
 
 export class UIManager {
   private scene: Phaser.Scene;
+  private productionManager: ProductionManager;
   private actionMenu: ActionMenu | null = null;
   private movementModeMenu: MovementModeMenu | null = null;
   private armyInfoPanel: ArmyInfoPanel | null = null;
@@ -29,8 +31,9 @@ export class UIManager {
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, productionManager: ProductionManager) {
     this.scene = scene;
+    this.productionManager = productionManager;
     this.initializeInfoPanels();
   }
 
@@ -463,18 +466,19 @@ export class UIManager {
     const centerX = viewLeft + viewWidth / 2;
     const centerY = viewTop + viewHeight / 2;
 
+    // 拠点IDを取得（現在選択中の拠点から）
+    const baseId = this.currentSelectedBase ? this.currentSelectedBase.getId() : 'base_001';
+
     this.productionFactoryMenu = new ProductionFactoryMenu({
       scene: this.scene,
+      baseId: baseId,
+      productionManager: this.productionManager,
       onCancel: () => {
         this.hideProductionFactoryMenu();
         // BaseActionMenuに戻る
         if (this.currentSelectedBase) {
           this.showBaseActionMenu(this.currentSelectedBase);
         }
-      },
-      onStartProduction: () => {
-        // TODO: 実際の生産処理を実装
-        console.log('生産を開始します');
       },
     });
 

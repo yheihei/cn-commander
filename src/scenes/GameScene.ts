@@ -16,12 +16,14 @@ import { WeaponFactory } from '../item/WeaponFactory';
 import { CombatSystem } from '../combat/CombatSystem';
 import { BaseManager } from '../base/BaseManager';
 import { CharacterFactory } from '../character/CharacterFactory';
+import { ProductionManager } from '../production/ProductionManager';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
   private armyManager!: ArmyManager;
   private baseManager!: BaseManager;
   private movementManager!: MovementManager;
+  private productionManager!: ProductionManager;
   private uiManager!: UIManager;
   private inputHandler!: MovementInputHandler;
   private commandSystem!: MovementCommandSystem;
@@ -93,11 +95,14 @@ export class GameScene extends Phaser.Scene {
       this.createDefaultMap();
     }
 
+    // 生産マネージャーの初期化
+    this.productionManager = new ProductionManager(this);
+
     // カメラの設定（UIManagerより先に実行）
     this.setupCamera();
 
-    // UIマネージャーの初期化（カメラ設定後）
-    this.uiManager = new UIManager(this);
+    // UIマネージャーの初期化（カメラ設定後、ProductionManager初期化後）
+    this.uiManager = new UIManager(this, this.productionManager);
 
     // 入力ハンドラーの初期化
     this.inputHandler = new MovementInputHandler(
