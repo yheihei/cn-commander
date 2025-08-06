@@ -8,6 +8,7 @@ import { BarracksSubMenu } from './BarracksSubMenu';
 import { ArmyFormationUI, FormationData } from './ArmyFormationUI';
 import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
 import { DeploymentPositionUI } from './DeploymentPositionUI';
+import { ProductionFactoryMenu } from './ProductionFactoryMenu';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
@@ -23,6 +24,7 @@ export class UIManager {
   private armyFormationUI: ArmyFormationUI | null = null;
   private itemSelectionUI: ItemSelectionUI | null = null;
   private deploymentPositionUI: DeploymentPositionUI | null = null;
+  private productionFactoryMenu: ProductionFactoryMenu | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
@@ -370,8 +372,7 @@ export class UIManager {
       },
       onFactory: () => {
         this.hideBaseActionMenu();
-        // TODO: 生産工場サブメニューを表示
-        console.log('生産工場が選択されました');
+        this.showProductionFactoryMenu();
       },
       onHospital: () => {
         this.hideBaseActionMenu();
@@ -445,6 +446,47 @@ export class UIManager {
     if (this.barracksSubMenu) {
       this.barracksSubMenu.destroy();
       this.barracksSubMenu = null;
+    }
+  }
+
+  public showProductionFactoryMenu(): void {
+    // 既存の生産工場メニューがあれば削除
+    this.hideProductionFactoryMenu();
+
+    // カメラの現在の表示範囲を取得（ArmyFormationUIと同じ方法）
+    const cam = this.scene.cameras.main;
+    const zoom = cam.zoom || 2.25;
+    const viewWidth = 1280 / zoom;
+    const viewHeight = 720 / zoom;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+    const centerX = viewLeft + viewWidth / 2;
+    const centerY = viewTop + viewHeight / 2;
+
+    this.productionFactoryMenu = new ProductionFactoryMenu({
+      scene: this.scene,
+      onCancel: () => {
+        this.hideProductionFactoryMenu();
+        // BaseActionMenuに戻る
+        if (this.currentSelectedBase) {
+          this.showBaseActionMenu(this.currentSelectedBase);
+        }
+      },
+      onStartProduction: () => {
+        // TODO: 実際の生産処理を実装
+        console.log('生産を開始します');
+      },
+    });
+
+    // 初期位置を設定
+    this.productionFactoryMenu.updatePosition(centerX, centerY);
+    this.productionFactoryMenu.show();
+  }
+
+  public hideProductionFactoryMenu(): void {
+    if (this.productionFactoryMenu) {
+      this.productionFactoryMenu.destroy();
+      this.productionFactoryMenu = null;
     }
   }
 
@@ -527,6 +569,20 @@ export class UIManager {
       const centerY = viewTop + viewHeight / 2;
 
       this.deploymentPositionUI.setPosition(centerX, centerY);
+    }
+
+    // ProductionFactoryMenuの位置更新
+    if (this.productionFactoryMenu) {
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const centerX = viewLeft + viewWidth / 2;
+      const centerY = viewTop + viewHeight / 2;
+
+      this.productionFactoryMenu.updatePosition(centerX, centerY);
     }
 
     // ArmyFormationUIは全画面モーダルなので位置更新不要
@@ -735,6 +791,7 @@ export class UIManager {
     this.hideBaseInfo();
     this.hideBaseActionMenu();
     this.hideBarracksSubMenu();
+    this.hideProductionFactoryMenu();
     this.hideGuideMessage();
     // 注: armyFormationUIは意図的に含めない（専用のhideメソッドがあるため）
   }
@@ -746,6 +803,7 @@ export class UIManager {
     this.hideBaseInfo();
     this.hideBaseActionMenu();
     this.hideBarracksSubMenu();
+    this.hideProductionFactoryMenu();
     this.hideGuideMessage();
     this.hideArmyFormationUI();
     this.hideItemSelectionUI();
