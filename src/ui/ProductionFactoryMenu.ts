@@ -1,14 +1,16 @@
 import Phaser from 'phaser';
+import { ProductionManager, ProductionItemType } from '../production/ProductionManager';
 
 interface ProductionFactoryMenuConfig {
   scene: Phaser.Scene;
+  baseId: string;
+  productionManager: ProductionManager;
   onCancel?: () => void;
-  onStartProduction?: () => void;
 }
 
 /**
- * 生産工場UI
- * ArmyFormationUIと同じデザインパターンで実装
+ * 生産工場UI（修正版）
+ * アイテムクリック問題を解決
  */
 export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   private readonly layoutConfig = {
@@ -26,19 +28,31 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   private titleText!: Phaser.GameObjects.Text;
   private cancelButton!: Phaser.GameObjects.Container;
   private startButton!: Phaser.GameObjects.Container;
-  private itemListContainer!: Phaser.GameObjects.Container;
-  private queueListContainer!: Phaser.GameObjects.Container;
   private selectedItemIndex: number = -1;
+  private selectedQuantity: number = 1;
 
+  // 数量指定UI要素
+  private quantityText!: Phaser.GameObjects.Text;
+  private quantityMinusButton!: Phaser.GameObjects.Container;
+  private quantityPlusButton!: Phaser.GameObjects.Container;
+  
+  // キューライン表示要素
+  private queueLineTexts: Phaser.GameObjects.Text[] = [];
+
+  // アイテム選択用の背景要素を保持
+  private itemBackgrounds: Phaser.GameObjects.Rectangle[] = [];
+  private itemTexts: Phaser.GameObjects.Text[] = [];
+
+  private baseId: string;
+  private productionManager: ProductionManager;
   private onCancelCallback?: () => void;
-  private onStartProductionCallback?: () => void;
 
-  // 仮の生産アイテムデータ
-  private readonly productionItems = [
-    { name: '忍者刀', cost: 300, time: 60 },
-    { name: '手裏剣', cost: 200, time: 60 },
-    { name: '弓', cost: 400, time: 60 },
-    { name: '兵糧丸', cost: 50, time: 60 },
+  // アイテムタイプのマッピング
+  private readonly itemTypeMapping = [
+    ProductionItemType.NINJA_SWORD,
+    ProductionItemType.SHURIKEN,
+    ProductionItemType.BOW,
+    ProductionItemType.FOOD_PILL,
   ];
 
   constructor(config: ProductionFactoryMenuConfig) {
@@ -56,8 +70,9 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
 
     super(config.scene, centerX, centerY);
 
+    this.baseId = config.baseId;
+    this.productionManager = config.productionManager;
     this.onCancelCallback = config.onCancel;
-    this.onStartProductionCallback = config.onStartProduction;
 
     // 画面全体を覆う半透明の背景
     this.modalBackground = config.scene.add.rectangle(0, 0, viewWidth, viewHeight, 0x000000, 0.5);
@@ -88,8 +103,11 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
     this.titleText.setOrigin(0.5, 0);
     this.add(this.titleText);
 
-    // 左側：生産可能アイテムリスト
-    this.createItemList(panelWidth, panelHeight);
+    // 左側：生産可能アイテムリスト（新しい方法で実装）
+    this.createItemListNew(panelWidth, panelHeight);
+
+    // 中央：数量指定UI
+    this.createQuantityInput(panelWidth, panelHeight);
 
     // 右側：生産キューリスト
     this.createQueueList(panelWidth, panelHeight);
@@ -105,95 +123,237 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
 
     // 入力イベントの設定
     this.setupInputHandlers();
+    
+    console.log('ProductionFactoryMenu(Fixed) initialized');
   }
 
-  private createItemList(panelWidth: number, panelHeight: number): void {
-    const startX = -panelWidth / 2 + this.layoutConfig.panelPadding * 2;
+  /**
+   * 新しいアイテムリスト作成方法（クリック問題を解決）
+   */
+  private createItemListNew(panelWidth: number, panelHeight: number): void {
+    const startX = -panelWidth / 2 + this.layoutConfig.panelPadding * 2 - 20;
     const startY = -panelHeight / 2 + 50;
 
-    this.itemListContainer = this.scene.add.container(startX, startY);
-    this.add(this.itemListContainer);
+    // ProductionManagerからアイテムリストを取得
+    const productionItems = this.productionManager.getProductionItems();
 
     // ヘッダー
-    const headerText = this.scene.add.text(0, 0, '生産可能アイテム', {
+    const headerText = this.scene.add.text(startX, startY, '生産可能アイテム', {
       fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
       padding: { top: 5 },
     });
-    this.itemListContainer.add(headerText);
-
-    // アイテムリスト
-    this.productionItems.forEach((item, index) => {
-      const y = 30 + index * this.layoutConfig.rowHeight;
+    this.add(headerText);
+    
+    // アイテムリスト（直接Containerに追加）
+    productionItems.forEach((item, index) => {
+      const y = startY + 30 + index * this.layoutConfig.rowHeight;
 
       // 背景（選択時のハイライト用）
       const itemBg = this.scene.add.rectangle(
-        0,
+        startX,
         y,
-        this.layoutConfig.itemListWidth,
+        this.layoutConfig.itemListWidth - 20,
         this.layoutConfig.rowHeight - 2,
         0x444444,
-        0,
+        1.0,
       );
       itemBg.setOrigin(0, 0.5);
-      itemBg.setInteractive({ useHandCursor: true });
-      itemBg.setData('index', index);
-
+      itemBg.setStrokeStyle(1, 0x666666);
+      
       // アイテム名と費用
-      const itemText = this.scene.add.text(10, y, `${item.name} (${item.cost}両)`, {
-        fontSize: '11px',
-        color: '#ffffff',
-        resolution: 2,
-      });
+      const itemText = this.scene.add.text(
+        startX, 
+        y, 
+        `${item.name} (${item.productionCost}両)`, 
+        {
+          fontSize: '11px',
+          color: '#ffffff',
+          resolution: 2,
+        }
+      );
       itemText.setOrigin(0, 0.5);
 
-      this.itemListContainer.add([itemBg, itemText]);
-
+      // Containerに直接追加
+      this.add(itemBg);
+      this.add(itemText);
+      
+      // 配列に保存（後で参照するため）
+      this.itemBackgrounds.push(itemBg);
+      this.itemTexts.push(itemText);
+      
+      // インタラクティブ設定（追加後に設定）
+      itemBg.setInteractive({ useHandCursor: true });
+      
       // クリックイベント
       itemBg.on('pointerdown', () => {
-        this.selectItem(index);
+        console.log(`Item clicked (fixed): index=${index}, item=${item.name}`);
+        this.selectItemNew(index);
       });
 
       itemBg.on('pointerover', () => {
         if (this.selectedItemIndex !== index) {
-          itemBg.setAlpha(0.3);
+          itemBg.setFillStyle(0x555555);
         }
       });
 
       itemBg.on('pointerout', () => {
         if (this.selectedItemIndex !== index) {
-          itemBg.setAlpha(0);
+          itemBg.setFillStyle(0x444444);
         }
       });
     });
+  }
+
+  /**
+   * 新しいアイテム選択メソッド
+   */
+  private selectItemNew(index: number): void {
+    console.log(`selectItemNew called: index=${index}`);
+    
+    // 前の選択をクリア
+    if (this.selectedItemIndex >= 0 && this.selectedItemIndex < this.itemBackgrounds.length) {
+      const prevBg = this.itemBackgrounds[this.selectedItemIndex];
+      if (prevBg) {
+        prevBg.setFillStyle(0x444444);
+      }
+    }
+
+    // 新しい選択
+    this.selectedItemIndex = index;
+    if (index >= 0 && index < this.itemBackgrounds.length) {
+      const bg = this.itemBackgrounds[index];
+      if (bg) {
+        bg.setFillStyle(0x00aa00); // 緑色で選択を表示
+      }
+    }
+
+    // ボタン状態を更新
+    this.updateButtonState();
+  }
+
+  private createQuantityInput(_panelWidth: number, panelHeight: number): void {
+    const startX = -40;
+    const startY = -panelHeight / 2 + 55;
+
+    // ラベル
+    const labelText = this.scene.add.text(startX, startY-5, '生産数', {
+      fontSize: '12px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      resolution: 2,
+      padding: { top: 5 }
+    });
+    labelText.setOrigin(0.5, 0);
+    this.add(labelText);
+
+    // 数量表示コンテナ
+    const quantityBg = this.scene.add.rectangle(startX, startY + 31, 60, 35, 0x444444);
+    quantityBg.setStrokeStyle(1, 0x666666);
+    this.add(quantityBg);
+
+    // 数量テキスト
+    this.quantityText = this.scene.add.text(startX, startY + 31, '1', {
+      fontSize: '16px',
+      color: '#ffffff',
+      resolution: 2,
+      padding: { top: 5 }
+    });
+    this.quantityText.setOrigin(0.5);
+    this.add(this.quantityText);
+
+    // －ボタン
+    this.quantityMinusButton = this.createQuantityButton('-', startX - 20, startY + 64, () => {
+      this.adjustQuantity(-1);
+    });
+    this.add(this.quantityMinusButton);
+
+    // ＋ボタン
+    this.quantityPlusButton = this.createQuantityButton('+', startX + 20, startY + 64, () => {
+      this.adjustQuantity(1);
+    });
+    this.add(this.quantityPlusButton);
+
+    // 説明テキスト
+    // const helpText = this.scene.add.text(startX, startY + 79, '（1〜99個）', {
+    //   fontSize: '10px',
+    //   color: '#999999',
+    //   resolution: 2,
+    // });
+    // helpText.setOrigin(0.5, 0);
+    // this.add(helpText);
+  }
+
+  private createQuantityButton(
+    text: string,
+    x: number,
+    y: number,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
+    const button = this.scene.add.container(x, y);
+
+    const buttonBg = this.scene.add.rectangle(0, 0, 20, 20, 0x666666);
+    buttonBg.setStrokeStyle(1, 0x888888);
+    buttonBg.setInteractive({ useHandCursor: true });
+
+    const buttonText = this.scene.add.text(0, 0, text, {
+      fontSize: '16px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      resolution: 2,
+    });
+    buttonText.setOrigin(0.5);
+
+    button.add([buttonBg, buttonText]);
+
+    buttonBg.on('pointerover', () => {
+      buttonBg.setFillStyle(0x888888);
+    });
+
+    buttonBg.on('pointerout', () => {
+      buttonBg.setFillStyle(0x666666);
+    });
+
+    buttonBg.on('pointerdown', () => {
+      onClick();
+    });
+
+    return button;
+  }
+
+  private adjustQuantity(delta: number): void {
+    const newQuantity = this.selectedQuantity + delta;
+    
+    // 1〜99の範囲内に制限
+    if (newQuantity >= 1 && newQuantity <= 99) {
+      this.selectedQuantity = newQuantity;
+      this.quantityText.setText(this.selectedQuantity.toString());
+    }
   }
 
   private createQueueList(_panelWidth: number, panelHeight: number): void {
     const startX = 10;
     const startY = -panelHeight / 2 + 50;
 
-    this.queueListContainer = this.scene.add.container(startX, startY);
-    this.add(this.queueListContainer);
-
     // ヘッダー
-    const headerText = this.scene.add.text(0, 0, '生産キュー', {
+    const headerText = this.scene.add.text(startX, startY, '生産キュー', {
       fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
       padding: { top: 5 },
     });
-    this.queueListContainer.add(headerText);
+    this.add(headerText);
 
     // 6つの生産ライン
     for (let i = 0; i < 6; i++) {
-      const y = 30 + i * this.layoutConfig.rowHeight;
+      const y = startY + 30 + i * this.layoutConfig.rowHeight;
 
       // ライン背景
       const lineBg = this.scene.add.rectangle(
-        0,
+        startX,
         y,
         this.layoutConfig.queueListWidth,
         this.layoutConfig.rowHeight - 2,
@@ -202,17 +362,43 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       );
       lineBg.setOrigin(0, 0.5);
       lineBg.setStrokeStyle(1, 0x555555);
+      this.add(lineBg);
 
       // ライン番号と状態
-      const lineText = this.scene.add.text(10, y, `${i + 1}. [空き]`, {
+      const lineText = this.scene.add.text(startX + 10, y, `${i + 1}. [空き]`, {
         fontSize: '11px',
         color: '#999999',
         resolution: 2,
       });
       lineText.setOrigin(0, 0.5);
-
-      this.queueListContainer.add([lineBg, lineText]);
+      this.add(lineText);
+      
+      // 参照を保存
+      this.queueLineTexts.push(lineText);
     }
+    
+    // 初期表示を更新
+    this.updateQueueDisplay();
+  }
+  
+  private updateQueueDisplay(): void {
+    const queues = this.productionManager.getProductionQueues(this.baseId);
+    const progressData = this.productionManager.getProgressData(this.baseId);
+    
+    queues.forEach((queue, index) => {
+      const lineText = this.queueLineTexts[index];
+      if (!lineText) return;
+      
+      if (queue && progressData[index]) {
+        // キューがある場合は「アイテム名 現在数/合計数」形式で表示
+        lineText.setText(`${index + 1}. ${progressData[index]!.displayText}`);
+        lineText.setColor('#ffffff');
+      } else {
+        // 空きラインの場合
+        lineText.setText(`${index + 1}. [空き]`);
+        lineText.setColor('#999999');
+      }
+    });
   }
 
   private createButtons(panelHeight: number): void {
@@ -227,9 +413,9 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
     });
     this.add(this.cancelButton);
 
-    // 生産開始ボタン
+    // 生産を追加ボタン
     const startButtonX = this.layoutConfig.buttonWidth / 2 + this.layoutConfig.buttonSpacing / 2;
-    this.startButton = this.createButton('生産開始', startButtonX, buttonY, () => {
+    this.startButton = this.createButton('生産を追加', startButtonX, buttonY, () => {
       this.onStartProduction();
     });
     this.add(this.startButton);
@@ -290,28 +476,6 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
     return button;
   }
 
-  private selectItem(index: number): void {
-    // 前の選択をクリア
-    if (this.selectedItemIndex >= 0) {
-      const items = this.itemListContainer.list as Phaser.GameObjects.GameObject[];
-      const prevBg = items[this.selectedItemIndex * 2 + 2] as Phaser.GameObjects.Rectangle;
-      if (prevBg) {
-        prevBg.setAlpha(0);
-      }
-    }
-
-    // 新しい選択
-    this.selectedItemIndex = index;
-    const items = this.itemListContainer.list as Phaser.GameObjects.GameObject[];
-    const bg = items[index * 2 + 2] as Phaser.GameObjects.Rectangle;
-    if (bg) {
-      bg.setAlpha(0.5);
-    }
-
-    // ボタン状態を更新
-    this.updateButtonState();
-  }
-
   private updateButtonState(): void {
     const isEnabled = this.selectedItemIndex >= 0;
     const bg = this.startButton.getData('background') as Phaser.GameObjects.Rectangle;
@@ -364,22 +528,76 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   }
 
   private onStartProduction(): void {
-    if (this.selectedItemIndex >= 0) {
-      const item = this.productionItems[this.selectedItemIndex];
-      console.log(`生産開始: ${item.name}`);
-      if (this.onStartProductionCallback) {
-        this.onStartProductionCallback();
+    console.log(`onStartProduction called: selectedIndex=${this.selectedItemIndex}, quantity=${this.selectedQuantity}`);
+    
+    if (this.selectedItemIndex < 0) {
+      console.warn('No item selected');
+      return;
+    }
+
+    // 選択されたアイテムタイプを取得
+    const itemType = this.itemTypeMapping[this.selectedItemIndex];
+    if (!itemType) {
+      console.warn(`Invalid item type for index ${this.selectedItemIndex}`);
+      return;
+    }
+    
+    console.log(`Selected item type: ${itemType}`);
+
+    // 空きラインがあるか確認
+    if (!this.productionManager.hasAvailableSlot(this.baseId)) {
+      console.warn('No available production lines');
+      // TODO: エラーメッセージを表示
+      return;
+    }
+
+    // キューに追加（「0/指定数」形式で追加される）
+    const lineIndex = this.productionManager.addToQueue(
+      this.baseId,
+      itemType,
+      this.selectedQuantity
+    );
+
+    if (lineIndex !== null) {
+      console.log(`Production added to line ${lineIndex + 1}`);
+      
+      // キュー表示を更新
+      this.updateQueueDisplay();
+      
+      // 選択をリセット
+      if (this.selectedItemIndex >= 0 && this.selectedItemIndex < this.itemBackgrounds.length) {
+        const bg = this.itemBackgrounds[this.selectedItemIndex];
+        if (bg) {
+          bg.setFillStyle(0x444444); // 元の色に戻す
+        }
       }
+      
+      this.selectedItemIndex = -1;
+      this.selectedQuantity = 1;
+      this.quantityText.setText('1');
+      this.updateButtonState();
     }
   }
 
   public show(): void {
+    console.log(`ProductionFactoryMenu(Fixed).show() called for base: ${this.baseId}`);
+    
+    // 拠点を初期化（まだ初期化されていない場合）
+    this.productionManager.initializeBase(this.baseId);
+    console.log(`Initialized/checked production lines for base: ${this.baseId}`);
+    
     this.setVisible(true);
+    // 表示時にキューを更新
+    this.updateQueueDisplay();
   }
 
   public hide(): void {
     this.setVisible(false);
     this.selectedItemIndex = -1;
+    this.selectedQuantity = 1;
+    if (this.quantityText) {
+      this.quantityText.setText('1');
+    }
     this.updateButtonState();
   }
 
@@ -390,6 +608,12 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   public destroy(): void {
     // 入力イベントのクリーンアップ
     this.scene.input.off('pointerdown');
+    
+    // 配列をクリア
+    this.itemBackgrounds = [];
+    this.itemTexts = [];
+    this.queueLineTexts = [];
+    
     super.destroy();
   }
 }
