@@ -14,6 +14,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 思考する際は英語で考えてください
 
+## **MUST** 実装/コードベース調査時のルール
+
+use serena whenever possible
+
 ## コーディング原則
 - YAGNI（You Aren't Gonna Need It）：今必要じゃない機能は作らない
 - KISS: 複雑な解決策より単純な解決策を優先
