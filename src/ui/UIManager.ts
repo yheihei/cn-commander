@@ -194,7 +194,16 @@ export class UIManager {
   }
 
   public isAnyMenuVisible(): boolean {
-    return this.isActionMenuVisible() || this.isMovementModeMenuVisible();
+    return (
+      this.isActionMenuVisible() ||
+      this.isMovementModeMenuVisible() ||
+      this.isBaseActionMenuVisible() ||
+      this.isBarracksSubMenuVisible() ||
+      this.isProductionFactoryMenuVisible() ||
+      this.isArmyFormationUIVisible() ||
+      this.isItemSelectionUIVisible() ||
+      this.isDeploymentPositionUIVisible()
+    );
   }
 
   public getCurrentSelectedArmy(): Army | null {
@@ -643,6 +652,26 @@ export class UIManager {
 
   public isArmyFormationUIVisible(): boolean {
     return this.armyFormationUI !== null;
+  }
+
+  public isBaseActionMenuVisible(): boolean {
+    return this.baseActionMenu !== null;
+  }
+
+  public isBarracksSubMenuVisible(): boolean {
+    return this.barracksSubMenu !== null;
+  }
+
+  public isProductionFactoryMenuVisible(): boolean {
+    return this.productionFactoryMenu !== null;
+  }
+
+  public isItemSelectionUIVisible(): boolean {
+    return this.itemSelectionUI !== null;
+  }
+
+  public isDeploymentPositionUIVisible(): boolean {
+    return this.deploymentPositionUI !== null;
   }
 
   public showItemSelectionUI(

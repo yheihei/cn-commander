@@ -46,6 +46,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   private baseId: string;
   private productionManager: ProductionManager;
   private onCancelCallback?: () => void;
+  private rightClickHandler?: (pointer: Phaser.Input.Pointer) => void;
 
   // アイテムタイプのマッピング
   private readonly itemTypeMapping = [
@@ -513,12 +514,13 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       },
     );
 
-    // 右クリックでキャンセル
-    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    // 右クリックでキャンセル - ハンドラーを保存
+    this.rightClickHandler = (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown() && this.visible) {
         this.onCancel();
       }
-    });
+    };
+    this.scene.input.on('pointerdown', this.rightClickHandler);
   }
 
   private onCancel(): void {
@@ -606,8 +608,11 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   }
 
   public destroy(): void {
-    // 入力イベントのクリーンアップ
-    this.scene.input.off('pointerdown');
+    // 入力イベントのクリーンアップ - 特定のハンドラーのみ削除
+    if (this.rightClickHandler) {
+      this.scene.input.off('pointerdown', this.rightClickHandler);
+      this.rightClickHandler = undefined;
+    }
     
     // 配列をクリア
     this.itemBackgrounds = [];
