@@ -24,7 +24,7 @@ export interface ProductionItemDefinition {
 }
 
 /**
- * 生産キュー
+ * 生産ライン
  */
 export interface ProductionQueue {
   itemType: ProductionItemType;
@@ -224,7 +224,7 @@ export class ProductionManager {
   }
 
   /**
-   * 生産キューを取得
+   * 生産ラインを取得
    */
   public getProductionQueues(baseId: string): (ProductionQueue | null)[] {
     if (!this.productionLines.has(baseId)) {
@@ -246,7 +246,7 @@ export class ProductionManager {
   }
 
   /**
-   * 生産キューの進捗情報を取得（表示用）
+   * 生産ラインの進捗情報を取得（表示用）
    */
   public getProgressData(baseId: string): (ProductionProgress | null)[] {
     const queues = this.getProductionQueues(baseId);

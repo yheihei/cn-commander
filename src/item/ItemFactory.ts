@@ -70,10 +70,10 @@ export class ItemFactory {
         // 武器使用時の処理（戦闘システムで実装）
       },
       canUse: () => true,
-      getDurabilityPercentage: function () {
+      getDurabilityPercentage() {
         return (this.durability / this.maxDurability) * 100;
       },
-      repair: function (amount?: number) {
+      repair(amount?: number) {
         const repairAmount = amount || this.maxDurability;
         this.durability = Math.min(this.durability + repairAmount, this.maxDurability);
       },
@@ -104,10 +104,10 @@ export class ItemFactory {
         // 武器使用時の処理（戦闘システムで実装）
       },
       canUse: () => true,
-      getDurabilityPercentage: function () {
+      getDurabilityPercentage() {
         return (this.durability / this.maxDurability) * 100;
       },
-      repair: function (amount?: number) {
+      repair(amount?: number) {
         const repairAmount = amount || this.maxDurability;
         this.durability = Math.min(this.durability + repairAmount, this.maxDurability);
       },
@@ -138,10 +138,10 @@ export class ItemFactory {
         // 武器使用時の処理（戦闘システムで実装）
       },
       canUse: () => true,
-      getDurabilityPercentage: function () {
+      getDurabilityPercentage() {
         return (this.durability / this.maxDurability) * 100;
       },
-      repair: function (amount?: number) {
+      repair(amount?: number) {
         const repairAmount = amount || this.maxDurability;
         this.durability = Math.min(this.durability + repairAmount, this.maxDurability);
       },
