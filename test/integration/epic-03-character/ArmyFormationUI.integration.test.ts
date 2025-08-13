@@ -429,8 +429,8 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
   describe('ページネーション機能', () => {
     test('5人以下の場合はページネーションボタンが無効化される', () => {
       ui = new ArmyFormationUI({
-        scene: scene,
-        base: base,
+        scene,
+        base,
         onProceedToItemSelection: jest.fn(),
         onCancelled: jest.fn(),
       });
@@ -466,8 +466,8 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
     test('6人以上の場合はページネーションが機能する', () => {
       ui = new ArmyFormationUI({
-        scene: scene,
-        base: base,
+        scene,
+        base,
         onProceedToItemSelection: jest.fn(),
         onCancelled: jest.fn(),
       });
@@ -521,8 +521,8 @@ describe('[エピック3] ArmyFormationUI Integration Tests', () => {
 
     test('ページを移動しても選択状態が維持される', () => {
       ui = new ArmyFormationUI({
-        scene: scene,
-        base: base,
+        scene,
+        base,
         onProceedToItemSelection: jest.fn(),
         onCancelled: jest.fn(),
       });
