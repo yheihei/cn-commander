@@ -35,7 +35,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   private quantityText!: Phaser.GameObjects.Text;
   private quantityMinusButton!: Phaser.GameObjects.Container;
   private quantityPlusButton!: Phaser.GameObjects.Container;
-  
+
   // キューライン表示要素
   private queueLineTexts: Phaser.GameObjects.Text[] = [];
 
@@ -124,7 +124,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
 
     // 入力イベントの設定
     this.setupInputHandlers();
-    
+
     console.log('ProductionFactoryMenu(Fixed) initialized');
   }
 
@@ -147,7 +147,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       padding: { top: 5 },
     });
     this.add(headerText);
-    
+
     // アイテムリスト（直接Containerに追加）
     productionItems.forEach((item, index) => {
       const y = startY + 30 + index * this.layoutConfig.rowHeight;
@@ -163,31 +163,26 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       );
       itemBg.setOrigin(0, 0.5);
       itemBg.setStrokeStyle(1, 0x666666);
-      
+
       // アイテム名と費用
-      const itemText = this.scene.add.text(
-        startX, 
-        y, 
-        `${item.name} (${item.productionCost}両)`, 
-        {
-          fontSize: '11px',
-          color: '#ffffff',
-          resolution: 2,
-        }
-      );
+      const itemText = this.scene.add.text(startX, y, `${item.name} (${item.productionCost}両)`, {
+        fontSize: '11px',
+        color: '#ffffff',
+        resolution: 2,
+      });
       itemText.setOrigin(0, 0.5);
 
       // Containerに直接追加
       this.add(itemBg);
       this.add(itemText);
-      
+
       // 配列に保存（後で参照するため）
       this.itemBackgrounds.push(itemBg);
       this.itemTexts.push(itemText);
-      
+
       // インタラクティブ設定（追加後に設定）
       itemBg.setInteractive({ useHandCursor: true });
-      
+
       // クリックイベント
       itemBg.on('pointerdown', () => {
         console.log(`Item clicked (fixed): index=${index}, item=${item.name}`);
@@ -213,7 +208,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
    */
   private selectItemNew(index: number): void {
     console.log(`selectItemNew called: index=${index}`);
-    
+
     // 前の選択をクリア
     if (this.selectedItemIndex >= 0 && this.selectedItemIndex < this.itemBackgrounds.length) {
       const prevBg = this.itemBackgrounds[this.selectedItemIndex];
@@ -240,12 +235,12 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
     const startY = -panelHeight / 2 + 55;
 
     // ラベル
-    const labelText = this.scene.add.text(startX, startY-5, '生産数', {
+    const labelText = this.scene.add.text(startX, startY - 5, '生産数', {
       fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
-      padding: { top: 5 }
+      padding: { top: 5 },
     });
     labelText.setOrigin(0.5, 0);
     this.add(labelText);
@@ -260,7 +255,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       fontSize: '16px',
       color: '#ffffff',
       resolution: 2,
-      padding: { top: 5 }
+      padding: { top: 5 },
     });
     this.quantityText.setOrigin(0.5);
     this.add(this.quantityText);
@@ -326,7 +321,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
 
   private adjustQuantity(delta: number): void {
     const newQuantity = this.selectedQuantity + delta;
-    
+
     // 1〜99の範囲内に制限
     if (newQuantity >= 1 && newQuantity <= 99) {
       this.selectedQuantity = newQuantity;
@@ -373,23 +368,23 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       });
       lineText.setOrigin(0, 0.5);
       this.add(lineText);
-      
+
       // 参照を保存
       this.queueLineTexts.push(lineText);
     }
-    
+
     // 初期表示を更新
     this.updateQueueDisplay();
   }
-  
+
   private updateQueueDisplay(): void {
     const queues = this.productionManager.getProductionQueues(this.baseId);
     const progressData = this.productionManager.getProgressData(this.baseId);
-    
+
     queues.forEach((queue, index) => {
       const lineText = this.queueLineTexts[index];
       if (!lineText) return;
-      
+
       if (queue && progressData[index]) {
         // キューがある場合は「アイテム名 現在数/合計数」形式で表示
         lineText.setText(`${index + 1}. ${progressData[index]!.displayText}`);
@@ -530,8 +525,10 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   }
 
   private onStartProduction(): void {
-    console.log(`onStartProduction called: selectedIndex=${this.selectedItemIndex}, quantity=${this.selectedQuantity}`);
-    
+    console.log(
+      `onStartProduction called: selectedIndex=${this.selectedItemIndex}, quantity=${this.selectedQuantity}`,
+    );
+
     if (this.selectedItemIndex < 0) {
       console.warn('No item selected');
       return;
@@ -543,7 +540,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       console.warn(`Invalid item type for index ${this.selectedItemIndex}`);
       return;
     }
-    
+
     console.log(`Selected item type: ${itemType}`);
 
     // 空きラインがあるか確認
@@ -557,15 +554,15 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
     const lineIndex = this.productionManager.addToQueue(
       this.baseId,
       itemType,
-      this.selectedQuantity
+      this.selectedQuantity,
     );
 
     if (lineIndex !== null) {
       console.log(`Production added to line ${lineIndex + 1}`);
-      
+
       // キュー表示を更新
       this.updateQueueDisplay();
-      
+
       // 選択をリセット
       if (this.selectedItemIndex >= 0 && this.selectedItemIndex < this.itemBackgrounds.length) {
         const bg = this.itemBackgrounds[this.selectedItemIndex];
@@ -573,7 +570,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
           bg.setFillStyle(0x444444); // 元の色に戻す
         }
       }
-      
+
       this.selectedItemIndex = -1;
       this.selectedQuantity = 1;
       this.quantityText.setText('1');
@@ -583,11 +580,11 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
 
   public show(): void {
     console.log(`ProductionFactoryMenu(Fixed).show() called for base: ${this.baseId}`);
-    
+
     // 拠点を初期化（まだ初期化されていない場合）
     this.productionManager.initializeBase(this.baseId);
     console.log(`Initialized/checked production lines for base: ${this.baseId}`);
-    
+
     this.setVisible(true);
     // 表示時にキューを更新
     this.updateQueueDisplay();
@@ -613,12 +610,12 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       this.scene.input.off('pointerdown', this.rightClickHandler);
       this.rightClickHandler = undefined;
     }
-    
+
     // 配列をクリア
     this.itemBackgrounds = [];
     this.itemTexts = [];
     this.queueLineTexts = [];
-    
+
     super.destroy();
   }
 }
