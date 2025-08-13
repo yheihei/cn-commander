@@ -649,13 +649,6 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       this.selectedQuantity = 1;
       this.quantityText.setText('1');
       this.updateButtonState();
-
-      // 全スロットが埋まったら自動的に閉じる
-      if (!this.productionManager.hasAvailableSlot(this.baseId)) {
-        console.log('生産ラインが満杯になりました');
-        this.hide();
-        this.onCancelCallback?.();
-      }
     } else {
       console.log(`生産開始失敗: キューが満杯またはエラー`);
     }

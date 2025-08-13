@@ -480,7 +480,7 @@ export class UIManager {
 
     this.productionFactoryMenu = new ProductionFactoryMenu({
       scene: this.scene,
-      baseId: baseId,
+      baseId,
       productionManager: this.productionManager,
       onCancel: () => {
         this.hideProductionFactoryMenu();
@@ -492,7 +492,7 @@ export class UIManager {
     });
 
     // 初期位置を設定
-    this.productionFactoryMenu.updatePosition(centerX, centerY);
+    this.productionFactoryMenu.setPosition(centerX, centerY);
     this.productionFactoryMenu.show();
   }
 
@@ -584,7 +584,7 @@ export class UIManager {
       this.deploymentPositionUI.setPosition(centerX, centerY);
     }
 
-    // ProductionFactoryMenuの位置更新
+    // ProductionFactoryMenuの位置更新と進捗更新
     if (this.productionFactoryMenu) {
       const cam = this.scene.cameras.main;
       const zoom = cam.zoom || 2.25;
@@ -595,7 +595,9 @@ export class UIManager {
       const centerX = viewLeft + viewWidth / 2;
       const centerY = viewTop + viewHeight / 2;
 
-      this.productionFactoryMenu.updatePosition(centerX, centerY);
+      this.productionFactoryMenu.setPosition(centerX, centerY);
+      // 進捗表示の更新
+      this.productionFactoryMenu.update();
     }
 
     // ArmyFormationUIは全画面モーダルなので位置更新不要
