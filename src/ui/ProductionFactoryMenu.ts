@@ -40,6 +40,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
   private queueLineTexts: Phaser.GameObjects.Text[] = [];
   private queueProgressBars: Phaser.GameObjects.Container[] = [];
   private queueRemainingTexts: Phaser.GameObjects.Text[] = [];
+  private queueCancelButtons: Phaser.GameObjects.Text[] = [];
 
   // アイテム選択用の背景要素を保持
   private itemBackgrounds: Phaser.GameObjects.Rectangle[] = [];
@@ -364,19 +365,6 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
     for (let i = 0; i < 6; i++) {
       const y = startY + 30 + i * this.layoutConfig.rowHeight;
 
-      // ライン背景
-      // const lineBg = this.scene.add.rectangle(
-      //   startX,
-      //   y,
-      //   this.layoutConfig.queueListWidth,
-      //   this.layoutConfig.rowHeight - 2,
-      //   0x333333,
-      //   0.5,
-      // );
-      // lineBg.setOrigin(0, 0.5);
-      // lineBg.setStrokeStyle(1, 0x555555);
-      // this.add(lineBg);
-
       // ライン番号と状態
       const lineText = this.scene.add.text(startX + 10, y, `${i + 1}. [空き]`, {
         fontSize: '11px',
@@ -392,7 +380,7 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
 
       // 残り時間テキスト
       const remainingText = this.scene.add.text(
-        startX + this.layoutConfig.queueListWidth - 10,
+        startX + this.layoutConfig.queueListWidth - 40,
         y,
         '',
         {
@@ -404,10 +392,42 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       remainingText.setOrigin(1, 0.5);
       this.add(remainingText);
 
+      // キャンセルボタン（×）
+      const cancelButton = this.scene.add.text(
+        startX + this.layoutConfig.queueListWidth - 20,
+        y,
+        '×',
+        {
+          fontSize: '14px',
+          color: '#ff6666',
+          fontStyle: 'bold',
+          resolution: 2,
+        },
+      );
+      cancelButton.setOrigin(0.5, 0.5);
+      cancelButton.setInteractive({ useHandCursor: true });
+      cancelButton.visible = false; // 初期状態では非表示
+
+      // キャンセルボタンのイベント
+      cancelButton.on('pointerdown', () => {
+        this.onCancelButtonClick(i);
+      });
+
+      cancelButton.on('pointerover', () => {
+        cancelButton.setColor('#ff9999');
+      });
+
+      cancelButton.on('pointerout', () => {
+        cancelButton.setColor('#ff6666');
+      });
+
+      this.add(cancelButton);
+
       // 参照を保存
       this.queueLineTexts.push(lineText);
       this.queueProgressBars.push(progressContainer);
       this.queueRemainingTexts.push(remainingText);
+      this.queueCancelButtons.push(cancelButton);
     }
 
     // 初期表示を更新
@@ -474,8 +494,9 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       const lineText = this.queueLineTexts[index];
       const progressBar = this.queueProgressBars[index];
       const remainingText = this.queueRemainingTexts[index];
+      const cancelButton = this.queueCancelButtons[index];
 
-      if (!lineText || !progressBar || !remainingText) return;
+      if (!lineText || !progressBar || !remainingText || !cancelButton) return;
 
       if (queue && progressData[index]) {
         const progress = progressData[index]!;
@@ -491,12 +512,18 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
         // 残り時間更新
         remainingText.setText(this.formatRemainingTime(progress.remainingTime));
         remainingText.visible = true;
+
+        // キャンセルボタンを表示
+        cancelButton.visible = true;
       } else {
         // 空きラインの場合
         lineText.setText(`${index + 1}. [空き]`);
         lineText.setColor('#999999');
         progressBar.visible = false;
         remainingText.visible = false;
+
+        // キャンセルボタンを非表示
+        cancelButton.visible = false;
       }
     });
   }
@@ -651,6 +678,39 @@ export class ProductionFactoryMenu extends Phaser.GameObjects.Container {
       this.updateButtonState();
     } else {
       console.log(`生産開始失敗: キューが満杯またはエラー`);
+    }
+  }
+
+  /**
+   * キャンセルボタンクリック時の処理
+   */
+  private onCancelButtonClick(lineIndex: number): void {
+    const queue = this.productionManager.getQueue(this.baseId, lineIndex);
+
+    if (!queue) {
+      return; // 空きライン
+    }
+
+    // 直接キャンセル実行
+    this.executeCancelProduction(lineIndex);
+  }
+
+  /**
+   * キャンセル実行
+   */
+  private executeCancelProduction(lineIndex: number): void {
+    const result = this.productionManager.cancelProduction(this.baseId, lineIndex);
+
+    if (result.success) {
+      // メッセージ表示
+      if (result.completedQuantity > 0) {
+        console.log(`生産キャンセル: ${result.completedQuantity}個は倉庫に保管されています`);
+      } else {
+        console.log('生産をキャンセルしました');
+      }
+
+      // ライン表示を更新
+      this.updateQueueDisplay();
     }
   }
 

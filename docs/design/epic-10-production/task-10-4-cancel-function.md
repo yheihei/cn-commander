@@ -11,7 +11,6 @@
 
 ### 実装範囲
 - キャンセルボタン（×）のUI
-- キャンセル確認ダイアログ
 - 既生産分の保持処理
 - キャンセル後のライン解放
 
@@ -28,32 +27,8 @@ class ProductionFactoryMenu {
   // キャンセルボタンの設定
   private setupCancelButtons(): void;
   
-  // キャンセル確認ダイアログ
-  private showCancelConfirmation(lineIndex: number): void;
-  
-  // キャンセル実行
+  // キャンセル実行（直接実行）
   private executeCancelProduction(lineIndex: number): void;
-}
-```
-
-### CancelConfirmationDialogクラス
-```typescript
-class CancelConfirmationDialog extends Phaser.GameObjects.Container {
-  constructor(config: {
-    scene: Phaser.Scene;
-    itemName: string;
-    completedQuantity: number;
-    totalQuantity: number;
-    onConfirm: () => void;
-    onCancel: () => void;
-  });
-  
-  // ダイアログ表示
-  show(): void;
-  hide(): void;
-  
-  // メッセージ生成
-  private createMessage(): string;
 }
 ```
 
@@ -81,27 +56,15 @@ interface CancelResult {
 
 ## UIデザイン
 
-### 1. キャンセルボタン
+### キャンセルボタン
 ```
 生産ラインの各ライン右端に×ボタン配置:
 "1. 忍者刀 5/20 [====  ] 残り15:00 [×]"
                                      ↑キャンセルボタン
 ```
 
-### 2. 確認ダイアログ
-```
-+----------------------------------+
-|     生産をキャンセルしますか？      |
-|                                  |
-| アイテム: 忍者刀                   |
-| 進捗: 5/20                        |
-|                                  |
-| ⚠️ 既に生産された5個は              |
-|    倉庫に残ります                  |
-|                                  |
-| [キャンセル実行]  [戻る]           |
-+----------------------------------+
-```
+- クリック時、即座にキャンセル処理を実行
+- 既生産分がある場合はメッセージで通知
 
 ## キャンセル処理フロー
 
@@ -116,51 +79,12 @@ onCancelButtonClick(lineIndex: number) {
     return;  // 空きライン
   }
   
-  // 確認ダイアログ表示
-  this.showCancelConfirmation(lineIndex);
+  // 直接キャンセル実行
+  this.executeCancelProduction(lineIndex);
 }
 ```
 
-### 2. 確認ダイアログ表示
-```typescript
-showCancelConfirmation(lineIndex: number) {
-  const queue = this.productionManager.getQueue(this.baseId, lineIndex);
-  
-  const dialog = new CancelConfirmationDialog({
-    scene: this.scene,
-    itemName: queue.itemName,
-    completedQuantity: queue.completedQuantity,
-    totalQuantity: queue.totalQuantity,
-    onConfirm: () => {
-      this.executeCancelProduction(lineIndex);
-      dialog.hide();
-    },
-    onCancel: () => {
-      dialog.hide();
-    }
-  });
-  
-  dialog.show();
-}
-```
-
-### 3. メッセージ生成
-```typescript
-// CancelConfirmationDialog.createMessage()
-createMessage(): string {
-  const base = `アイテム: ${this.itemName}\n` +
-               `進捗: ${this.completedQuantity}/${this.totalQuantity}\n\n`;
-  
-  if (this.completedQuantity > 0) {
-    return base + `⚠️ 既に生産された${this.completedQuantity}個は\n` +
-                  `   倉庫に残ります`;
-  } else {
-    return base + `まだ生産が開始されていません`;
-  }
-}
-```
-
-### 4. キャンセル実行
+### 2. キャンセル実行
 ```typescript
 // ProductionManager.cancelProduction()
 cancelProduction(baseId: string, lineIndex: number): CancelResult {
@@ -191,7 +115,7 @@ cancelProduction(baseId: string, lineIndex: number): CancelResult {
 }
 ```
 
-### 5. UI更新
+### 3. UI更新
 ```typescript
 // キャンセル後のUI更新
 executeCancelProduction(lineIndex: number) {
@@ -203,13 +127,13 @@ executeCancelProduction(lineIndex: number) {
   if (result.success) {
     // メッセージ表示
     if (result.completedQuantity > 0) {
-      this.showMessage(
+      console.log(
         `${result.completedQuantity}個は倉庫に保管されています`
       );
     }
     
-    // ライン表示を更新（"[空き]"に戻る）
-    this.updateLineDisplay(lineIndex, null);
+    // ライン表示を更新
+    this.updateQueueDisplay();
   }
 }
 ```

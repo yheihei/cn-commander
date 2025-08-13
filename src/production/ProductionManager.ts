@@ -48,6 +48,17 @@ export interface ProductionProgress {
 }
 
 /**
+ * キャンセル結果の情報
+ */
+export interface CancelResult {
+  success: boolean;
+  itemType?: ProductionItemType;
+  completedQuantity: number; // 既生産数
+  totalQuantity: number; // 元の指示数
+  message: string; // ユーザー向けメッセージ
+}
+
+/**
  * 生産管理システム
  * task-10-1: 生産開始フロー実装
  */
@@ -337,10 +348,31 @@ export class ProductionManager {
   /**
    * キャンセル処理（task-10-4で実装）
    */
-  public cancelProduction(baseId: string, lineIndex: number): boolean {
-    // task-10-4で実装
-    console.log(`Cancel production: base=${baseId}, line=${lineIndex}`);
-    return false;
+  public cancelProduction(baseId: string, lineIndex: number): CancelResult {
+    const baseQueues = this.productionLines.get(baseId);
+
+    if (!baseQueues || !baseQueues[lineIndex]) {
+      return {
+        success: false,
+        completedQuantity: 0,
+        totalQuantity: 0,
+        message: '無効なラインです',
+      };
+    }
+
+    const queue = baseQueues[lineIndex];
+    const result: CancelResult = {
+      success: true,
+      itemType: queue.itemType,
+      completedQuantity: queue.completedQuantity,
+      totalQuantity: queue.totalQuantity,
+      message: `生産をキャンセルしました`,
+    };
+
+    // ラインをリセット（nullに設定して空きにする）
+    baseQueues[lineIndex] = null;
+
+    return result;
   }
 
   /**
