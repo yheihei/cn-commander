@@ -18,6 +18,7 @@ import { BaseManager } from '../base/BaseManager';
 import { CharacterFactory } from '../character/CharacterFactory';
 import { ProductionManager } from '../production/ProductionManager';
 import { EconomyManager } from '../economy/EconomyManager';
+import { InventoryManager } from '../item/InventoryManager';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -26,6 +27,7 @@ export class GameScene extends Phaser.Scene {
   private movementManager!: MovementManager;
   private productionManager!: ProductionManager;
   private economyManager!: EconomyManager;
+  private inventoryManager!: InventoryManager;
   private uiManager!: UIManager;
   private inputHandler!: MovementInputHandler;
   private commandSystem!: MovementCommandSystem;
@@ -100,9 +102,13 @@ export class GameScene extends Phaser.Scene {
     // 経済マネージャーの初期化
     this.economyManager = new EconomyManager(this);
 
+    // インベントリマネージャーの初期化
+    this.inventoryManager = new InventoryManager(this);
+
     // 生産マネージャーの初期化
     this.productionManager = new ProductionManager(this);
     this.productionManager.setEconomyManager(this.economyManager);
+    this.productionManager.setInventoryManager(this.inventoryManager);
 
     // カメラの設定（UIManagerより先に実行）
     this.setupCamera();

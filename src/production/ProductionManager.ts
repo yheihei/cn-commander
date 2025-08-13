@@ -114,6 +114,13 @@ export class ProductionManager {
   }
 
   /**
+   * InventoryManagerを取得
+   */
+  public getInventoryManager(): InventoryManager | null {
+    return this.inventoryManager;
+  }
+
+  /**
    * EconomyManagerを設定
    */
   public setEconomyManager(economyManager: EconomyManager): void {

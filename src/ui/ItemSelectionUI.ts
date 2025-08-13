@@ -3,11 +3,14 @@ import { Base } from '../base/Base';
 import { Character } from '../character/Character';
 import { IItem, IWeapon, IConsumable, ItemType, WeaponType } from '../types/ItemTypes';
 import { FormationData } from './ArmyFormationUI';
+import { InventoryManager } from '../item/InventoryManager';
+import { ItemFactory } from '../item/ItemFactory';
 
 export interface ItemSelectionUIConfig {
   scene: Phaser.Scene;
   base: Base;
   formationData: FormationData;
+  inventoryManager?: InventoryManager; // 追加
   onProceedToDeployment?: (data: ItemEquippedFormationData) => void;
   onBack?: () => void;
   onCancelled?: () => void;
@@ -23,6 +26,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   private formationData: FormationData;
   private onProceedCallback?: (data: ItemEquippedFormationData) => void;
   private onBackCallback?: () => void;
+  private inventoryManager?: InventoryManager;
 
   // UI要素
   private background: Phaser.GameObjects.Rectangle;
@@ -94,6 +98,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     this.formationData = config.formationData;
     this.onProceedCallback = config.onProceedToDeployment;
     this.onBackCallback = config.onBack;
+    this.inventoryManager = config.inventoryManager;
 
     // 画面全体を覆う半透明の背景
     this.modalBackground = config.scene.add.rectangle(0, 0, viewWidth, viewHeight, 0x000000, 0.5);
@@ -374,94 +379,105 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   }
 
   private loadInventoryItems(): void {
-    // TODO: BaseManagerから倉庫アイテムを取得
-    // 一時的にダミーデータを使用
-    const dummyItems: IItem[] = [];
+    // InventoryManagerが設定されている場合は実際のデータを使用
+    if (this.inventoryManager) {
+      const inventoryData = this.inventoryManager.getAllItems();
+      console.log('ItemSelectionUI: Loading from InventoryManager:', inventoryData);
+      this.availableItems = ItemFactory.createItemsFromInventory(inventoryData);
+      console.log(
+        `ItemSelectionUI: Loaded ${this.availableItems.length} items from InventoryManager`,
+      );
+    } else {
+      console.log('ItemSelectionUI: No InventoryManager, using dummy data');
+      // InventoryManagerが設定されていない場合はダミーデータを使用（後方互換性のため）
+      const dummyItems: IItem[] = [];
 
-    // 忍者刀 x12
-    for (let i = 0; i < 12; i++) {
-      dummyItems.push({
-        id: `sword_${i}`,
-        name: '忍者刀',
-        type: ItemType.WEAPON,
-        stackable: false,
-        weaponType: WeaponType.SWORD,
-        attackBonus: 15,
-        minRange: 1,
-        maxRange: 3,
-        durability: 100,
-        maxDurability: 100,
-        price: 300,
-        getDisplayInfo: () => ({ name: '忍者刀', description: '基本的な刀剣' }),
-        use: () => {},
-        canUse: () => true,
-        getDurabilityPercentage: () => 100,
-        repair: () => {},
-      } as IWeapon);
+      // 忍者刀 x12
+      for (let i = 0; i < 12; i++) {
+        dummyItems.push({
+          id: `sword_${i}`,
+          name: '忍者刀',
+          type: ItemType.WEAPON,
+          stackable: false,
+          weaponType: WeaponType.SWORD,
+          attackBonus: 15,
+          minRange: 1,
+          maxRange: 3,
+          durability: 100,
+          maxDurability: 100,
+          price: 300,
+          getDisplayInfo: () => ({ name: '忍者刀', description: '基本的な刀剣' }),
+          use: () => {},
+          canUse: () => true,
+          getDurabilityPercentage: () => 100,
+          repair: () => {},
+        } as IWeapon);
+      }
+
+      // 手裏剣 x25
+      for (let i = 0; i < 25; i++) {
+        dummyItems.push({
+          id: `shuriken_${i}`,
+          name: '手裏剣',
+          type: ItemType.WEAPON,
+          stackable: false,
+          weaponType: WeaponType.PROJECTILE,
+          attackBonus: 5,
+          minRange: 1,
+          maxRange: 6,
+          durability: 100,
+          maxDurability: 100,
+          price: 200,
+          getDisplayInfo: () => ({ name: '手裏剣', description: '飛び道具' }),
+          use: () => true,
+          canUse: () => true,
+          getDurabilityPercentage: () => 100,
+          repair: () => {},
+        } as IWeapon);
+      }
+
+      // 弓 x10
+      for (let i = 0; i < 10; i++) {
+        dummyItems.push({
+          id: `bow_${i}`,
+          name: '弓',
+          type: ItemType.WEAPON,
+          stackable: false,
+          weaponType: WeaponType.PROJECTILE,
+          attackBonus: 2,
+          minRange: 4,
+          maxRange: 12,
+          durability: 100,
+          maxDurability: 100,
+          price: 400,
+          getDisplayInfo: () => ({ name: '弓', description: '長距離飛び道具' }),
+          use: () => {},
+          canUse: () => true,
+          getDurabilityPercentage: () => 100,
+          repair: () => {},
+        } as IWeapon);
+      }
+
+      // 兵糧丸 x30
+      for (let i = 0; i < 30; i++) {
+        dummyItems.push({
+          id: `food_${i}`,
+          name: '兵糧丸',
+          type: ItemType.CONSUMABLE,
+          stackable: true,
+          effect: 'HP全快',
+          uses: 1,
+          maxUses: 1,
+          price: 50,
+          getDisplayInfo: () => ({ name: '兵糧丸', description: 'HP全快アイテム' }),
+          use: () => true,
+          canUse: () => true,
+        } as IConsumable);
+      }
+
+      this.availableItems = dummyItems;
     }
 
-    // 手裏剣 x25
-    for (let i = 0; i < 25; i++) {
-      dummyItems.push({
-        id: `shuriken_${i}`,
-        name: '手裏剣',
-        type: ItemType.WEAPON,
-        stackable: false,
-        weaponType: WeaponType.PROJECTILE,
-        attackBonus: 5,
-        minRange: 1,
-        maxRange: 6,
-        durability: 100,
-        maxDurability: 100,
-        price: 200,
-        getDisplayInfo: () => ({ name: '手裏剣', description: '飛び道具' }),
-        use: () => {},
-        canUse: () => true,
-        getDurabilityPercentage: () => 100,
-        repair: () => {},
-      } as IWeapon);
-    }
-
-    // 弓 x10
-    for (let i = 0; i < 10; i++) {
-      dummyItems.push({
-        id: `bow_${i}`,
-        name: '弓',
-        type: ItemType.WEAPON,
-        stackable: false,
-        weaponType: WeaponType.PROJECTILE,
-        attackBonus: 2,
-        minRange: 4,
-        maxRange: 12,
-        durability: 100,
-        maxDurability: 100,
-        price: 400,
-        getDisplayInfo: () => ({ name: '弓', description: '長距離飛び道具' }),
-        use: () => {},
-        canUse: () => true,
-        getDurabilityPercentage: () => 100,
-        repair: () => {},
-      } as IWeapon);
-    }
-
-    // 兵糧丸 x30
-    for (let i = 0; i < 30; i++) {
-      dummyItems.push({
-        id: `food_${i}`,
-        name: '兵糧丸',
-        type: ItemType.CONSUMABLE,
-        stackable: true,
-        effect: 'HP全快',
-        uses: 1,
-        maxUses: 1,
-        price: 50,
-        getDisplayInfo: () => ({ name: '兵糧丸', description: 'HP全快アイテム' }),
-        use: () => true,
-        canUse: () => true,
-      } as IConsumable);
-    }
-
-    this.availableItems = dummyItems;
     this.currentItemPage = 0;
     this.updateItemList();
   }
@@ -971,6 +987,8 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
   }
 
   public updateInventory(items: IItem[]): void {
+    console.log(`ItemSelectionUI: updateInventory called with ${items.length} items`);
+    console.log('ItemSelectionUI: WARNING - This will overwrite InventoryManager data!');
     this.availableItems = items;
     this.updateItemList();
   }

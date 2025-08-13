@@ -687,11 +687,15 @@ export class UIManager {
       this.itemSelectionUI = null;
     }
 
+    // ProductionManagerからInventoryManagerを取得
+    const inventoryManager = this.productionManager.getInventoryManager();
+
     // アイテム選択UIを作成
     this.itemSelectionUI = new ItemSelectionUI({
       scene: this.scene,
       base,
       formationData,
+      inventoryManager: inventoryManager || undefined, // nullをundefinedに変換
       onProceedToDeployment: (itemEquippedData: ItemEquippedFormationData) => {
         console.log('アイテム装備データ:', itemEquippedData);
 
@@ -714,13 +718,15 @@ export class UIManager {
     });
 
     // BaseManagerから倉庫アイテムを取得
-    const baseManager = (this.scene as any).baseManager;
-    if (baseManager) {
-      const warehouseItems = baseManager.getWarehouseItems();
-      this.itemSelectionUI.updateInventory(warehouseItems);
-    } else {
-      this.itemSelectionUI.updateInventory([]);
-    }
+    // 注意: ItemSelectionUIは既にInventoryManagerからデータを読み込んでいるため、
+    // ここでupdateInventoryを呼ぶとそのデータが上書きされてしまう
+    // const baseManager = (this.scene as any).baseManager;
+    // if (baseManager) {
+    //   const warehouseItems = baseManager.getWarehouseItems();
+    //   this.itemSelectionUI.updateInventory(warehouseItems);
+    // } else {
+    //   this.itemSelectionUI.updateInventory([]);
+    // }
 
     this.itemSelectionUI.show();
   }

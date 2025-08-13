@@ -17,7 +17,9 @@ export class InventoryManager {
    */
   public addItem(itemId: string, quantity: number = 1): void {
     const current = this.inventory.get(itemId) || 0;
-    this.inventory.set(itemId, current + quantity);
+    const newQuantity = current + quantity;
+    this.inventory.set(itemId, newQuantity);
+    console.log(`InventoryManager: Added ${quantity} x ${itemId}, total now: ${newQuantity}`);
   }
 
   /**
@@ -43,6 +45,7 @@ export class InventoryManager {
    * 全アイテムを取得
    */
   public getAllItems(): Map<string, number> {
+    console.log('InventoryManager: getAllItems called, inventory contents:', this.inventory);
     return new Map(this.inventory);
   }
 
