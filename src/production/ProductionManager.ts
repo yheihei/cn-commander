@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { InventoryManager } from '../item/InventoryManager';
+import { EconomyManager } from '../economy/EconomyManager';
 
 /**
  * 生産アイテムタイプ
@@ -31,7 +32,7 @@ export interface ProductionQueue {
   completedQuantity: number; // 現在生産数
   lineIndex: number; // ライン番号（0-5）
   status: 'queued' | 'producing' | 'paused' | 'completed';
-  elapsedTime?: number; // 現在アイテムの経過時間
+  elapsedTime: number; // 現在アイテムの経過時間（秒）
 }
 
 /**
@@ -51,12 +52,12 @@ export interface ProductionProgress {
  * task-10-1: 生産開始フロー実装
  */
 export class ProductionManager {
-  private scene: Phaser.Scene;
   private inventoryManager: InventoryManager | null = null;
-  
+  private economyManager: EconomyManager | null = null;
+
   // 拠点ごとの生産ライン（最大6ライン/拠点）
   private productionLines: Map<string, (ProductionQueue | null)[]> = new Map();
-  
+
   // 生産可能アイテムの定義
   private readonly productionItems: Map<ProductionItemType, ProductionItemDefinition> = new Map([
     [
@@ -75,7 +76,7 @@ export class ProductionManager {
         type: ProductionItemType.SHURIKEN,
         name: '手裏剣',
         category: 'weapon',
-        productionTime: 60,
+        productionTime: 80,
         productionCost: 200,
       },
     ],
@@ -85,7 +86,7 @@ export class ProductionManager {
         type: ProductionItemType.BOW,
         name: '弓',
         category: 'weapon',
-        productionTime: 60,
+        productionTime: 100,
         productionCost: 400,
       },
     ],
@@ -95,14 +96,14 @@ export class ProductionManager {
         type: ProductionItemType.FOOD_PILL,
         name: '兵糧丸',
         category: 'consumable',
-        productionTime: 60,
+        productionTime: 120,
         productionCost: 50,
       },
     ],
   ]);
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene; // Will be used in task-10-2 for timers
+  constructor(_scene: Phaser.Scene) {
+    // sceneは将来の拡張用に引数として受け取るが、現時点では使用しない
   }
 
   /**
@@ -110,6 +111,13 @@ export class ProductionManager {
    */
   public setInventoryManager(inventoryManager: InventoryManager): void {
     this.inventoryManager = inventoryManager;
+  }
+
+  /**
+   * EconomyManagerを設定
+   */
+  public setEconomyManager(economyManager: EconomyManager): void {
+    this.economyManager = economyManager;
   }
 
   /**
@@ -144,9 +152,9 @@ export class ProductionManager {
     }
 
     const lines = this.productionLines.get(baseId)!;
-    
+
     // 空きラインを探す
-    const availableIndex = lines.findIndex(line => line === null);
+    const availableIndex = lines.findIndex((line) => line === null);
     if (availableIndex === -1) {
       console.warn(`No available production lines for base ${baseId}`);
       return null;
@@ -178,9 +186,7 @@ export class ProductionManager {
     // ラインに追加
     lines[availableIndex] = newQueue;
 
-    console.log(
-      `Added production to line ${availableIndex + 1}: ${itemDef.name} 0/${quantity}`
-    );
+    console.log(`Added production to line ${availableIndex + 1}: ${itemDef.name} 0/${quantity}`);
 
     return availableIndex;
   }
@@ -194,7 +200,7 @@ export class ProductionManager {
     }
 
     const lines = this.productionLines.get(baseId)!;
-    return lines.some(line => line === null);
+    return lines.some((line) => line === null);
   }
 
   /**
@@ -206,7 +212,7 @@ export class ProductionManager {
     }
 
     const lines = this.productionLines.get(baseId)!;
-    const index = lines.findIndex(line => line === null);
+    const index = lines.findIndex((line) => line === null);
     return index;
   }
 
@@ -237,20 +243,21 @@ export class ProductionManager {
    */
   public getProgressData(baseId: string): (ProductionProgress | null)[] {
     const queues = this.getProductionQueues(baseId);
-    
-    return queues.map(queue => {
+
+    return queues.map((queue) => {
       if (!queue) return null;
 
       const itemDef = this.productionItems.get(queue.itemType)!;
-      const currentProgress = 0; // task-10-2で実装
-      const remainingTime = (queue.totalQuantity - queue.completedQuantity) * itemDef.productionTime;
+      const currentProgress = queue.elapsedTime / itemDef.productionTime;
+      const remainingItems = queue.totalQuantity - queue.completedQuantity;
+      const remainingTime = (remainingItems - currentProgress) * itemDef.productionTime;
 
       return {
         itemName: itemDef.name,
         completedQuantity: queue.completedQuantity,
         totalQuantity: queue.totalQuantity,
         currentItemProgress: currentProgress,
-        remainingTime,
+        remainingTime: Math.max(0, remainingTime),
         displayText: `${itemDef.name} ${queue.completedQuantity}/${queue.totalQuantity}`,
       };
     });
@@ -260,11 +267,63 @@ export class ProductionManager {
    * 更新処理（task-10-2で実装）
    * GameSceneから毎フレーム呼び出される
    */
-  public update(_deltaTime: number): void {
-    // task-10-2で実装：リアルタイム生産進行
-    // this.scene と this.inventoryManager は task-10-2で使用予定
-    if (this.scene && this.inventoryManager) {
-      // TODO: task-10-2で実装
+  public update(deltaTime: number): void {
+    // 全拠点の生産ラインを処理
+    for (const [, lines] of this.productionLines) {
+      for (let i = 0; i < lines.length; i++) {
+        const queue = lines[i];
+        if (!queue || queue.status === 'completed' || queue.status === 'paused') {
+          continue;
+        }
+
+        // 生産を開始
+        if (queue.status === 'queued') {
+          queue.status = 'producing';
+        }
+
+        // 経過時間を進める
+        queue.elapsedTime += deltaTime;
+
+        // アイテム定義を取得
+        const itemDef = this.productionItems.get(queue.itemType);
+        if (!itemDef) {
+          continue;
+        }
+
+        // リードタイムに達したか確認
+        if (queue.elapsedTime >= itemDef.productionTime) {
+          // 資金チェック
+          if (this.economyManager && this.economyManager.canAfford(itemDef.productionCost)) {
+            // 費用を引き落とし
+            this.economyManager.spend(itemDef.productionCost);
+
+            // 倉庫に追加
+            if (this.inventoryManager) {
+              this.inventoryManager.addItem(queue.itemType, 1);
+            }
+
+            // 完成数を増やす
+            queue.completedQuantity++;
+
+            // 経過時間をリセット
+            queue.elapsedTime = 0;
+
+            console.log(
+              `生産完了: ${itemDef.name} (${queue.completedQuantity}/${queue.totalQuantity})`,
+            );
+
+            // 全数完成したら削除
+            if (queue.completedQuantity >= queue.totalQuantity) {
+              lines[i] = null;
+              console.log(`ライン${i + 1}の生産が全て完了しました`);
+            }
+          } else {
+            // 資金不足で一時停止
+            queue.status = 'paused';
+            console.log(`資金不足で生産一時停止: ${itemDef.name}`);
+          }
+        }
+      }
     }
   }
 
