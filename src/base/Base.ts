@@ -25,6 +25,8 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
   private hpBarBg!: Phaser.GameObjects.Graphics;
   private ownerFlag!: Phaser.GameObjects.Sprite;
   private nameText!: Phaser.GameObjects.Text;
+  private highlightGraphics: Phaser.GameObjects.Graphics | null = null;
+  private isHighlighted = false;
 
   // 定数
   private static readonly TILE_SIZE = 16;
@@ -405,9 +407,60 @@ export class Base extends Phaser.GameObjects.Container implements IAttackableBas
     // TODO: 煙エフェクトの追加
   }
 
+  // === ハイライト機能 ===
+
+  /**
+   * ハイライト状態の設定
+   * @param highlighted ハイライト状態
+   * @param color ハイライトの色（デフォルト: 黄色）
+   */
+  public setHighlighted(highlighted: boolean, color: number = 0xffff00): void {
+    this.isHighlighted = highlighted;
+
+    if (highlighted) {
+      if (!this.highlightGraphics) {
+        this.highlightGraphics = this.scene.add.graphics();
+        this.add(this.highlightGraphics);
+      }
+
+      this.updateHighlight(color, 0.5);
+    } else {
+      if (this.highlightGraphics) {
+        this.highlightGraphics.clear();
+      }
+    }
+  }
+
+  /**
+   * ホバー状態の設定
+   * @param hovered ホバー状態
+   */
+  public setHovered(hovered: boolean): void {
+    if (!this.isHighlighted) return;
+
+    const alpha = hovered ? 0.8 : 0.5;
+    this.updateHighlight(0xffff00, alpha);
+  }
+
+  /**
+   * ハイライトの描画を更新
+   * @param color 色
+   * @param alpha 透明度
+   */
+  private updateHighlight(color: number, alpha: number): void {
+    if (!this.highlightGraphics) return;
+
+    this.highlightGraphics.clear();
+    this.highlightGraphics.lineStyle(3, color, alpha);
+    this.highlightGraphics.strokeRect(-34, -34, 68, 68);
+  }
+
   // === その他 ===
 
   destroy(): void {
+    if (this.highlightGraphics) {
+      this.highlightGraphics.destroy();
+    }
     this.combatData.attackers.clear();
     super.destroy();
   }

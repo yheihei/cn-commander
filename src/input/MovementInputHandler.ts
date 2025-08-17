@@ -8,6 +8,7 @@ import { Position } from '../types/CharacterTypes';
 import { UIManager } from '../ui/UIManager';
 import { WaypointMarker } from '../ui/WaypointMarker';
 import { AttackTargetInputHandler } from './AttackTargetInputHandler';
+import { GarrisonSelectionInputHandler } from './GarrisonSelectionInputHandler';
 import { VisionSystem } from '../vision/VisionSystem';
 import { BaseManager } from '../base/BaseManager';
 import { Base } from '../base/Base';
@@ -29,6 +30,7 @@ export class MovementInputHandler {
   private isSettingPath: boolean = false;
   private isSelectingAction: boolean = false;
   private isAttackTargetMode: boolean = false;
+  private isGarrisonSelectionMode: boolean = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -70,6 +72,12 @@ export class MovementInputHandler {
     // 攻撃目標指定モード中は何もしない
     if (this.isAttackTargetMode) {
       console.log('MovementInputHandler: 攻撃目標指定モード中なのでクリックを無視');
+      return;
+    }
+
+    // 駐留選択モード中は何もしない
+    if (this.isGarrisonSelectionMode) {
+      console.log('MovementInputHandler: 駐留選択モード中なのでクリックを無視');
       return;
     }
 
@@ -309,31 +317,53 @@ export class MovementInputHandler {
       return;
     }
 
-    // ガイドメッセージを表示
+    // 駐留選択モードフラグを設定
+    this.isGarrisonSelectionMode = true;
+    console.log('MovementInputHandler: 駐留選択モード開始');
+
+    // ガイドメッセージを先に表示
     this.uiManager.showGuideMessage('駐留先の拠点を選択してください');
 
-    // 拠点選択モードの実装は次のタスク（task-7-4-2）で行います
-    // 現時点では最も近い拠点に自動的に駐留させます（仮実装）
-    const nearestBase = nearbyBases[0];
-    if (nearestBase && this.selectedArmy) {
-      this.baseManager.addStationedArmy(nearestBase.getId(), this.selectedArmy);
-
-      // 軍団を拠点の位置に移動（視覚的な表現）
-      const basePos = nearestBase.getPosition();
-      const worldX = (basePos.x + 1) * 16; // 拠点の中心
-      const worldY = (basePos.y + 1) * 16;
-      this.selectedArmy.setPosition(worldX, worldY);
-
-      console.log(`軍団を${nearestBase.getName()}に駐留させました`);
-      this.uiManager.showGuideMessage(`軍団を${nearestBase.getName()}に駐留させました`);
-
-      // 3秒後にメッセージを消す
-      this.scene.time.delayedCall(3000, () => {
+    // 0.5秒待ってから駐留選択モードを開始（誤クリック防止）
+    this.scene.time.delayedCall(500, () => {
+      if (!this.selectedArmy || !this.isGarrisonSelectionMode) {
+        // 既にキャンセルされている場合は何もしない
         this.uiManager.hideGuideMessage();
-      });
-    }
+        return;
+      }
 
-    this.deselectArmy();
+      // 駐留選択モードを開始
+      new GarrisonSelectionInputHandler(
+        this.scene,
+        this.baseManager,
+        nearbyBases,
+        (selectedBase) => {
+          // 拠点が選択された
+          if (this.selectedArmy && selectedBase) {
+            this.baseManager.addStationedArmy(selectedBase.getId(), this.selectedArmy);
+
+            // 軍団を拠点の位置に移動（視覚的な表現）
+            const basePos = selectedBase.getPosition();
+            const worldX = (basePos.x + 1) * 16; // 拠点の中心
+            const worldY = (basePos.y + 1) * 16;
+            this.selectedArmy.setPosition(worldX, worldY);
+
+            console.log(`軍団を${selectedBase.getName()}に駐留させました`);
+          }
+          // モードを解除
+          this.isGarrisonSelectionMode = false;
+          this.deselectArmy();
+          console.log('MovementInputHandler: 駐留選択モード終了');
+        },
+        () => {
+          // キャンセルされた
+          this.isGarrisonSelectionMode = false;
+          this.deselectArmy();
+          console.log('MovementInputHandler: 駐留選択モードキャンセル');
+        },
+        this.uiManager,
+      );
+    });
   }
 
   private deselectArmy(): void {
