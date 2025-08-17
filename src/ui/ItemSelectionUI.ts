@@ -5,6 +5,7 @@ import { IItem, IWeapon, IConsumable, ItemType, WeaponType } from '../types/Item
 import { FormationData } from './ArmyFormationUI';
 import { InventoryManager } from '../item/InventoryManager';
 import { ItemFactory } from '../item/ItemFactory';
+import { ProductionItemType } from '../production/ProductionManager';
 
 export interface ItemSelectionUIConfig {
   scene: Phaser.Scene;
@@ -960,6 +961,46 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
 
   private onProceed(): void {
     if (this.onProceedCallback) {
+      // 装備確定時にInventoryManagerから削除
+      if (this.inventoryManager) {
+        // 装備されたアイテムをタイプごとにカウント
+        const itemTypeCount = new Map<string, number>();
+        
+        for (const [, items] of this.soldierItemsMap) {
+          for (const item of items) {
+            // アイテムタイプを判定
+            let itemType = '';
+            if ('weaponType' in item) {
+              const weapon = item as IWeapon;
+              if (weapon.weaponType === WeaponType.SWORD) {
+                itemType = ProductionItemType.NINJA_SWORD;
+              } else if (weapon.maxRange === 6) {
+                itemType = ProductionItemType.SHURIKEN;
+              } else if (weapon.maxRange === 12) {
+                itemType = ProductionItemType.BOW;
+              }
+            } else if ('effect' in item) {
+              itemType = ProductionItemType.FOOD_PILL;
+            }
+            
+            if (itemType) {
+              const currentCount = itemTypeCount.get(itemType) || 0;
+              itemTypeCount.set(itemType, currentCount + 1);
+            }
+          }
+        }
+        
+        // InventoryManagerから削除
+        for (const [itemType, count] of itemTypeCount) {
+          const removed = this.inventoryManager.removeItem(itemType, count);
+          if (removed) {
+            console.log(`ItemSelectionUI: Removed ${count} x ${itemType} from inventory`);
+          } else {
+            console.warn(`ItemSelectionUI: Failed to remove ${count} x ${itemType} from inventory`);
+          }
+        }
+      }
+      
       const itemEquippedData: ItemEquippedFormationData = {
         commander: this.formationData.commander!,
         soldiers: this.formationData.soldiers,
