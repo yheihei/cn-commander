@@ -73,7 +73,15 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const showArmyInfoSpy = jest.spyOn(uiManager, 'showArmyInfo');
 
       // アクションメニューを表示（内部でshowArmyInfoが呼ばれる）
-      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
 
       expect(showArmyInfoSpy).toHaveBeenCalledWith(mockArmy);
     });
@@ -82,14 +90,30 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const mockArmy = createMockArmy();
 
       // 軍団を選択
-      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
 
       // hideArmyInfoが呼ばれることを確認
       const hideArmyInfoSpy = jest.spyOn(uiManager, 'hideArmyInfo');
 
       // アクションメニューをキャンセル（内部でhideArmyInfoが呼ばれる）
       const onCancel = jest.fn();
-      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn(), jest.fn(), onCancel);
+      uiManager.showActionMenu(
+        mockArmy,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        onCancel,
+      );
 
       // onCancelコールバックを実行（実際のUIでキャンセルボタンをクリックした場合の動作）
       const actionMenu = (uiManager as any).actionMenu;
@@ -202,12 +226,28 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const mockArmy2 = createMockArmy('第二軍団');
 
       // 最初の軍団を選択
-      uiManager.showActionMenu(mockArmy1, jest.fn(), jest.fn(), jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy1,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy1);
 
       // 別の軍団を選択
       uiManager.hideActionMenu();
-      uiManager.showActionMenu(mockArmy2, jest.fn(), jest.fn(), jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy2,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy2);
     });
   });
@@ -226,7 +266,15 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       });
 
       // アクションメニューを表示
-      uiManager.showActionMenu(mockArmy, jest.fn(), onStandby, jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy,
+        jest.fn(),
+        onStandby,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
 
       // 待機ボタンをクリック（コールバックを実行）
       onStandby();
@@ -271,13 +319,29 @@ describe('[エピック12] Army UI System Integration Tests', () => {
       const mockArmy = createMockArmy();
 
       // アクションメニューを表示
-      uiManager.showActionMenu(mockArmy, jest.fn(), jest.fn(), jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
 
       const hideArmyInfoSpy = jest.spyOn(uiManager, 'hideArmyInfo');
 
       // 待機コールバックを実行
       const onStandby = jest.fn();
-      uiManager.showActionMenu(mockArmy, jest.fn(), onStandby, jest.fn(), jest.fn(), jest.fn());
+      uiManager.showActionMenu(
+        mockArmy,
+        jest.fn(),
+        onStandby,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      );
 
       // ActionMenuのonStandbyコールバックを直接実行
       const actionMenu = (uiManager as any).actionMenu;

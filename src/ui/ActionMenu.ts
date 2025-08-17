@@ -8,8 +8,10 @@ export interface ActionMenuConfig {
   onStandby?: () => void;
   onAttackTarget?: () => void;
   onClearAttackTarget?: () => void;
+  onGarrison?: () => void;
   onCancel?: () => void;
   hasAttackTarget?: boolean;
+  canGarrison?: boolean;
 }
 
 export class ActionMenu extends Phaser.GameObjects.Container {
@@ -17,12 +19,15 @@ export class ActionMenu extends Phaser.GameObjects.Container {
   private moveButton: Phaser.GameObjects.Container;
   private standbyButton: Phaser.GameObjects.Container;
   private attackTargetButton: Phaser.GameObjects.Container;
+  private garrisonButton: Phaser.GameObjects.Container | null = null;
   private onMoveCallback?: () => void;
   private onStandbyCallback?: () => void;
   private onAttackTargetCallback?: () => void;
   private onClearAttackTargetCallback?: () => void;
+  private onGarrisonCallback?: () => void;
   private onCancelCallback?: () => void;
   private hasAttackTarget: boolean;
+  private canGarrison: boolean;
 
   constructor(config: ActionMenuConfig) {
     super(config.scene, config.x, config.y);
@@ -31,22 +36,32 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.onStandbyCallback = config.onStandby;
     this.onAttackTargetCallback = config.onAttackTarget;
     this.onClearAttackTargetCallback = config.onClearAttackTarget;
+    this.onGarrisonCallback = config.onGarrison;
     this.onCancelCallback = config.onCancel;
     this.hasAttackTarget = config.hasAttackTarget || false;
+    this.canGarrison = config.canGarrison || false;
 
-    // メニューの背景（3つのボタン用に高さを調整）
-    this.background = config.scene.add.rectangle(0, 0, 120, 160, 0x333333, 0.9);
+    console.log('[ActionMenu] canGarrison:', this.canGarrison);
+
+    // メニューの背景（駐留ボタンがある場合は高さを調整）
+    const menuHeight = this.canGarrison ? 210 : 160;
+    this.background = config.scene.add.rectangle(0, 0, 120, menuHeight, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
+    // ボタンの垂直間隔を調整
+    const buttonSpacing = this.canGarrison ? 50 : 50;
+    let currentY = this.canGarrison ? -75 : -50;
+
     // 移動ボタン
-    this.moveButton = this.createButton('移動', 0, -50, () => {
+    this.moveButton = this.createButton('移動', 0, currentY, () => {
       if (this.onMoveCallback) {
         this.onMoveCallback();
       }
       this.hide();
     });
     this.add(this.moveButton);
+    currentY += buttonSpacing;
 
     // 攻撃目標指定/解除ボタン
     const attackButtonText = this.hasAttackTarget ? '攻撃目標解除' : '攻撃目標指定';
@@ -64,17 +79,39 @@ export class ActionMenu extends Phaser.GameObjects.Container {
           this.hide();
         };
 
-    this.attackTargetButton = this.createButton(attackButtonText, 0, 0, attackButtonCallback);
+    this.attackTargetButton = this.createButton(
+      attackButtonText,
+      0,
+      currentY,
+      attackButtonCallback,
+    );
     this.add(this.attackTargetButton);
+    currentY += buttonSpacing;
 
     // 待機ボタン
-    this.standbyButton = this.createButton('待機', 0, 50, () => {
+    this.standbyButton = this.createButton('待機', 0, currentY, () => {
       if (this.onStandbyCallback) {
         this.onStandbyCallback();
       }
       this.hide();
     });
     this.add(this.standbyButton);
+    currentY += buttonSpacing;
+
+    // 駐留ボタン（駐留可能な場合のみ）
+    if (this.canGarrison) {
+      console.log('[ActionMenu] 駐留ボタンを作成します');
+      this.garrisonButton = this.createButton('駐留', 0, currentY, () => {
+        if (this.onGarrisonCallback) {
+          this.onGarrisonCallback();
+        }
+        this.hide();
+      });
+      this.add(this.garrisonButton);
+      console.log('[ActionMenu] 駐留ボタンを追加しました');
+    } else {
+      console.log('[ActionMenu] 駐留ボタンは作成されません（canGarrison=false）');
+    }
 
     // Containerを配置
     config.scene.add.existing(this);
@@ -154,7 +191,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
       const menuScreenX = this.x - cam.worldView.x;
       const menuScreenY = this.y - cam.worldView.y;
       const halfWidth = 60;
-      const halfHeight = 80;
+      const halfHeight = this.canGarrison ? 105 : 80;
 
       // メニューの範囲外をクリックした場合（画面座標で判定）
       if (

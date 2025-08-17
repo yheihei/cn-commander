@@ -51,6 +51,9 @@ export class BaseManager {
     // 拠点作成
     const base = new Base(this.scene, baseData);
     this.bases.set(baseData.id, base);
+    console.log(
+      `[BaseManager.addBase] 拠点を追加: ${baseData.name} @ (${baseData.x}, ${baseData.y}), ID: ${baseData.id}`,
+    );
     // BaseはContainerなので、Groupに追加しない
 
     // クリックイベントの設定（テスト環境ではスキップ）
@@ -125,6 +128,47 @@ export class BaseManager {
     }
 
     return nearestBase;
+  }
+
+  /**
+   * 指定位置から指定範囲内の拠点を取得
+   * @param x タイルX座標
+   * @param y タイルY座標
+   * @param range 範囲（マス）
+   * @param filter フィルター条件
+   */
+  getBasesWithinRange(
+    x: number,
+    y: number,
+    range: number,
+    filter?: (base: Base) => boolean,
+  ): Base[] {
+    const basesInRange: Base[] = [];
+    console.log(`[BaseManager.getBasesWithinRange] 検索位置: (${x}, ${y}), 範囲: ${range}マス`);
+
+    for (const base of this.bases.values()) {
+      if (filter && !filter(base)) {
+        console.log(`[BaseManager.getBasesWithinRange] ${base.getName()} はフィルターで除外`);
+        continue;
+      }
+
+      const pos = base.getPosition();
+      const dx = pos.x + 1 - x; // 拠点の中心を基準
+      const dy = pos.y + 1 - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      console.log(
+        `[BaseManager.getBasesWithinRange] ${base.getName()}: 位置(${pos.x}, ${pos.y}), 距離=${distance.toFixed(2)}`,
+      );
+
+      if (distance <= range) {
+        basesInRange.push(base);
+        console.log(`[BaseManager.getBasesWithinRange] ${base.getName()} は範囲内！`);
+      }
+    }
+
+    console.log(`[BaseManager.getBasesWithinRange] 検出された拠点数: ${basesInRange.length}`);
+    return basesInRange;
   }
 
   /**
@@ -315,6 +359,8 @@ export class BaseManager {
    * 初期拠点配置（テスト用）
    */
   setupInitialBases(): void {
+    console.log('[BaseManager] 初期拠点を配置します');
+
     // 味方本拠地
     this.addBase({
       id: 'player_hq',
@@ -327,6 +373,7 @@ export class BaseManager {
       income: 200,
       owner: 'player',
     });
+    console.log('[BaseManager] 味方本拠地: 甲賀の里 @ (10, 10)');
 
     // 敵本拠地
     this.addBase({

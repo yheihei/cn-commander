@@ -73,8 +73,10 @@ export class GameScene extends Phaser.Scene {
     // 発見システムの初期化
     this.discoverySystem = new DiscoverySystem(this.visionSystem);
     this.discoverySystem.onArmyDiscovered = (army, _event) => {
-      // 効果音を再生
-      this.sound.play('enemyFound', { volume: 0.25 });
+      // 音声がロードされている場合のみ再生
+      if (this.cache.audio.exists('enemyFound')) {
+        this.sound.play('enemyFound', { volume: 0.25 });
+      }
 
       // 点滅フェードイン演出
       this.playDiscoveryAnimation(army);

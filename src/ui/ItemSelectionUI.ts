@@ -965,7 +965,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       if (this.inventoryManager) {
         // 装備されたアイテムをタイプごとにカウント
         const itemTypeCount = new Map<string, number>();
-        
+
         for (const [, items] of this.soldierItemsMap) {
           for (const item of items) {
             // アイテムタイプを判定
@@ -982,14 +982,14 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
             } else if ('effect' in item) {
               itemType = ProductionItemType.FOOD_PILL;
             }
-            
+
             if (itemType) {
               const currentCount = itemTypeCount.get(itemType) || 0;
               itemTypeCount.set(itemType, currentCount + 1);
             }
           }
         }
-        
+
         // InventoryManagerから削除
         for (const [itemType, count] of itemTypeCount) {
           const removed = this.inventoryManager.removeItem(itemType, count);
@@ -1000,7 +1000,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
           }
         }
       }
-      
+
       const itemEquippedData: ItemEquippedFormationData = {
         commander: this.formationData.commander!,
         soldiers: this.formationData.soldiers,

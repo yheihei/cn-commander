@@ -160,6 +160,51 @@ export class MovementInputHandler {
     // 攻撃目標の有無を確認
     const hasAttackTarget = army.hasAttackTarget();
 
+    // 駐留可能かどうかを判定（3マス以内に味方拠点があるか）
+    const commander = army.getCommander();
+
+    // getWorldTransformMatrixを使って実際のワールド座標を取得
+    let worldX: number, worldY: number;
+    if (typeof commander.getWorldTransformMatrix === 'function') {
+      const worldPos = commander.getWorldTransformMatrix();
+      worldX = worldPos.tx;
+      worldY = worldPos.ty;
+    } else {
+      // テスト環境の場合
+      const pos = commander.getPosition();
+      worldX = pos.x;
+      worldY = pos.y;
+    }
+
+    // ワールド座標からタイル座標に変換
+    const tileX = Math.floor(worldX / 16);
+    const tileY = Math.floor(worldY / 16);
+    console.log(
+      '[駐留判定] 指揮官の位置 - ワールド座標:',
+      { x: worldX, y: worldY },
+      'タイル座標:',
+      { x: tileX, y: tileY },
+    );
+
+    const nearbyBases = this.baseManager.getBasesWithinRange(
+      tileX,
+      tileY,
+      3,
+      (base) => base.getOwner() === 'player',
+    );
+    console.log('[駐留判定] 3マス以内の味方拠点数:', nearbyBases.length);
+    console.log(
+      '[駐留判定] 検出された拠点:',
+      nearbyBases.map((b) => ({
+        name: b.getName(),
+        pos: b.getPosition(),
+        owner: b.getOwner(),
+      })),
+    );
+
+    const canGarrison = nearbyBases.length > 0;
+    console.log('[駐留判定] canGarrison:', canGarrison);
+
     // アクションメニューを表示
     this.uiManager.showActionMenu(
       army,
@@ -184,11 +229,17 @@ export class MovementInputHandler {
         this.clearAttackTarget();
       },
       () => {
+        // 駐留が選択された
+        this.isSelectingAction = false;
+        this.startGarrisonProcess();
+      },
+      () => {
         // キャンセルされた
         this.isSelectingAction = false;
         this.deselectArmy();
       },
       hasAttackTarget,
+      canGarrison,
     );
   }
 
@@ -221,6 +272,68 @@ export class MovementInputHandler {
         this.startPathSetting();
       }
     });
+  }
+
+  private startGarrisonProcess(): void {
+    if (!this.selectedArmy) return;
+
+    const commander = this.selectedArmy.getCommander();
+
+    // getWorldTransformMatrixを使って実際のワールド座標を取得
+    let worldX: number, worldY: number;
+    if (typeof commander.getWorldTransformMatrix === 'function') {
+      const worldPos = commander.getWorldTransformMatrix();
+      worldX = worldPos.tx;
+      worldY = worldPos.ty;
+    } else {
+      // テスト環境の場合
+      const pos = commander.getPosition();
+      worldX = pos.x;
+      worldY = pos.y;
+    }
+
+    // ワールド座標からタイル座標に変換
+    const tileX = Math.floor(worldX / 16);
+    const tileY = Math.floor(worldY / 16);
+
+    const nearbyBases = this.baseManager.getBasesWithinRange(
+      tileX,
+      tileY,
+      3,
+      (base) => base.getOwner() === 'player',
+    );
+
+    if (nearbyBases.length === 0) {
+      console.warn('駐留可能な拠点がありません');
+      this.deselectArmy();
+      return;
+    }
+
+    // ガイドメッセージを表示
+    this.uiManager.showGuideMessage('駐留先の拠点を選択してください');
+
+    // 拠点選択モードの実装は次のタスク（task-7-4-2）で行います
+    // 現時点では最も近い拠点に自動的に駐留させます（仮実装）
+    const nearestBase = nearbyBases[0];
+    if (nearestBase && this.selectedArmy) {
+      this.baseManager.addStationedArmy(nearestBase.getId(), this.selectedArmy);
+
+      // 軍団を拠点の位置に移動（視覚的な表現）
+      const basePos = nearestBase.getPosition();
+      const worldX = (basePos.x + 1) * 16; // 拠点の中心
+      const worldY = (basePos.y + 1) * 16;
+      this.selectedArmy.setPosition(worldX, worldY);
+
+      console.log(`軍団を${nearestBase.getName()}に駐留させました`);
+      this.uiManager.showGuideMessage(`軍団を${nearestBase.getName()}に駐留させました`);
+
+      // 3秒後にメッセージを消す
+      this.scene.time.delayedCall(3000, () => {
+        this.uiManager.hideGuideMessage();
+      });
+    }
+
+    this.deselectArmy();
   }
 
   private deselectArmy(): void {

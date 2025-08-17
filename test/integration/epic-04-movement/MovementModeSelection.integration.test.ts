@@ -66,6 +66,7 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(),
       );
       expect(uiManager.isActionMenuVisible()).toBe(true);
       expect(uiManager.isAnyMenuVisible()).toBe(true);
@@ -98,6 +99,7 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
 
       uiManager.showActionMenu(
         mockArmy as any,
+        jest.fn(),
         jest.fn(),
         jest.fn(),
         jest.fn(),
