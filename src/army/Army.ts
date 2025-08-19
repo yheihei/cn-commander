@@ -32,6 +32,10 @@ export class Army extends Phaser.GameObjects.Container {
   private attackTarget: SimpleAttackTarget = null;
   private attackTargetMarker: AttackTargetMarker | null = null;
 
+  // 駐留状態管理
+  private isGarrisoned: boolean = false;
+  private garrisonedBaseId: string | null = null;
+
   constructor(scene: Phaser.Scene, x: number, y: number, config: ArmyConfig) {
     super(scene, x, y);
 
@@ -282,6 +286,11 @@ export class Army extends Phaser.GameObjects.Container {
   }
 
   update(_time: number, delta: number): void {
+    // 駐留中の軍団は更新処理をスキップ
+    if (this.isGarrisoned) {
+      return;
+    }
+
     if (this.movement && this.movement.isMoving) {
       const baseSpeed = this.getAverageMovementSpeed();
 
@@ -450,6 +459,68 @@ export class Army extends Phaser.GameObjects.Container {
       this.attackTargetMarker = null;
     }
     this.attackTarget = null;
+  }
+
+  /**
+   * 駐留状態を設定
+   * @param baseId 駐留先拠点のID
+   */
+  setGarrisoned(baseId: string): void {
+    this.isGarrisoned = true;
+    this.garrisonedBaseId = baseId;
+
+    // 駐留時は移動を停止
+    this.stopMovement();
+
+    // 軍団を非表示化
+    this.setVisible(false);
+
+    // 全メンバーも非表示化
+    this.getAllMembers().forEach((member) => {
+      member.setVisible(false);
+    });
+
+    console.log(`[Army] ${this.armyName}が拠点${baseId}に駐留しました`);
+  }
+
+  /**
+   * 駐留状態を解除
+   */
+  ungarrison(): void {
+    this.isGarrisoned = false;
+    this.garrisonedBaseId = null;
+
+    // 軍団を再表示
+    this.setVisible(true);
+
+    // 全メンバーも再表示
+    this.getAllMembers().forEach((member) => {
+      member.setVisible(true);
+    });
+
+    console.log(`[Army] ${this.armyName}の駐留が解除されました`);
+  }
+
+  /**
+   * 特定の拠点に駐留しているか確認
+   * @param baseId 拠点ID
+   */
+  isGarrisonedAt(baseId: string): boolean {
+    return this.isGarrisoned && this.garrisonedBaseId === baseId;
+  }
+
+  /**
+   * 駐留中かどうかを取得
+   */
+  getIsGarrisoned(): boolean {
+    return this.isGarrisoned;
+  }
+
+  /**
+   * 駐留している拠点IDを取得
+   */
+  getGarrisonedBaseId(): string | null {
+    return this.garrisonedBaseId;
   }
 
   destroy(): void {
