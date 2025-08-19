@@ -4,14 +4,18 @@ import { Character } from '../character/Character';
 import { ARMY_CONSTRAINTS, FactionType } from '../types/ArmyTypes';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
 import { Base } from '../base/Base';
+import { BaseManager } from '../base/BaseManager';
+import { Position } from '../types/CharacterTypes';
 
 export class ArmyManager {
   private armies: Map<string, Army> = new Map();
   private scene: Phaser.Scene;
   private nextArmyId: number = 1;
+  private baseManager?: BaseManager;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, baseManager?: BaseManager) {
     this.scene = scene;
+    this.baseManager = baseManager;
   }
 
   /**
@@ -231,6 +235,86 @@ export class ArmyManager {
       }
     }
     return null;
+  }
+
+  /**
+   * 軍団を駐留させる
+   * @param army 駐留させる軍団
+   * @param baseId 駐留先拠点のID
+   */
+  garrisonArmy(army: Army, baseId: string): void {
+    if (!army) {
+      console.error('[ArmyManager] garrisonArmy: 軍団が指定されていません');
+      return;
+    }
+
+    // 軍団の駐留状態を設定（非表示化も内部で行われる）
+    army.setGarrisoned(baseId);
+
+    // BaseManagerに駐留軍団として登録
+    if (this.baseManager) {
+      this.baseManager.addStationedArmy(baseId, army);
+      console.log(`[ArmyManager] ${army.getName()}を拠点${baseId}に駐留させました`);
+    } else {
+      console.warn('[ArmyManager] BaseManagerが設定されていません');
+    }
+
+    // 駐留イベントを発火
+    this.scene.events.emit('armyGarrisoned', { army, baseId });
+  }
+
+  /**
+   * 軍団の駐留を解除する
+   * @param army 駐留解除する軍団
+   * @param position 再配置位置（ワールド座標）
+   */
+  ungarrisonArmy(army: Army, position: Position): void {
+    if (!army || !army.getIsGarrisoned()) {
+      console.error('[ArmyManager] ungarrisonArmy: 軍団が駐留していません');
+      return;
+    }
+
+    const baseId = army.getGarrisonedBaseId();
+
+    // 軍団の駐留状態を解除（再表示も内部で行われる）
+    army.ungarrison();
+
+    // 指定位置に軍団を配置
+    army.setPosition(position.x, position.y);
+
+    // BaseManagerから駐留軍団を削除
+    if (this.baseManager && baseId) {
+      this.baseManager.removeStationedArmy(baseId, army);
+      console.log(`[ArmyManager] ${army.getName()}の駐留を解除しました`);
+    }
+
+    // 駐留解除イベントを発火
+    this.scene.events.emit('armyUngarrisoned', { army, baseId });
+  }
+
+  /**
+   * 駐留中の軍団を取得
+   * @param baseId 拠点ID（省略時は全駐留軍団）
+   */
+  getGarrisonedArmies(baseId?: string): Army[] {
+    const garrisonedArmies: Army[] = [];
+
+    this.armies.forEach((army) => {
+      if (army.getIsGarrisoned()) {
+        if (!baseId || army.getGarrisonedBaseId() === baseId) {
+          garrisonedArmies.push(army);
+        }
+      }
+    });
+
+    return garrisonedArmies;
+  }
+
+  /**
+   * BaseManagerを設定（後から設定する場合）
+   */
+  setBaseManager(baseManager: BaseManager): void {
+    this.baseManager = baseManager;
   }
 
   destroy(): void {
