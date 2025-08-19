@@ -9,6 +9,7 @@ import { ArmyFormationUI, FormationData } from './ArmyFormationUI';
 import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
 import { DeploymentPositionUI } from './DeploymentPositionUI';
 import { ProductionFactoryMenu } from './ProductionFactoryMenu';
+import { GarrisonedArmiesPanel } from './GarrisonedArmiesPanel';
 import { ProductionManager } from '../production/ProductionManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
@@ -17,6 +18,7 @@ import { ArmyFormationData } from '../types/ArmyFormationTypes';
 export class UIManager {
   private scene: Phaser.Scene;
   private productionManager: ProductionManager;
+  private baseManager: any; // BaseManagerの型は後で適切に設定
   private actionMenu: ActionMenu | null = null;
   private movementModeMenu: MovementModeMenu | null = null;
   private armyInfoPanel: ArmyInfoPanel | null = null;
@@ -27,13 +29,15 @@ export class UIManager {
   private itemSelectionUI: ItemSelectionUI | null = null;
   private deploymentPositionUI: DeploymentPositionUI | null = null;
   private productionFactoryMenu: ProductionFactoryMenu | null = null;
+  private garrisonedArmiesPanel: GarrisonedArmiesPanel | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
 
-  constructor(scene: Phaser.Scene, productionManager: ProductionManager) {
+  constructor(scene: Phaser.Scene, productionManager: ProductionManager, baseManager: any) {
     this.scene = scene;
     this.productionManager = productionManager;
+    this.baseManager = baseManager;
     this.initializeInfoPanels();
   }
 
@@ -445,8 +449,10 @@ export class UIManager {
       },
       onManageGarrison: () => {
         this.hideBarracksSubMenu();
-        // TODO: 駐留軍団管理画面を表示
-        console.log('駐留軍団管理が選択されました');
+        // 駐留軍団管理画面を表示
+        if (this.currentSelectedBase) {
+          this.showGarrisonedArmiesPanel(this.currentSelectedBase);
+        }
       },
       onViewSoldiers: () => {
         this.hideBarracksSubMenu();
@@ -607,6 +613,20 @@ export class UIManager {
       this.productionFactoryMenu.setPosition(centerX, centerY);
       // 進捗表示の更新
       this.productionFactoryMenu.update();
+    }
+
+    // GarrisonedArmiesPanelの位置更新
+    if (this.garrisonedArmiesPanel) {
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const centerX = viewLeft + viewWidth / 2;
+      const centerY = viewTop + viewHeight / 2;
+
+      this.garrisonedArmiesPanel.setPosition(centerX, centerY);
     }
 
     // ArmyFormationUIは全画面モーダルなので位置更新不要
@@ -833,6 +853,72 @@ export class UIManager {
     }
   }
 
+  public showGarrisonedArmiesPanel(base: Base): void {
+    console.log(`showGarrisonedArmiesPanel called for base: ${base.getName()}`);
+
+    // 既存のUIを非表示
+    this.hideAllUI();
+
+    // 既存のパネルがあれば削除
+    if (this.garrisonedArmiesPanel) {
+      this.garrisonedArmiesPanel.destroy();
+      this.garrisonedArmiesPanel = null;
+    }
+
+    // 駐留軍団を取得
+    const garrisonedArmies = this.baseManager.getStationedArmies(base.getId());
+
+    if (!garrisonedArmies || garrisonedArmies.length === 0) {
+      console.log('駐留軍団がありません');
+      // 拠点情報を再表示
+      if (this.currentSelectedBase) {
+        this.showBaseInfo(this.currentSelectedBase);
+      }
+      return;
+    }
+
+    // 駐留軍団管理パネルを作成
+    this.garrisonedArmiesPanel = new GarrisonedArmiesPanel({
+      scene: this.scene,
+      base,
+      armies: garrisonedArmies,
+      onProceedToItemSelection: (army: Army) => {
+        console.log('アイテム装備へ進む:', army.getName());
+
+        // 駐留軍団パネルを非表示
+        this.hideGarrisonedArmiesPanel();
+
+        // 軍団のメンバーからFormationDataを作成
+        const members = army.getAllMembers();
+        const formationData = {
+          commander: members[0], // 最初のメンバーが指揮官
+          soldiers: members.slice(1), // 残りが一般兵
+        };
+
+        // アイテム選択UIを表示
+        // ItemSelectionUIが自動的に次の画面（DeploymentPositionUI）へ遷移するため、
+        // ここでは何もする必要がない
+        this.showItemSelectionUI(base, formationData);
+      },
+      onCancel: () => {
+        this.hideGarrisonedArmiesPanel();
+        // 拠点情報を再表示
+        if (this.currentSelectedBase) {
+          this.showBaseInfo(this.currentSelectedBase);
+        }
+      },
+    });
+
+    this.garrisonedArmiesPanel.show();
+  }
+
+  public hideGarrisonedArmiesPanel(): void {
+    if (this.garrisonedArmiesPanel) {
+      this.garrisonedArmiesPanel.destroy();
+      this.garrisonedArmiesPanel = null;
+    }
+  }
+
   private hideAllUI(): void {
     console.log('hideAllUI called');
     this.hideActionMenu();
@@ -858,6 +944,7 @@ export class UIManager {
     this.hideArmyFormationUI();
     this.hideItemSelectionUI();
     this.hideDeploymentPositionUI();
+    this.hideGarrisonedArmiesPanel();
     if (this.armyInfoPanel) {
       this.armyInfoPanel.destroy();
       this.armyInfoPanel = null;

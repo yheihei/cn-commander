@@ -30,7 +30,7 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
     commandSystem = new MovementCommandSystem();
     movementManager = new MovementManager(scene, armyManager, mapManager, commandSystem);
     const productionManager = createMockProductionManager();
-    uiManager = new UIManager(scene, productionManager);
+    uiManager = new UIManager(scene, productionManager, {});
     visionSystem = new VisionSystem(mapManager);
     inputHandler = new MovementInputHandler(
       scene,

@@ -641,8 +641,16 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       itemContainer.add(equipButton);
     }
 
-    // 削除ボタン
-    const removeButton = this.createSmallButton('[✗]', 180, 0, () => {
+    // 削除ボタン（耐久度に応じてテキストを変更）
+    let removeButtonText = '[✗]';
+    if (item.type === ItemType.WEAPON) {
+      const weapon = item as IWeapon;
+      if (weapon.durability < weapon.maxDurability) {
+        removeButtonText = '[破棄]';
+      }
+    }
+
+    const removeButton = this.createSmallButton(removeButtonText, 180, 0, () => {
       this.removeItem(soldier, index);
     });
     itemContainer.add(removeButton);
@@ -743,8 +751,18 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
       // 兵士のItemHolderからも削除
       soldier.getItemHolder().removeItem(removedItem);
 
-      // アイテムを倉庫に戻す
-      this.availableItems.push(removedItem);
+      // 武器の耐久度をチェック
+      if (removedItem.type === ItemType.WEAPON) {
+        const weapon = removedItem as IWeapon;
+        if (weapon.durability === weapon.maxDurability) {
+          // 耐久度100%の武器のみ倉庫に戻す
+          this.availableItems.push(removedItem);
+        }
+        // 耐久度が減っている武器は破棄（何もしない）
+      } else {
+        // 消耗品は倉庫に戻す
+        this.availableItems.push(removedItem);
+      }
 
       // ページが範囲外になった場合は調整
       const itemGroups = new Map<string, { item: IItem; count: number }>();

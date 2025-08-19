@@ -116,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     this.setupCamera();
 
     // UIマネージャーの初期化（カメラ設定後、ProductionManager初期化後）
-    this.uiManager = new UIManager(this, this.productionManager);
+    this.uiManager = new UIManager(this, this.productionManager, this.baseManager);
 
     // 入力ハンドラーの初期化
     this.inputHandler = new MovementInputHandler(

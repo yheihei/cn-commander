@@ -100,7 +100,7 @@ describe('[エピック7] Base UI Integration Tests', () => {
 
     // UIManagerとBaseManagerの初期化
     const productionManager = createMockProductionManager();
-    uiManager = new UIManager(scene, productionManager);
+    uiManager = new UIManager(scene, productionManager, {});
     baseManager = new BaseManager(scene, mockMapManager);
 
     // テスト用拠点の作成

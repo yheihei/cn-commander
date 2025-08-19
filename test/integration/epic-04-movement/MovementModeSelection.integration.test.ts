@@ -9,7 +9,7 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
   beforeEach(() => {
     scene = createMockScene();
     const productionManager = createMockProductionManager();
-    uiManager = new UIManager(scene, productionManager);
+    uiManager = new UIManager(scene, productionManager, {});
   });
 
   afterEach(() => {
