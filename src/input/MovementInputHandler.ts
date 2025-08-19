@@ -129,6 +129,11 @@ export class MovementInputHandler {
     const armies = this.armyManager.getActiveArmies();
 
     for (const army of armies) {
+      // 駐留中の軍団は選択できない
+      if (army.getIsGarrisoned()) {
+        continue;
+      }
+
       const commander = army.getCommander();
       const commanderBounds = commander.getBounds();
 
@@ -340,13 +345,9 @@ export class MovementInputHandler {
         (selectedBase) => {
           // 拠点が選択された
           if (this.selectedArmy && selectedBase) {
-            this.baseManager.addStationedArmy(selectedBase.getId(), this.selectedArmy);
-
-            // 軍団を拠点の位置に移動（視覚的な表現）
-            const basePos = selectedBase.getPosition();
-            const worldX = (basePos.x + 1) * 16; // 拠点の中心
-            const worldY = (basePos.y + 1) * 16;
-            this.selectedArmy.setPosition(worldX, worldY);
+            // ArmyManagerのgarrisonArmyメソッドを使用して駐留を実行
+            // これにより、軍団の非表示化と駐留状態の設定が自動的に行われる
+            this.armyManager.garrisonArmy(this.selectedArmy, selectedBase.getId());
 
             console.log(`軍団を${selectedBase.getName()}に駐留させました`);
           }
