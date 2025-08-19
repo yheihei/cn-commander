@@ -50,11 +50,11 @@ export class GameScene extends Phaser.Scene {
     // マップマネージャーの初期化
     this.mapManager = new MapManager(this);
 
-    // 軍団マネージャーの初期化
-    this.armyManager = new ArmyManager(this);
-
-    // 拠点マネージャーの初期化
+    // 拠点マネージャーの初期化（軍団マネージャーより先に初期化）
     this.baseManager = new BaseManager(this, this.mapManager);
+
+    // 軍団マネージャーの初期化（BaseManagerを渡す）
+    this.armyManager = new ArmyManager(this, this.baseManager);
 
     // 移動コマンドシステムの初期化
     this.commandSystem = new MovementCommandSystem();
