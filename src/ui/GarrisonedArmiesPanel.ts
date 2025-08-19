@@ -27,6 +27,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     buttonWidth: 100,
     buttonSpacing: 20,
     tableHeaderY: -105,
+    tableYOffset: 40,
     tableRowHeight: 25,
     tableWidth: 440,
     buttonMarginTop: 0,
@@ -95,6 +96,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
+      padding: {top: 5,},
     });
     this.titleText.setOrigin(0.5);
     this.contentContainer.add(this.titleText);
@@ -135,12 +137,13 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
   }
 
   private createArmyHeader(): void {
-    const headerY = -120;
-    const armyNameText = this.scene.add.text(-200, headerY, '', {
+    const headerY = -80;
+    const armyNameText = this.scene.add.text(-220, headerY, '', {
       fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
+      padding: { x: 0, y: 2 },
     });
     armyNameText.setOrigin(0, 0.5);
     this.contentContainer.add(armyNameText);
@@ -151,6 +154,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
       fontSize: '12px',
       color: '#ffffff',
       resolution: 2,
+      padding: { x: 0, y: 2 },
     });
     pageText.setOrigin(1, 0.5);
     this.contentContainer.add(pageText);
@@ -159,7 +163,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
 
   private createMemberTable(): void {
     const tableX = -this.layoutConfig.tableWidth / 2;
-    const tableY = this.layoutConfig.tableHeaderY;
+    const tableY = this.layoutConfig.tableHeaderY + this.layoutConfig.tableYOffset;
 
     // ヘッダーの作成
     this.createTableHeader(tableX, tableY);
@@ -230,7 +234,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     // メンバーを表示
     const members = currentArmy.getAllMembers();
     const tableX = -this.layoutConfig.tableWidth / 2;
-    const startY = this.layoutConfig.tableHeaderY + 20;
+    const startY = this.layoutConfig.tableHeaderY + 20 + this.layoutConfig.tableYOffset;
 
     members.forEach((member, index) => {
       const isCommander = index === 0; // 最初のメンバーが指揮官
@@ -264,21 +268,6 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
       );
       bg.setOrigin(0.5, 0.5);
       rowContainer.add(bg);
-    }
-
-    // 指揮官の場合は赤枠
-    if (isCommander) {
-      const frame = this.scene.add.rectangle(
-        x + this.layoutConfig.tableWidth / 2,
-        y + 10,
-        this.layoutConfig.tableWidth,
-        24,
-        0x000000,
-        0,
-      );
-      frame.setOrigin(0.5, 0.5);
-      frame.setStrokeStyle(1, 0xff8888);
-      rowContainer.add(frame);
     }
 
     // メンバーデータの表示
@@ -320,23 +309,13 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     const paginationY = 80;
 
     // 前へボタン
-    this.prevButton = this.createNavigationButton('< 前へ', -80, paginationY, () => {
+    this.prevButton = this.createNavigationButton('< 前へ', -180, paginationY, () => {
       this.navigateToPreviousArmy();
     });
     this.contentContainer.add(this.prevButton);
 
-    // ページテキスト
-    this.pageText = this.scene.add.text(0, paginationY, '', {
-      fontSize: '12px',
-      color: '#ffffff',
-      resolution: 2,
-    });
-    this.pageText.setOrigin(0.5);
-    this.contentContainer.add(this.pageText);
-    this.updatePaginationText();
-
     // 次へボタン
-    this.nextButton = this.createNavigationButton('次へ >', 80, paginationY, () => {
+    this.nextButton = this.createNavigationButton('次へ >', 180, paginationY, () => {
       this.navigateToNextArmy();
     });
     this.contentContainer.add(this.nextButton);

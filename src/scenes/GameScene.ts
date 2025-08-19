@@ -243,7 +243,7 @@ export class GameScene extends Phaser.Scene {
   private createTestArmies(): void {
     // 軍団をグリッド座標で配置（各軍団は2x2マスを占有）
     // プレイヤー軍団を作成（グリッド座標10,10から）
-    const playerArmy = ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 5, 10);
+    const playerArmy = ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 5, 7);
 
     // プレイヤー軍団の全メンバーに武器を持たせる
     if (playerArmy) {
@@ -262,19 +262,10 @@ export class GameScene extends Phaser.Scene {
           // 忍者刀の方が攻撃力が高いので自動装備される
         }
       });
-
-      // デバッグ用：装備状況はデバッグ表示（Dキー）で確認可能
-      // allMembers.forEach((member) => {
-      //   const itemHolder = member.getItemHolder();
-      //   const equipped = itemHolder.getEquippedWeapon();
-      //   const allWeapons = itemHolder.getWeapons();
-      //   console.log(`  ${member.getName()} (${member.getJobType()}):`);
-      //   console.log(
-      //     `    装備中: ${equipped ? `${equipped.name} (攻撃力+${equipped.attackBonus})` : '装備なし'}`,
-      //   );
-      //   console.log(`    所持武器: ${allWeapons.map((w: IWeapon) => w.name).join(', ')}`);
-      // });
     }
+
+    // プレイヤー軍団2
+    ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 2, 7);
 
     // 敵軍団を視界外に配置（視界テスト用）
     // 咲耶軍団の視界は約8マス程度なので、18,10に配置（8マス離れた位置）
