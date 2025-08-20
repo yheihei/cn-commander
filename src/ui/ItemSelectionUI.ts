@@ -370,7 +370,7 @@ export class ItemSelectionUI extends Phaser.GameObjects.Container {
     // 各兵士の既存アイテムを読み込む
     this.allSoldiers.forEach((soldier) => {
       const itemHolder = soldier.getItemHolder();
-      const existingItems = itemHolder.items; // ItemHolderからアイテムを取得
+      const existingItems = itemHolder?.items || []; // ItemHolderからアイテムを取得（nullチェック追加）
       this.soldierItemsMap.set(soldier, [...existingItems]);
     });
 
