@@ -96,7 +96,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: 2,
-      padding: {top: 5,},
+      padding: { top: 5 },
     });
     this.titleText.setOrigin(0.5);
     this.contentContainer.add(this.titleText);
