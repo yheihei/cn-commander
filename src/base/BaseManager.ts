@@ -248,8 +248,14 @@ export class BaseManager {
    */
   addStationedArmy(baseId: string, army: Army): void {
     const armies = this.stationedArmies.get(baseId) || [];
-    armies.push(army);
-    this.stationedArmies.set(baseId, armies);
+    // 重複チェック: 同じ軍団が既に駐留していないか確認
+    if (!armies.includes(army)) {
+      armies.push(army);
+      this.stationedArmies.set(baseId, armies);
+      console.log(`[BaseManager] ${army.getName()}を${baseId}に駐留させました`);
+    } else {
+      console.log(`[BaseManager] ${army.getName()}は既に${baseId}に駐留しています`);
+    }
   }
 
   /**
@@ -261,6 +267,9 @@ export class BaseManager {
     if (index > -1) {
       armies.splice(index, 1);
       this.stationedArmies.set(baseId, armies);
+      console.log(`[BaseManager] ${army.getName()}を${baseId}から削除しました`);
+    } else {
+      console.log(`[BaseManager] ${army.getName()}は${baseId}に駐留していません`);
     }
   }
 

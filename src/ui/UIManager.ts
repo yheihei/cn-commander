@@ -895,10 +895,18 @@ export class UIManager {
           soldiers: members.slice(1), // 残りが一般兵
         };
 
-        // アイテム選択UIを表示
-        // ItemSelectionUIが自動的に次の画面（DeploymentPositionUI）へ遷移するため、
-        // ここでは何もする必要がない
-        this.showItemSelectionUI(base, formationData);
+        // 駐留軍団から出撃する際のコールバック
+        // 新しい軍団が作成された後に、元の駐留軍団を削除する
+        const onGarrisonedArmyDeploy = (_data: ArmyFormationData) => {
+          // 元の駐留軍団を削除
+          this.baseManager.removeStationedArmy(base.getId(), army);
+          console.log(`駐留軍団 ${army.getName()} を削除しました`);
+          // 元の軍団オブジェクトを破棄
+          army.destroy();
+        };
+
+        // アイテム選択UIを表示（駐留軍団用コールバックを渡す）
+        this.showItemSelectionUI(base, formationData, onGarrisonedArmyDeploy);
       },
       onCancel: () => {
         this.hideGarrisonedArmiesPanel();
