@@ -898,11 +898,10 @@ export class UIManager {
         // 駐留軍団から出撃する際のコールバック
         // 新しい軍団が作成された後に、元の駐留軍団を削除する
         const onGarrisonedArmyDeploy = (_data: ArmyFormationData) => {
-          // 元の駐留軍団を削除
+          // 元の駐留軍団をBaseManagerから削除
+          // 注意: army.destroy()は呼ばない。新しい軍団が同じCharacterオブジェクトを使用しているため
           this.baseManager.removeStationedArmy(base.getId(), army);
           console.log(`駐留軍団 ${army.getName()} を削除しました`);
-          // 元の軍団オブジェクトを破棄
-          army.destroy();
         };
 
         // アイテム選択UIを表示（駐留軍団用コールバックを渡す）
