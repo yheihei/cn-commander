@@ -68,6 +68,18 @@ export class Character extends Phaser.GameObjects.Sprite {
     return { ...this.stats };
   }
 
+  getCurrentHP(): number {
+    return this.stats.hp;
+  }
+
+  getMaxHP(): number {
+    return this.stats.maxHp;
+  }
+
+  heal(amount: number): void {
+    this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + amount);
+  }
+
   getPosition(): Position {
     return { x: this.x, y: this.y };
   }
@@ -80,10 +92,6 @@ export class Character extends Phaser.GameObjects.Sprite {
 
   takeDamage(amount: number): void {
     this.stats.hp = Math.max(0, this.stats.hp - amount);
-  }
-
-  heal(amount: number): void {
-    this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + amount);
   }
 
   setStats(updates: Partial<CharacterStats>): void {

@@ -73,6 +73,10 @@ export class ArmyManager {
     return Array.from(this.armies.values());
   }
 
+  getArmyById(armyId: string): Army | undefined {
+    return this.armies.get(armyId);
+  }
+
   disbandArmy(armyId: string): void {
     const army = this.armies.get(armyId);
     if (army) {

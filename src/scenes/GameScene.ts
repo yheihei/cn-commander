@@ -267,6 +267,34 @@ export class GameScene extends Phaser.Scene {
     // プレイヤー軍団2
     ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 2, 7);
 
+    // 医療施設テスト用：HPが減った駐留軍団を作成
+    const testGarrisonArmy = ArmyFactory.createPlayerArmyAtGrid(this, this.armyManager, 8, 5);
+    if (testGarrisonArmy) {
+      // 軍団のメンバーのHPを減らす
+      const allMembers = [testGarrisonArmy.getCommander(), ...testGarrisonArmy.getSoldiers()];
+      allMembers.forEach((member) => {
+        // 各メンバーのHPを50%に減らす
+        const maxHp = member.getMaxHP();
+        const newHp = Math.floor(maxHp * 0.5);
+        const damage = maxHp - newHp;
+
+        // ダメージを与えてHPを減らす
+        member.takeDamage(damage);
+
+        console.log(`${member.getName()}のHPを${maxHp}から${member.getCurrentHP()}に減らしました`);
+      });
+
+      // 軍団を拠点に駐留させる
+      const playerBase = this.baseManager.getBase('player-hq');
+      if (playerBase) {
+        // 駐留を実行
+        this.baseManager.addStationedArmy('player-hq', testGarrisonArmy);
+        testGarrisonArmy.setVisible(false);
+
+        console.log(`HPが減った軍団（ID: ${testGarrisonArmy.getId()}）を拠点に駐留させました`);
+      }
+    }
+
     // 敵軍団を視界外に配置（視界テスト用）
     // 咲耶軍団の視界は約8マス程度なので、18,10に配置（8マス離れた位置）
     ArmyFactory.createEnemyArmyAtGrid(this, this.armyManager, 20, 10, 'normal');

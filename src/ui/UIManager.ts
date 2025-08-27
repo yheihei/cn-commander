@@ -10,6 +10,8 @@ import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
 import { DeploymentPositionUI } from './DeploymentPositionUI';
 import { ProductionFactoryMenu } from './ProductionFactoryMenu';
 import { GarrisonedArmiesPanel } from './GarrisonedArmiesPanel';
+import { MedicalFacilityMenu } from './MedicalFacilityMenu';
+import { MedicalManager } from '../medical/MedicalManager';
 import { ProductionManager } from '../production/ProductionManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
@@ -18,6 +20,7 @@ import { ArmyFormationData } from '../types/ArmyFormationTypes';
 export class UIManager {
   private scene: Phaser.Scene;
   private productionManager: ProductionManager;
+  private medicalManager: MedicalManager;
   private baseManager: any; // BaseManagerの型は後で適切に設定
   private actionMenu: ActionMenu | null = null;
   private movementModeMenu: MovementModeMenu | null = null;
@@ -30,13 +33,16 @@ export class UIManager {
   private deploymentPositionUI: DeploymentPositionUI | null = null;
   private productionFactoryMenu: ProductionFactoryMenu | null = null;
   private garrisonedArmiesPanel: GarrisonedArmiesPanel | null = null;
+  private medicalFacilityMenu: MedicalFacilityMenu | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
+  private currentMoney: number = 3000; // 初期資金
 
   constructor(scene: Phaser.Scene, productionManager: ProductionManager, baseManager: any) {
     this.scene = scene;
     this.productionManager = productionManager;
+    this.medicalManager = new MedicalManager(scene);
     this.baseManager = baseManager;
     this.initializeInfoPanels();
   }
@@ -213,6 +219,7 @@ export class UIManager {
       this.isBaseActionMenuVisible() ||
       this.isBarracksSubMenuVisible() ||
       this.isProductionFactoryMenuVisible() ||
+      this.isMedicalFacilityMenuVisible() ||
       this.isArmyFormationUIVisible() ||
       this.isItemSelectionUIVisible() ||
       this.isDeploymentPositionUIVisible()
@@ -401,8 +408,7 @@ export class UIManager {
       },
       onHospital: () => {
         this.hideBaseActionMenu();
-        // TODO: 医療施設サブメニューを表示
-        console.log('医療施設が選択されました');
+        this.showMedicalFacilityMenu();
       },
       onWarehouse: () => {
         this.hideBaseActionMenu();
@@ -518,6 +524,59 @@ export class UIManager {
     }
   }
 
+  public showMedicalFacilityMenu(): void {
+    if (!this.currentSelectedBase || !this.baseManager || !this.medicalManager) {
+      return;
+    }
+
+    // 既存のメニューを削除
+    this.hideMedicalFacilityMenu();
+
+    // ArmyManagerの取得
+    const armyManager = (this.scene as any).armyManager;
+    if (!armyManager) {
+      console.error('ArmyManager not found');
+      return;
+    }
+
+    // MedicalFacilityMenuは自身で中央配置を管理するため、座標指定は不要
+    this.medicalFacilityMenu = new MedicalFacilityMenu({
+      scene: this.scene,
+      x: 0, // コンストラクタ内で中央配置される
+      y: 0, // コンストラクタ内で中央配置される
+      baseId: this.currentSelectedBase.getId(),
+      baseManager: this.baseManager,
+      armyManager: armyManager,
+      medicalManager: this.medicalManager,
+      money: this.currentMoney,
+      onStartTreatment: (_armyId: string, cost: number) => {
+        // 資金チェックと支払い処理
+        if (this.currentMoney >= cost) {
+          this.currentMoney -= cost;
+          console.log(`治療費${cost}両を支払いました。残金: ${this.currentMoney}両`);
+          return true;
+        }
+        return false;
+      },
+      onCancel: () => {
+        this.hideMedicalFacilityMenu();
+        // BaseActionMenuに戻る
+        if (this.currentSelectedBase) {
+          this.showBaseActionMenu(this.currentSelectedBase);
+        }
+      },
+    });
+
+    this.medicalFacilityMenu.show();
+  }
+
+  public hideMedicalFacilityMenu(): void {
+    if (this.medicalFacilityMenu) {
+      this.medicalFacilityMenu.destroy();
+      this.medicalFacilityMenu = null;
+    }
+  }
+
   public update(): void {
     // 軍団情報パネルの更新は既存のupdateArmyInfoで行う
     if (this.currentSelectedArmy && this.armyInfoPanel) {
@@ -629,6 +688,21 @@ export class UIManager {
       this.garrisonedArmiesPanel.setPosition(centerX, centerY);
     }
 
+    // MedicalFacilityMenuの位置更新と処理更新
+    if (this.medicalFacilityMenu) {
+      this.medicalFacilityMenu.updatePosition();
+      this.medicalFacilityMenu.update();
+      this.medicalFacilityMenu.updateMoney(this.currentMoney);
+    }
+
+    // MedicalManagerの更新
+    if (this.medicalManager) {
+      const armyManager = (this.scene as any).armyManager;
+      if (armyManager) {
+        this.medicalManager.update(armyManager);
+      }
+    }
+
     // ArmyFormationUIは全画面モーダルなので位置更新不要
   }
 
@@ -695,6 +769,10 @@ export class UIManager {
 
   public isProductionFactoryMenuVisible(): boolean {
     return this.productionFactoryMenu !== null;
+  }
+
+  public isMedicalFacilityMenuVisible(): boolean {
+    return this.medicalFacilityMenu !== null;
   }
 
   public isItemSelectionUIVisible(): boolean {
@@ -935,6 +1013,7 @@ export class UIManager {
     this.hideBaseActionMenu();
     this.hideBarracksSubMenu();
     this.hideProductionFactoryMenu();
+    this.hideMedicalFacilityMenu();
     this.hideGuideMessage();
     // 注: armyFormationUIは意図的に含めない（専用のhideメソッドがあるため）
   }
@@ -947,6 +1026,7 @@ export class UIManager {
     this.hideBaseActionMenu();
     this.hideBarracksSubMenu();
     this.hideProductionFactoryMenu();
+    this.hideMedicalFacilityMenu();
     this.hideGuideMessage();
     this.hideArmyFormationUI();
     this.hideItemSelectionUI();
@@ -959,6 +1039,9 @@ export class UIManager {
     if (this.baseInfoPanel) {
       this.baseInfoPanel.destroy();
       this.baseInfoPanel = null;
+    }
+    if (this.medicalManager) {
+      this.medicalManager.destroy();
     }
   }
 }
