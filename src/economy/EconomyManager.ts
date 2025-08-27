@@ -43,7 +43,6 @@ export class EconomyManager {
    */
   public addIncome(amount: number): void {
     this.money += amount;
-    console.log(`${amount}両獲得、残高: ${this.money}両`);
   }
 
   /**

@@ -13,6 +13,7 @@ import { GarrisonedArmiesPanel } from './GarrisonedArmiesPanel';
 import { MedicalFacilityMenu } from './MedicalFacilityMenu';
 import { MedicalManager } from '../medical/MedicalManager';
 import { ProductionManager } from '../production/ProductionManager';
+import { EconomyManager } from '../economy/EconomyManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
@@ -21,6 +22,7 @@ export class UIManager {
   private scene: Phaser.Scene;
   private productionManager: ProductionManager;
   private medicalManager: MedicalManager;
+  private economyManager: EconomyManager;
   private baseManager: any; // BaseManagerの型は後で適切に設定
   private actionMenu: ActionMenu | null = null;
   private movementModeMenu: MovementModeMenu | null = null;
@@ -37,12 +39,12 @@ export class UIManager {
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
-  private currentMoney: number = 3000; // 初期資金
 
   constructor(scene: Phaser.Scene, productionManager: ProductionManager, baseManager: any) {
     this.scene = scene;
     this.productionManager = productionManager;
     this.medicalManager = new MedicalManager(scene);
+    this.economyManager = new EconomyManager(scene);
     this.baseManager = baseManager;
     this.initializeInfoPanels();
   }
@@ -548,13 +550,14 @@ export class UIManager {
       baseManager: this.baseManager,
       armyManager: armyManager,
       medicalManager: this.medicalManager,
-      money: this.currentMoney,
+      money: this.economyManager.getMoney(),
       onStartTreatment: (_armyId: string, cost: number) => {
         // 資金チェックと支払い処理
-        if (this.currentMoney >= cost) {
-          this.currentMoney -= cost;
-          console.log(`治療費${cost}両を支払いました。残金: ${this.currentMoney}両`);
-          return true;
+        if (this.economyManager.canAfford(cost)) {
+          const success = this.economyManager.spend(cost);
+          if (success) {
+            return true;
+          }
         }
         return false;
       },
@@ -692,7 +695,7 @@ export class UIManager {
     if (this.medicalFacilityMenu) {
       this.medicalFacilityMenu.updatePosition();
       this.medicalFacilityMenu.update();
-      this.medicalFacilityMenu.updateMoney(this.currentMoney);
+      this.medicalFacilityMenu.updateMoney(this.economyManager.getMoney());
     }
 
     // MedicalManagerの更新

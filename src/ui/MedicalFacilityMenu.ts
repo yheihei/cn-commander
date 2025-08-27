@@ -65,6 +65,7 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
     // 画面全体を覆う半透明の背景（モーダル）
     this.modalBackground = config.scene.add.rectangle(0, 0, viewWidth, viewHeight, 0x000000, 0.5);
     this.modalBackground.setOrigin(0.5);
+    // modalBackgroundは最背面に配置
     this.add(this.modalBackground);
 
     // メインパネルの背景（ビューポートの90%サイズ）
@@ -417,7 +418,6 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
       );
 
       if (!success) {
-        console.log('治療開始に失敗しました');
         return;
       }
     }
@@ -438,19 +438,35 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
   }
 
   private setupInputHandlers(): void {
-    // メニュー自体へのクリックはイベントを停止
-    this.background.setInteractive();
-    this.background.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      pointer.event.stopPropagation();
+    // モーダル背景とメインパネルのクリック処理
+    // 注意: setInteractive()は子要素のイベントをブロックしない
+    this.modalBackground.setInteractive();
+    this.modalBackground.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      // モーダル背景がクリックされた場合の処理
+      // この位置でのクリックはパネル外なので閉じる
+      const localX = pointer.x - this.x;
+      const localY = pointer.y - this.y;
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const panelWidth = viewWidth * 0.9;
+      const panelHeight = viewHeight * 0.9;
+
+      const isInsidePanel = Math.abs(localX) < panelWidth / 2 && Math.abs(localY) < panelHeight / 2;
+
+      if (!isInsidePanel) {
+        this.onCancel();
+      }
     });
+
+    // メインパネルはクリックを無視（子要素のイベントは通る）
+    this.background.setInteractive();
+    // backgroundのイベントハンドラーは設定しない（子要素のクリックを妨げないため）
   }
 
   private setupOutsideClickHandler(): void {
-    // モーダル背景のクリックで閉じる
-    this.modalBackground.setInteractive();
-    this.modalBackground.on('pointerdown', () => {
-      this.onCancel();
-    });
+    // 何もしない - パネル外クリックの処理は必要に応じて後で追加
 
     // 右クリックで閉じる
     const rightClickHandler = (pointer: Phaser.Input.Pointer) => {
@@ -475,9 +491,23 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
   }
 
   public update(): void {
-    // 治療状況を定期的に更新
-    this.updateLists();
+    // 治療中の軍団がある場合のみ更新（1秒ごと）
+    if (!this.lastUpdateTime) {
+      this.lastUpdateTime = 0;
+    }
+
+    const currentTime = this.scene.time.now;
+    if (currentTime - this.lastUpdateTime > 1000) {
+      // 治療中の軍団がある場合のみリストを更新
+      const treatments = this.medicalManager.getTreatmentsByBase(this.baseId);
+      if (treatments.length > 0) {
+        this.updateLists();
+      }
+      this.lastUpdateTime = currentTime;
+    }
   }
+
+  private lastUpdateTime?: number;
 
   public updateMoney(money: number): void {
     this.money = money;

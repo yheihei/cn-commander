@@ -38,13 +38,11 @@ export class MedicalManager {
 
     // すでに治療中の場合
     if (this.treatments.has(armyId)) {
-      console.log(`軍団${armyId}は既に治療中です`);
       return false;
     }
 
     // 資金不足チェック
     if (money < MedicalManager.TREATMENT_COST) {
-      console.log('治療費が不足しています');
       return false;
     }
 
@@ -56,7 +54,6 @@ export class MedicalManager {
       cost: MedicalManager.TREATMENT_COST,
     });
 
-    console.log(`軍団${armyId}の治療を開始しました（費用: ${MedicalManager.TREATMENT_COST}両）`);
     return true;
   }
 
@@ -105,7 +102,6 @@ export class MedicalManager {
 
     // 治療情報を削除
     this.treatments.delete(armyId);
-    console.log(`軍団${armyId}の治療が完了しました`);
   }
 
   /**
