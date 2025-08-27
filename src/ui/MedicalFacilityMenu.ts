@@ -287,11 +287,12 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
     item.add(bg);
 
     // 軍団名
-    const nameText = this.scene.add.text(0, -10, `第${army.getId().slice(-1)}軍団`, {
-      fontSize: '13px',
+    const nameText = this.scene.add.text(0, -6, `${army.getCommander().getName()}軍団`, {
+      fontSize: '12px',
       fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
       resolution: 2,
+      padding: { top: 2 },
     });
     nameText.setOrigin(0.5);
     item.add(nameText);
@@ -299,10 +300,11 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
     // HP表示
     const hpColor = currentHP < maxHP * 0.5 ? '#ff6666' : '#ffffff';
     const hpText = this.scene.add.text(0, 7, `${currentHP}/${maxHP}`, {
-      fontSize: '11px',
+      fontSize: '10px',
       fontFamily: 'monospace, "Courier New", Courier',
       color: hpColor,
       resolution: 2,
+      padding: { top: 2 },
     });
     hpText.setOrigin(0.5);
     item.add(hpText);
@@ -337,7 +339,7 @@ export class MedicalFacilityMenu extends Phaser.GameObjects.Container {
     const item = this.scene.add.container(0, y);
 
     // 軍団名
-    const nameText = this.scene.add.text(0, -12, `第${army.getId().slice(-1)}軍団`, {
+    const nameText = this.scene.add.text(0, -12, `${army.getCommander().getName()}軍団`, {
       fontSize: '13px',
       fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
