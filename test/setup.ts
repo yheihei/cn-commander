@@ -123,13 +123,41 @@ jest.mock('phaser', () => ({
         on: jest.fn(),
         destroy: jest.fn(),
       })),
-      container: jest.fn((x, y) => ({
-        x,
-        y,
-        add: jest.fn(),
-        setVisible: jest.fn(),
-        destroy: jest.fn(),
-      })),
+      container: jest.fn((x, y) => {
+        const container: any = {
+          x,
+          y,
+          list: [],
+          input: null,
+          eventListeners: new Map(),
+          add: jest.fn(function (this: any, child: any) {
+            this.list.push(child);
+            return this;
+          }),
+          setVisible: jest.fn().mockReturnThis(),
+          setInteractive: jest.fn(function (this: any, _hitArea?: any, _callback?: any) {
+            this.input = { enabled: _hitArea === false ? false : true };
+            return this;
+          }),
+          on: jest.fn(function (this: any, event: string, handler: Function) {
+            if (!this.eventListeners.has(event)) {
+              this.eventListeners.set(event, []);
+            }
+            this.eventListeners.get(event).push(handler);
+            return this;
+          }),
+          removeAllListeners: jest.fn(function (this: any, event?: string) {
+            if (event) {
+              this.eventListeners.delete(event);
+            } else {
+              this.eventListeners.clear();
+            }
+            return this;
+          }),
+          destroy: jest.fn(),
+        };
+        return container;
+      }),
       rectangle: jest.fn((x, y, width, height, fillColor, fillAlpha) => {
         const rect: any = {
           x,
@@ -140,10 +168,28 @@ jest.mock('phaser', () => ({
           fillAlpha,
           data: new Map(),
           eventListeners: new Map(),
+          alpha: fillAlpha || 1,
+          input: null,
           setStrokeStyle: jest.fn().mockReturnThis(),
-          setFillStyle: jest.fn().mockReturnThis(),
-          setInteractive: jest.fn().mockReturnThis(),
-          disableInteractive: jest.fn().mockReturnThis(),
+          setFillStyle: jest.fn(function (this: any, color: number, alpha?: number) {
+            this.fillColor = color;
+            if (alpha !== undefined) {
+              this.fillAlpha = alpha;
+            }
+            return this;
+          }),
+          setAlpha: jest.fn(function (this: any, alpha: number) {
+            this.alpha = alpha;
+            return this;
+          }),
+          setInteractive: jest.fn(function (this: any, _hitArea?: any, _callback?: any) {
+            this.input = { enabled: true };
+            return this;
+          }),
+          disableInteractive: jest.fn(function (this: any) {
+            this.input = { enabled: false };
+            return this;
+          }),
           setOrigin: jest.fn().mockReturnThis(),
           setData: jest.fn(function (this: any, key: string, value: any) {
             this.data.set(key, value);
@@ -354,6 +400,8 @@ jest.mock('phaser', () => ({
       list: any[] = [];
       depth: number = 0;
       data: Map<string, any> = new Map();
+      input: any = null;
+      eventListeners: Map<string, Function[]> = new Map();
 
       constructor(
         public scene: any,
@@ -423,7 +471,25 @@ jest.mock('phaser', () => ({
         return this.data.get(key);
       });
       setAlpha = jest.fn().mockReturnThis();
-      removeAllListeners = jest.fn().mockReturnThis();
+      setInteractive = jest.fn(function (this: any, _hitArea?: any, _callback?: any) {
+        this.input = { enabled: true };
+        return this;
+      });
+      on = jest.fn(function (this: any, event: string, handler: Function) {
+        if (!this.eventListeners.has(event)) {
+          this.eventListeners.set(event, []);
+        }
+        this.eventListeners.get(event)!.push(handler);
+        return this;
+      });
+      removeAllListeners = jest.fn(function (this: any, event?: string) {
+        if (event) {
+          this.eventListeners.delete(event);
+        } else {
+          this.eventListeners.clear();
+        }
+        return this;
+      });
       destroy = jest.fn();
     },
   },
@@ -447,12 +513,19 @@ export const createMockScene = () => {
           text,
           style,
           data: new Map(),
+          alpha: 1,
           setOrigin: jest.fn().mockReturnThis(),
-          setText: jest.fn().mockReturnThis(),
+          setText: jest.fn(function (this: any, newText: string) {
+            this.text = newText;
+            return this;
+          }),
           setVisible: jest.fn().mockReturnThis(),
           setStyle: jest.fn().mockReturnThis(),
           setColor: jest.fn().mockReturnThis(),
-          setAlpha: jest.fn().mockReturnThis(),
+          setAlpha: jest.fn(function (this: any, alpha: number) {
+            this.alpha = alpha;
+            return this;
+          }),
           setData: jest.fn(function (this: any, key: string, value: any) {
             this.data.set(key, value);
             return this;

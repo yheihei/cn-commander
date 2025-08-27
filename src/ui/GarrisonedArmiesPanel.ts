@@ -2,11 +2,13 @@ import * as Phaser from 'phaser';
 import { Base } from '../base/Base';
 import { Army } from '../army/Army';
 import { Character } from '../character/Character';
+import { MedicalManager } from '../medical/MedicalManager';
 
 export interface GarrisonedArmiesPanelConfig {
   scene: Phaser.Scene;
   base: Base;
   armies: Army[];
+  medicalManager: MedicalManager;
   onProceedToItemSelection?: (army: Army) => void;
   onCancel?: () => void;
 }
@@ -40,6 +42,8 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
   private armies: Army[];
   private currentArmyIndex: number = 0;
   private base: Base;
+  private medicalManager: MedicalManager;
+  private isArmyInTreatment: boolean = false; // 現在表示中の軍団が治療中かどうか
 
   // ページネーション
   private prevButton?: Phaser.GameObjects.Container;
@@ -72,6 +76,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     this.onProceedCallback = config.onProceedToItemSelection;
     this.armies = config.armies;
     this.base = config.base;
+    this.medicalManager = config.medicalManager;
 
     // 画面全体を覆う半透明の背景
     this.modalBackground = config.scene.add.rectangle(0, 0, viewWidth, viewHeight, 0x000000, 0.5);
@@ -215,12 +220,16 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
 
     const currentArmy = this.armies[this.currentArmyIndex];
 
-    // 軍団名を更新
+    // 現在の軍団が治療中かどうかチェック（UIを開いた時に一度だけチェック）
+    this.isArmyInTreatment = this.medicalManager.isInTreatment(currentArmy.getId());
+
+    // 軍団名を更新（治療中の場合はサフィックスを追加）
     const armyNameText = this.contentContainer.list.find(
       (child: any) => child.getData && child.getData('type') === 'armyName',
     ) as Phaser.GameObjects.Text;
     if (armyNameText) {
-      armyNameText.setText(`軍団名: ${currentArmy.getName()}`);
+      const suffix = this.isArmyInTreatment ? ' (治療中)' : '';
+      armyNameText.setText(`軍団名: ${currentArmy.getName()}${suffix}`);
     }
 
     // ページ番号を更新
@@ -246,6 +255,71 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
         isCommander,
       );
     });
+
+    // 治療中の場合、「アイテム装備へ」ボタンを無効化
+    this.updateProceedButtonState();
+  }
+
+  private updateProceedButtonState(): void {
+    if (!this.proceedButton) return;
+
+    // ボタンの背景を取得（実際のインタラクティブ要素）
+    const buttonBg = this.proceedButton.list[0] as any;
+    const buttonText = this.proceedButton.list[1] as any;
+
+    if (this.isArmyInTreatment) {
+      // 治療中の場合、ボタンを無効化
+      if (buttonBg.setFillStyle) buttonBg.setFillStyle(0x444444); // グレーアウト
+      if (buttonBg.setAlpha) buttonBg.setAlpha(0.5); // 半透明
+      if (buttonBg.alpha !== undefined) buttonBg.alpha = 0.5; // 直接設定もしてみる
+      if (buttonText.setAlpha) buttonText.setAlpha(0.5);
+      if (buttonText.alpha !== undefined) buttonText.alpha = 0.5;
+
+      // buttonBgのクリックを無効化（inputオブジェクトのenabledプロパティのみを変更）
+      if (buttonBg.input) {
+        buttonBg.input.enabled = false;
+      }
+
+      // 既存のイベントリスナーを削除
+      if (buttonBg.removeAllListeners) {
+        buttonBg.removeAllListeners('pointerdown');
+        buttonBg.removeAllListeners('pointerover');
+        buttonBg.removeAllListeners('pointerout');
+      }
+    } else {
+      // 治療中でない場合、ボタンを有効化
+      if (buttonBg.setFillStyle) buttonBg.setFillStyle(0x007700); // 通常の緑色
+      if (buttonBg.setAlpha) buttonBg.setAlpha(1);
+      if (buttonBg.alpha !== undefined) buttonBg.alpha = 1;
+      if (buttonText.setAlpha) buttonText.setAlpha(1);
+      if (buttonText.alpha !== undefined) buttonText.alpha = 1;
+
+      // buttonBgのクリックを有効化（inputオブジェクトが存在する場合のみ）
+      if (buttonBg.input) {
+        buttonBg.input.enabled = true;
+      }
+
+      // イベントリスナーを再設定
+      if (buttonBg.removeAllListeners) {
+        buttonBg.removeAllListeners('pointerdown');
+        buttonBg.removeAllListeners('pointerover');
+        buttonBg.removeAllListeners('pointerout');
+      }
+
+      if (buttonBg.on) {
+        buttonBg.on('pointerover', () => {
+          buttonBg.setFillStyle(0x009900);
+        });
+
+        buttonBg.on('pointerout', () => {
+          buttonBg.setFillStyle(0x007700);
+        });
+
+        buttonBg.on('pointerdown', () => {
+          this.onProceed();
+        });
+      }
+    }
   }
 
   private createMemberRow(
@@ -392,10 +466,16 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     const panelHeight = viewHeight * 0.9;
     const buttonY = panelHeight / 2 - 60;
 
-    // アイテム装備へボタン
-    this.proceedButton = this.createButton('アイテム装備へ', -60, buttonY, () => {
-      this.onProceed();
-    });
+    // アイテム装備へボタン（緑色）
+    this.proceedButton = this.createButton(
+      'アイテム装備へ',
+      -60,
+      buttonY,
+      () => {
+        this.onProceed();
+      },
+      0x007700,
+    );
     this.contentContainer.add(this.proceedButton);
 
     // キャンセルボタン
@@ -410,6 +490,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     x: number,
     y: number,
     onClick: () => void,
+    color: number = 0x666666,
   ): Phaser.GameObjects.Container {
     const button = this.scene.add.container(x, y);
 
@@ -418,7 +499,7 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
       0,
       this.layoutConfig.buttonWidth,
       this.layoutConfig.buttonHeight,
-      0x666666,
+      color,
     );
     buttonBg.setStrokeStyle(2, 0xaaaaaa);
     buttonBg.setInteractive({ useHandCursor: true });
@@ -434,11 +515,11 @@ export class GarrisonedArmiesPanel extends Phaser.GameObjects.Container {
     button.add([buttonBg, buttonText]);
 
     buttonBg.on('pointerover', () => {
-      buttonBg.setFillStyle(0x888888);
+      buttonBg.setFillStyle(color === 0x007700 ? 0x009900 : 0x888888);
     });
 
     buttonBg.on('pointerout', () => {
-      buttonBg.setFillStyle(0x666666);
+      buttonBg.setFillStyle(color);
     });
 
     buttonBg.on('pointerdown', onClick);

@@ -963,6 +963,7 @@ export class UIManager {
       scene: this.scene,
       base,
       armies: garrisonedArmies,
+      medicalManager: this.medicalManager,
       onProceedToItemSelection: (army: Army) => {
         console.log('アイテム装備へ進む:', army.getName());
 
