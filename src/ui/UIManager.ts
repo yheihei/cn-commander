@@ -790,6 +790,7 @@ export class UIManager {
     base: Base,
     formationData: FormationData,
     onArmyFormed?: (data: ArmyFormationData) => void,
+    customOnBack?: () => void, // 新しいオプショナルパラメータ
   ): void {
     console.log('showItemSelectionUI called');
 
@@ -815,11 +816,14 @@ export class UIManager {
         this.hideItemSelectionUI();
         this.showDeploymentPositionUI(base, itemEquippedData, onArmyFormed);
       },
-      onBack: () => {
-        // アイテム選択画面から兵士選択画面に戻る
-        this.hideItemSelectionUI();
-        this.showArmyFormationUI(base, onArmyFormed);
-      },
+      onBack: customOnBack
+        ? customOnBack
+        : () => {
+            // カスタムコールバックがない場合のデフォルト動作
+            // アイテム選択画面から兵士選択画面に戻る
+            this.hideItemSelectionUI();
+            this.showArmyFormationUI(base, onArmyFormed);
+          },
       onCancelled: () => {
         this.hideItemSelectionUI();
         // 拠点情報を再表示
@@ -987,7 +991,12 @@ export class UIManager {
         };
 
         // アイテム選択UIを表示（駐留軍団用コールバックを渡す）
-        this.showItemSelectionUI(base, formationData, onGarrisonedArmyDeploy);
+        this.showItemSelectionUI(base, formationData, onGarrisonedArmyDeploy, () => {
+          // 駐留管理から来た場合の戻るボタンのコールバック
+          // ItemSelectionUIを非表示にして駐留管理画面に戻る
+          this.hideItemSelectionUI();
+          this.showGarrisonedArmiesPanel(base);
+        });
       },
       onCancel: () => {
         this.hideGarrisonedArmiesPanel();
