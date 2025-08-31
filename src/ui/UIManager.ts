@@ -91,9 +91,11 @@ export class UIManager {
     onAttackTarget: () => void,
     onClearAttackTarget: () => void,
     onGarrison: () => void,
+    onOccupy: () => void,
     onCancel: () => void,
     hasAttackTarget: boolean = false,
     canGarrison: boolean = false,
+    canOccupy: boolean = false,
   ): void {
     // 既存のメニューがあれば削除
     this.hideActionMenu();
@@ -145,6 +147,12 @@ export class UIManager {
         // 駐留を選択したら情報パネルを非表示
         this.hideArmyInfo();
       },
+      onOccupy: () => {
+        onOccupy();
+        this.actionMenu = null;
+        // 占領を選択したら情報パネルを非表示
+        this.hideArmyInfo();
+      },
       onCancel: () => {
         onCancel();
         this.actionMenu = null;
@@ -154,6 +162,7 @@ export class UIManager {
       },
       hasAttackTarget,
       canGarrison,
+      canOccupy,
     });
   }
 

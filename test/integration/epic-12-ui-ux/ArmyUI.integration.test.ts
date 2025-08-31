@@ -81,6 +81,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       expect(showArmyInfoSpy).toHaveBeenCalledWith(mockArmy);
@@ -98,6 +100,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       // hideArmyInfoが呼ばれることを確認
@@ -113,6 +117,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         onCancel,
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       // onCancelコールバックを実行（実際のUIでキャンセルボタンをクリックした場合の動作）
@@ -234,6 +240,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy1);
 
@@ -247,6 +255,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
       expect(uiManager.getCurrentSelectedArmy()).toBe(mockArmy2);
     });
@@ -274,6 +284,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       // 待機ボタンをクリック（コールバックを実行）
@@ -327,6 +339,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       const hideArmyInfoSpy = jest.spyOn(uiManager, 'hideArmyInfo');
@@ -341,6 +355,8 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       // ActionMenuのonStandbyコールバックを直接実行

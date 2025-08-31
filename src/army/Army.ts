@@ -145,6 +145,18 @@ export class Army extends Phaser.GameObjects.Container {
     return totalSpeed / aliveMembers.length;
   }
 
+  /**
+   * 軍団の合計HPを取得
+   */
+  getTotalHp(): number {
+    const aliveMembers = this.getAliveMembers();
+    if (aliveMembers.length === 0) return 0;
+
+    return aliveMembers.reduce((sum, member) => {
+      return sum + member.getStats().hp;
+    }, 0);
+  }
+
   getTotalSight(): SightArea[] {
     return this.getAliveMembers().map((member) => ({
       character: member,

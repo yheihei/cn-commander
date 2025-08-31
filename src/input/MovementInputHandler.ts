@@ -218,6 +218,19 @@ export class MovementInputHandler {
     const canGarrison = nearbyBases.length > 0;
     console.log('[駐留判定] canGarrison:', canGarrison);
 
+    // 占領可能かどうかを判定
+    const occupiableBase = this.armyManager.getOccupiableBase(army);
+    const canOccupy = occupiableBase !== null;
+    console.log('[占領判定] canOccupy:', canOccupy);
+    if (occupiableBase) {
+      console.log('[占領判定] 占領可能な拠点:', {
+        name: occupiableBase.getName(),
+        pos: occupiableBase.getPosition(),
+        owner: occupiableBase.getOwner(),
+        hp: occupiableBase.getCurrentHp(),
+      });
+    }
+
     // アクションメニューを表示
     this.uiManager.showActionMenu(
       army,
@@ -247,12 +260,20 @@ export class MovementInputHandler {
         this.startGarrisonProcess();
       },
       () => {
+        // 占領が選択された
+        this.isSelectingAction = false;
+        if (occupiableBase) {
+          this.executeOccupation(army, occupiableBase);
+        }
+      },
+      () => {
         // キャンセルされた
         this.isSelectingAction = false;
         this.deselectArmy();
       },
       hasAttackTarget,
       canGarrison,
+      canOccupy,
     );
   }
 
@@ -285,6 +306,31 @@ export class MovementInputHandler {
         this.startPathSetting();
       }
     });
+  }
+
+  private executeOccupation(army: Army, base: Base): void {
+    if (!army || !base) return;
+
+    console.log(`[占領実行] ${army.getName()}が${base.getName()}を占領開始`);
+
+    // BaseManagerで占領処理を実行
+    this.baseManager.occupyBase(base, army);
+
+    // 軍団を自動的に駐留させる
+    this.armyManager.garrisonArmy(army, base.getId());
+
+    // ガイドメッセージを表示
+    this.uiManager.showGuideMessage(`${base.getName()}を占領しました！`);
+
+    // 3秒後にメッセージを消す
+    this.scene.time.delayedCall(3000, () => {
+      this.uiManager.hideGuideMessage();
+    });
+
+    // 選択を解除
+    this.deselectArmy();
+
+    console.log(`[占領完了] ${army.getName()}が${base.getName()}を占領し、駐留しました`);
   }
 
   private startGarrisonProcess(): void {

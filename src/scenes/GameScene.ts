@@ -181,6 +181,17 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    // テスト用中立拠点の周辺も平地にする
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const x = 15 + dx;
+        const y = 10 + dy;
+        if (x >= 0 && x < mapSize && y >= 0 && y < mapSize) {
+          tiles[y][x] = TileType.PLAIN;
+        }
+      }
+    }
+
     // 敵開始位置付近も平地にする
     for (let dy = -3; dy <= 3; dy++) {
       for (let dx = -3; dx <= 3; dx++) {
@@ -218,6 +229,16 @@ export class GameScene extends Phaser.Scene {
           hp: 200,
           maxHp: 200,
           owner: 'player',
+        },
+        {
+          id: 'test-neutral-base',
+          name: 'テスト中立拠点',
+          type: BaseType.NEUTRAL,
+          x: 15,
+          y: 10,
+          hp: 0, // HP0にして占領可能な状態にする
+          maxHp: 80,
+          owner: 'neutral',
         },
         {
           id: 'enemy-hq',

@@ -242,6 +242,76 @@ export class ArmyManager {
   }
 
   /**
+   * 占領可能な拠点を取得
+   * @param army 軍団
+   * @returns 占領可能な拠点（null: 占領可能な拠点なし）
+   */
+  getOccupiableBase(army: Army): Base | null {
+    if (!this.baseManager) {
+      return null;
+    }
+
+    // 駐留判定と同じロジックで指揮官の位置を取得
+    const commander = army.getCommander();
+
+    // getWorldTransformMatrixを使って実際のワールド座標を取得
+    let worldX: number, worldY: number;
+    if (typeof commander.getWorldTransformMatrix === 'function') {
+      const worldPos = commander.getWorldTransformMatrix();
+      worldX = worldPos.tx;
+      worldY = worldPos.ty;
+    } else {
+      // テスト環境の場合
+      const pos = commander.getPosition();
+      worldX = pos.x;
+      worldY = pos.y;
+    }
+
+    // ワールド座標からタイル座標に変換
+    const armyTileX = Math.floor(worldX / 16);
+    const armyTileY = Math.floor(worldY / 16);
+
+    console.log(
+      '[占領判定] 指揮官の位置 - ワールド座標:',
+      { x: worldX, y: worldY },
+      'タイル座標:',
+      { x: armyTileX, y: armyTileY },
+    );
+
+    const bases = this.baseManager.getAllBases();
+
+    for (const base of bases) {
+      const basePos = base.getPosition();
+
+      // 隣接判定（3マス以内 - 駐留と同じ距離）
+      const distance = Math.max(Math.abs(armyTileX - basePos.x), Math.abs(armyTileY - basePos.y));
+
+      console.log(
+        `[占領判定] 拠点 ${base.getName()} - 位置:`,
+        basePos,
+        '距離:',
+        distance,
+        'HP:',
+        base.getCurrentHp(),
+        'Owner:',
+        base.getOwner(),
+      );
+
+      // 3マス以内（駐留と同じ距離）
+      if (distance > 3) continue;
+
+      // HP=0の敵/中立拠点
+      if (base.getCurrentHp() === 0 && base.getOwner() !== 'player') {
+        console.log('[占領判定] 占領可能な拠点を発見:', base.getName());
+        return base;
+      }
+    }
+
+    console.log('[占領判定] 占領可能な拠点なし');
+    return null;
+  }
+
+  /**
    * 軍団を駐留させる
    * @param army 駐留させる軍団
    * @param baseId 駐留先拠点のID

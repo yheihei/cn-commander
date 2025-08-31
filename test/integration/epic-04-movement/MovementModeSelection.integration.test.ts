@@ -67,6 +67,8 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
       expect(uiManager.isActionMenuVisible()).toBe(true);
       expect(uiManager.isAnyMenuVisible()).toBe(true);
@@ -105,6 +107,8 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
       expect(uiManager.isAnyMenuVisible()).toBe(true);
 

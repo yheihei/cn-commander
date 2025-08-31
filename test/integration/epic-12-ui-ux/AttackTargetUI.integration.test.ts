@@ -57,17 +57,20 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
         onStandby,
         onAttackTarget,
         onCancel,
+        onOccupy: jest.fn(),
+        canOccupy: false,
       });
 
       // 3つのボタンが作成されることを確認（移動、攻撃目標指定、待機）
+      // 占領ボタンはcanOccupy=falseなので作成されない
       const rectangleCalls = scene.add.rectangle.mock.calls;
 
       // 背景と3つのボタンの背景で計4回rectangleが呼ばれる
       expect(rectangleCalls.length).toBe(4);
 
-      // 背景の高さが160に調整されていることを確認（3つのボタン用）
+      // 背景の高さが210に調整されていることを確認（3つのボタン用: 60 + 3 * 50）
       const backgroundCall = rectangleCalls[0];
-      expect(backgroundCall[3]).toBe(160); // height引数 (x, y, width, height, fillColor, fillAlpha)
+      expect(backgroundCall[3]).toBe(210); // height引数 (x, y, width, height, fillColor, fillAlpha)
     });
 
     test('攻撃目標指定ボタンをクリックするとコールバックが呼ばれる', () => {
@@ -84,6 +87,8 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
         onStandby,
         onAttackTarget,
         onCancel,
+        onOccupy: jest.fn(),
+        canOccupy: false,
       });
 
       // ボタンのクリックイベントをシミュレート
@@ -200,6 +205,8 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
         onStandby,
         onAttackTarget,
         onCancel,
+        onOccupy: jest.fn(),
+        canOccupy: false,
       });
 
       // delayedCallが呼ばれたことを確認

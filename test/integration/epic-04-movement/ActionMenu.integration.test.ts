@@ -55,6 +55,8 @@ describe('[エピック4] Action Menu Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         onCancel,
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
 
       expect(uiManager.isActionMenuVisible()).toBe(true);
@@ -88,6 +90,8 @@ describe('[エピック4] Action Menu Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onOccupy
+        false, // canOccupy
       );
       expect(uiManager.isActionMenuVisible()).toBe(true);
 

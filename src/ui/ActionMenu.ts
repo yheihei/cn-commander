@@ -9,9 +9,11 @@ export interface ActionMenuConfig {
   onAttackTarget?: () => void;
   onClearAttackTarget?: () => void;
   onGarrison?: () => void;
+  onOccupy?: () => void;
   onCancel?: () => void;
   hasAttackTarget?: boolean;
   canGarrison?: boolean;
+  canOccupy?: boolean;
 }
 
 export class ActionMenu extends Phaser.GameObjects.Container {
@@ -20,14 +22,17 @@ export class ActionMenu extends Phaser.GameObjects.Container {
   private standbyButton: Phaser.GameObjects.Container;
   private attackTargetButton: Phaser.GameObjects.Container;
   private garrisonButton: Phaser.GameObjects.Container | null = null;
+  private occupyButton: Phaser.GameObjects.Container | null = null;
   private onMoveCallback?: () => void;
   private onStandbyCallback?: () => void;
   private onAttackTargetCallback?: () => void;
   private onClearAttackTargetCallback?: () => void;
   private onGarrisonCallback?: () => void;
+  private onOccupyCallback?: () => void;
   private onCancelCallback?: () => void;
   private hasAttackTarget: boolean;
   private canGarrison: boolean;
+  private canOccupy: boolean;
 
   constructor(config: ActionMenuConfig) {
     super(config.scene, config.x, config.y);
@@ -37,21 +42,27 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.onAttackTargetCallback = config.onAttackTarget;
     this.onClearAttackTargetCallback = config.onClearAttackTarget;
     this.onGarrisonCallback = config.onGarrison;
+    this.onOccupyCallback = config.onOccupy;
     this.onCancelCallback = config.onCancel;
     this.hasAttackTarget = config.hasAttackTarget || false;
     this.canGarrison = config.canGarrison || false;
+    this.canOccupy = config.canOccupy || false;
 
     console.log('[ActionMenu] canGarrison:', this.canGarrison);
+    console.log('[ActionMenu] canOccupy:', this.canOccupy);
 
-    // メニューの背景（駐留ボタンがある場合は高さを調整）
-    const menuHeight = this.canGarrison ? 210 : 160;
+    // メニューの背景（駐留ボタンや占領ボタンがある場合は高さを調整）
+    let buttonCount = 3; // 基本ボタン数（移動、攻撃目標、待機）
+    if (this.canGarrison) buttonCount++;
+    if (this.canOccupy) buttonCount++;
+    const menuHeight = 60 + buttonCount * 50;
     this.background = config.scene.add.rectangle(0, 0, 120, menuHeight, 0x333333, 0.9);
     this.background.setStrokeStyle(2, 0xffffff);
     this.add(this.background);
 
     // ボタンの垂直間隔を調整
-    const buttonSpacing = this.canGarrison ? 50 : 50;
-    let currentY = this.canGarrison ? -75 : -50;
+    const buttonSpacing = 50;
+    let currentY = -(menuHeight / 2) + 50;
 
     // 移動ボタン
     this.moveButton = this.createButton('移動', 0, currentY, () => {
@@ -109,8 +120,24 @@ export class ActionMenu extends Phaser.GameObjects.Container {
       });
       this.add(this.garrisonButton);
       console.log('[ActionMenu] 駐留ボタンを追加しました');
+      currentY += buttonSpacing;
     } else {
       console.log('[ActionMenu] 駐留ボタンは作成されません（canGarrison=false）');
+    }
+
+    // 占領ボタン（占領可能な場合のみ）
+    if (this.canOccupy) {
+      console.log('[ActionMenu] 占領ボタンを作成します');
+      this.occupyButton = this.createButton('占領', 0, currentY, () => {
+        if (this.onOccupyCallback) {
+          this.onOccupyCallback();
+        }
+        this.hide();
+      });
+      this.add(this.occupyButton);
+      console.log('[ActionMenu] 占領ボタンを追加しました');
+    } else {
+      console.log('[ActionMenu] 占領ボタンは作成されません（canOccupy=false）');
     }
 
     // Containerを配置

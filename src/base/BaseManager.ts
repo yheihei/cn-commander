@@ -300,6 +300,58 @@ export class BaseManager {
   }
 
   /**
+   * 拠点を占領する
+   * @param base 占領する拠点
+   * @param army 占領する軍団
+   */
+  occupyBase(base: Base, army: Army): void {
+    if (!base || !army) {
+      console.error('[BaseManager] occupyBase: 拠点または軍団が指定されていません');
+      return;
+    }
+
+    // HP=0でない場合は占領不可
+    if (base.getCurrentHp() > 0) {
+      console.error('[BaseManager] occupyBase: 拠点のHPが0ではありません');
+      return;
+    }
+
+    // 既に味方拠点の場合は占領不可
+    if (base.getOwner() === 'player') {
+      console.error('[BaseManager] occupyBase: 既に味方拠点です');
+      return;
+    }
+
+    const baseId = base.getId();
+    const previousOwner = base.getOwner();
+
+    // 敵兵士の削除（敵拠点の場合）
+    if (previousOwner === 'enemy') {
+      const enemySoldiers = this.waitingSoldiers.get(baseId);
+      if (enemySoldiers && enemySoldiers.length > 0) {
+        console.log(`[BaseManager] 拠点${baseId}の敵兵士${enemySoldiers.length}名を撃破`);
+        this.waitingSoldiers.set(baseId, []);
+      }
+
+      // TODO: 生産中アイテムの破棄（生産システム実装後）
+    }
+
+    // 所有者を変更
+    base.changeOwner('player');
+
+    // HPを占領軍団の合計HPまで回復
+    const totalHp = army.getTotalHp();
+    base.heal(totalHp);
+    console.log(`[BaseManager] 拠点${baseId}のHPを${totalHp}に回復`);
+
+    // 軍団を自動的に駐留させる
+    // garrisonArmyはArmyManagerで呼び出すため、ここではイベントを発火
+    this.scene.events.emit('baseOccupied', { base, army });
+
+    console.log(`[BaseManager] ${army.getName()}が拠点${baseId}を占領しました`);
+  }
+
+  /**
    * 倉庫アイテムの初期化（デバッグ用）
    */
   initializeWarehouse(): void {
