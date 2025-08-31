@@ -1,7 +1,6 @@
-import { ProductionManager } from '../../../src/production/ProductionManager';
+import { ProductionManager, ProductionItemType } from '../../../src/production/ProductionManager';
 import { InventoryManager } from '../../../src/item/InventoryManager';
 import { WarehouseSubMenu } from '../../../src/ui/WarehouseSubMenu';
-import { ProductionItemType } from '../../../src/production/ProductionManager';
 
 // モックセットアップ
 jest.mock('phaser');
