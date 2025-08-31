@@ -29,6 +29,7 @@ describe('[エピック4] Action Menu Integration Tests', () => {
       const mockArmy = {
         getCommander: () => ({
           getCenter: () => ({ x: 100, y: 100 }),
+          getPosition: () => ({ x: 100, y: 100 }),
         }),
         getName: () => 'テスト軍団',
         getMovementState: () => ({
@@ -42,6 +43,7 @@ describe('[エピック4] Action Menu Integration Tests', () => {
         getAllMembers: () => [],
         getAttackTarget: () => null,
         hasAttackTarget: () => false,
+        getIsGarrisoned: () => false,
       };
 
       const onMove = jest.fn();
@@ -67,6 +69,7 @@ describe('[エピック4] Action Menu Integration Tests', () => {
       const mockArmy = {
         getCommander: () => ({
           getCenter: () => ({ x: 100, y: 100 }),
+          getPosition: () => ({ x: 100, y: 100 }),
         }),
         getName: () => 'テスト軍団',
         getMovementState: () => ({
@@ -80,6 +83,7 @@ describe('[エピック4] Action Menu Integration Tests', () => {
         getAllMembers: () => [],
         getAttackTarget: () => null,
         hasAttackTarget: () => false,
+        getIsGarrisoned: () => false,
       };
 
       uiManager.showActionMenu(

@@ -170,9 +170,6 @@ export class MovementInputHandler {
     this.selectedArmy = army;
     this.highlightCommander(army);
 
-    // 攻撃目標の有無を確認
-    const hasAttackTarget = army.hasAttackTarget();
-
     // 駐留可能かどうかを判定（3マス以内に味方拠点があるか）
     const commander = army.getCommander();
 
@@ -245,9 +242,9 @@ export class MovementInputHandler {
         this.setArmyStandby();
       },
       () => {
-        // 攻撃目標指定が選択された
+        // 駐留が選択された
         this.isSelectingAction = false;
-        this.startAttackTargetSelection();
+        this.startGarrisonProcess();
       },
       () => {
         // 攻撃目標解除が選択された
@@ -255,24 +252,24 @@ export class MovementInputHandler {
         this.clearAttackTarget();
       },
       () => {
-        // 駐留が選択された
+        // 攻撃目標指定が選択された
         this.isSelectingAction = false;
-        this.startGarrisonProcess();
-      },
-      () => {
-        // 占領が選択された
-        this.isSelectingAction = false;
-        if (occupiableBase) {
-          this.executeOccupation(army, occupiableBase);
-        }
+        this.startAttackTargetSelection();
       },
       () => {
         // キャンセルされた
         this.isSelectingAction = false;
         this.deselectArmy();
       },
-      hasAttackTarget,
-      canGarrison,
+      occupiableBase
+        ? () => {
+            // 占領が選択された
+            this.isSelectingAction = false;
+            if (occupiableBase) {
+              this.executeOccupation(army, occupiableBase);
+            }
+          }
+        : undefined,
       canOccupy,
     );
   }

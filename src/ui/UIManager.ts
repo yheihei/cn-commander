@@ -26,6 +26,7 @@ export class UIManager {
   private economyManager: EconomyManager;
   private baseManager: any; // BaseManagerの型は後で適切に設定
   private actionMenu: ActionMenu | null = null;
+  private actionMenuButtonCount: number = 3; // ActionMenuのボタン数を記憶
   private movementModeMenu: MovementModeMenu | null = null;
   private armyInfoPanel: ArmyInfoPanel | null = null;
   private baseInfoPanel: BaseInfoPanel | null = null;
@@ -88,31 +89,48 @@ export class UIManager {
     army: Army,
     onMove: () => void,
     onStandby: () => void,
-    onAttackTarget: () => void,
-    onClearAttackTarget: () => void,
     onGarrison: () => void,
-    onOccupy: () => void,
+    onClearGarrison: () => void,
+    onAttackTarget: () => void,
     onCancel: () => void,
-    hasAttackTarget: boolean = false,
-    canGarrison: boolean = false,
-    canOccupy: boolean = false,
+    onOccupy?: () => void,
+    canOccupy?: boolean,
   ): void {
-    // 既存のメニューがあれば削除
+    // 既存のメニューを非表示
     this.hideActionMenu();
+    this.hideMovementModeMenu();
 
+    // 現在選択中の軍団を記録
     this.currentSelectedArmy = army;
 
     // 軍団情報パネルを表示
     this.showArmyInfo(army);
 
-    // カメラの現在の表示範囲を取得
     const cam = this.scene.cameras.main;
-    const viewLeft = cam.worldView.x;
     const viewTop = cam.worldView.y;
-
-    // 画面左側の固定位置に配置
+    const viewLeft = cam.worldView.x;
     const menuX = viewLeft + 80; // 左端から80px
-    const menuY = viewTop + 100; // 上端から100px
+
+    // 駐留可能かチェック
+    const canGarrison = this.checkCanGarrison(army);
+
+    // 攻撃目標があるかチェック
+    const hasAttackTarget = army.hasAttackTarget();
+
+    // ボタン数をカウント（ActionMenuと同じロジック）
+    let buttonCount = 3; // 基本ボタン数（移動、攻撃目標、待機）
+    if (canGarrison) buttonCount++;
+    if (canOccupy) buttonCount++;
+
+    // ボタン数を記憶（updateActionMenuPositionで使用）
+    this.actionMenuButtonCount = buttonCount;
+
+    // メニュー高さを計算（ActionMenuと同じロジック）
+    const menuHeight = 60 + buttonCount * 50;
+
+    // メニューの上端が画面内に収まるようにY座標を調整
+    // メニューの中心点Y座標 = viewTop + 余白 + メニュー高さの半分
+    const menuY = viewTop + 10 + menuHeight / 2;
 
     this.actionMenu = new ActionMenu({
       scene: this.scene,
@@ -130,40 +148,86 @@ export class UIManager {
         // 待機を選択したら情報パネルも非表示
         this.hideArmyInfo();
       },
-      onAttackTarget: () => {
-        onAttackTarget();
-        this.actionMenu = null;
-        // 攻撃目標指定を選択したら情報パネルを非表示
-        this.hideArmyInfo();
-      },
-      onClearAttackTarget: () => {
-        onClearAttackTarget();
-        this.actionMenu = null;
-        // 攻撃目標解除を選択しても情報パネルは表示したままにする
-      },
       onGarrison: () => {
         onGarrison();
         this.actionMenu = null;
         // 駐留を選択したら情報パネルを非表示
         this.hideArmyInfo();
       },
-      onOccupy: () => {
-        onOccupy();
+      onClearAttackTarget: () => {
+        onClearGarrison();
         this.actionMenu = null;
-        // 占領を選択したら情報パネルを非表示
+        // 攻撃目標解除も情報パネルを非表示
+        this.hideArmyInfo();
+      },
+      onAttackTarget: () => {
+        onAttackTarget();
+        this.actionMenu = null;
+        // 攻撃目標指定も情報パネルを非表示
         this.hideArmyInfo();
       },
       onCancel: () => {
         onCancel();
         this.actionMenu = null;
-        this.currentSelectedArmy = null;
-        // キャンセル時は情報パネルも非表示
+        // キャンセルも情報パネルを非表示
         this.hideArmyInfo();
       },
-      hasAttackTarget,
-      canGarrison,
-      canOccupy,
+      onOccupy: onOccupy
+        ? () => {
+            onOccupy();
+            this.actionMenu = null;
+            // 占領も情報パネルを非表示
+            this.hideArmyInfo();
+          }
+        : undefined,
+      hasAttackTarget: hasAttackTarget,
+      canGarrison: canGarrison,
+      canOccupy: canOccupy || false,
     });
+  }
+
+  /**
+   * 軍団が駐留可能かチェック
+   */
+  /**
+   * 軍団が駐留可能かチェック
+   */
+  private checkCanGarrison(army: Army): boolean {
+    // baseManagerがない、またはgetBasesWithinRangeメソッドがない場合はfalse
+    if (!this.baseManager || typeof this.baseManager.getBasesWithinRange !== 'function') {
+      return false;
+    }
+
+    const commander = army.getCommander();
+
+    // getWorldTransformMatrixを使って実際のワールド座標を取得
+    let worldX: number, worldY: number;
+    if (typeof commander.getWorldTransformMatrix === 'function') {
+      const worldPos = commander.getWorldTransformMatrix();
+      worldX = worldPos.tx;
+      worldY = worldPos.ty;
+    } else if (typeof commander.getPosition === 'function') {
+      // テスト環境の場合
+      const pos = commander.getPosition();
+      worldX = pos.x;
+      worldY = pos.y;
+    } else {
+      // どちらのメソッドもない場合はfalse
+      return false;
+    }
+
+    // ワールド座標からタイル座標に変換
+    const tileX = Math.floor(worldX / 16);
+    const tileY = Math.floor(worldY / 16);
+
+    const nearbyBases = this.baseManager.getBasesWithinRange(
+      tileX,
+      tileY,
+      3,
+      (base: Base) => base.getOwner() === 'player',
+    );
+
+    return nearbyBases.length > 0;
   }
 
   public showMovementModeMenu(
@@ -297,7 +361,14 @@ export class UIManager {
 
   private updateActionMenuPosition(): void {
     if (this.actionMenu) {
-      this.actionMenu.updateFixedPosition(80, 100); // 左端から80px、上端から100px
+      // メニュー高さを計算（ActionMenuと同じロジック）
+      const menuHeight = 60 + this.actionMenuButtonCount * 50;
+
+      // メニューの上端が画面内に収まるようにY座標を調整
+      // screenY = 余白 + メニュー高さの半分
+      const screenY = 10 + menuHeight / 2;
+
+      this.actionMenu.updateFixedPosition(80, screenY); // 左端から80px、動的に計算されたY座標
     }
   }
 
