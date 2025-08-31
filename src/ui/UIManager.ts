@@ -11,6 +11,7 @@ import { DeploymentPositionUI } from './DeploymentPositionUI';
 import { ProductionFactoryMenu } from './ProductionFactoryMenu';
 import { GarrisonedArmiesPanel } from './GarrisonedArmiesPanel';
 import { MedicalFacilityMenu } from './MedicalFacilityMenu';
+import { WarehouseSubMenu } from './WarehouseSubMenu';
 import { MedicalManager } from '../medical/MedicalManager';
 import { ProductionManager } from '../production/ProductionManager';
 import { EconomyManager } from '../economy/EconomyManager';
@@ -36,6 +37,7 @@ export class UIManager {
   private productionFactoryMenu: ProductionFactoryMenu | null = null;
   private garrisonedArmiesPanel: GarrisonedArmiesPanel | null = null;
   private medicalFacilityMenu: MedicalFacilityMenu | null = null;
+  private warehouseSubMenu: WarehouseSubMenu | null = null;
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
@@ -222,6 +224,7 @@ export class UIManager {
       this.isBarracksSubMenuVisible() ||
       this.isProductionFactoryMenuVisible() ||
       this.isMedicalFacilityMenuVisible() ||
+      this.isWarehouseSubMenuVisible() ||
       this.isArmyFormationUIVisible() ||
       this.isItemSelectionUIVisible() ||
       this.isDeploymentPositionUIVisible()
@@ -414,8 +417,7 @@ export class UIManager {
       },
       onWarehouse: () => {
         this.hideBaseActionMenu();
-        // TODO: 倉庫サブメニューを表示
-        console.log('倉庫が選択されました');
+        this.showWarehouseSubMenu();
       },
       onCancel: () => {
         this.hideBaseActionMenu();
@@ -580,6 +582,30 @@ export class UIManager {
     }
   }
 
+  public showWarehouseSubMenu(): void {
+    // 他のメニューを閉じる
+    this.hideBaseActionMenu();
+    this.hideBarracksSubMenu();
+    this.hideProductionFactoryMenu();
+    this.hideMedicalFacilityMenu();
+    this.hideWarehouseSubMenu();
+
+    // WarehouseSubMenuを作成
+    this.warehouseSubMenu = new WarehouseSubMenu({
+      scene: this.scene,
+      onCancel: () => {
+        this.hideWarehouseSubMenu();
+      },
+    });
+  }
+
+  public hideWarehouseSubMenu(): void {
+    if (this.warehouseSubMenu) {
+      this.warehouseSubMenu.destroy();
+      this.warehouseSubMenu = null;
+    }
+  }
+
   public update(): void {
     // 軍団情報パネルの更新は既存のupdateArmyInfoで行う
     if (this.currentSelectedArmy && this.armyInfoPanel) {
@@ -698,6 +724,11 @@ export class UIManager {
       this.medicalFacilityMenu.updateMoney(this.economyManager.getMoney());
     }
 
+    // WarehouseSubMenuの位置更新
+    if (this.warehouseSubMenu) {
+      this.warehouseSubMenu.updatePosition();
+    }
+
     // MedicalManagerの更新
     if (this.medicalManager) {
       const armyManager = (this.scene as any).armyManager;
@@ -776,6 +807,10 @@ export class UIManager {
 
   public isMedicalFacilityMenuVisible(): boolean {
     return this.medicalFacilityMenu !== null;
+  }
+
+  public isWarehouseSubMenuVisible(): boolean {
+    return this.warehouseSubMenu !== null;
   }
 
   public isItemSelectionUIVisible(): boolean {
@@ -1027,6 +1062,7 @@ export class UIManager {
     this.hideBarracksSubMenu();
     this.hideProductionFactoryMenu();
     this.hideMedicalFacilityMenu();
+    this.hideWarehouseSubMenu();
     this.hideGuideMessage();
     // 注: armyFormationUIは意図的に含めない（専用のhideメソッドがあるため）
   }
@@ -1040,6 +1076,7 @@ export class UIManager {
     this.hideBarracksSubMenu();
     this.hideProductionFactoryMenu();
     this.hideMedicalFacilityMenu();
+    this.hideWarehouseSubMenu();
     this.hideGuideMessage();
     this.hideArmyFormationUI();
     this.hideItemSelectionUI();
