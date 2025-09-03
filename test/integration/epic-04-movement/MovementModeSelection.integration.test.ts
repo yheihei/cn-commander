@@ -61,12 +61,13 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
       // アクションメニューを表示
       uiManager.showActionMenu(
         mockArmy as any,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
+        jest.fn(), // onMove
+        jest.fn(), // onStandby
+        jest.fn(), // onGarrison
+        jest.fn(), // onClearGarrison
+        jest.fn(), // onAttackTarget
+        jest.fn(), // onCancel
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -101,12 +102,13 @@ describe('[エピック4] Movement Mode Selection Integration Tests', () => {
 
       uiManager.showActionMenu(
         mockArmy as any,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
+        jest.fn(), // onMove
+        jest.fn(), // onStandby
+        jest.fn(), // onGarrison
+        jest.fn(), // onClearGarrison
+        jest.fn(), // onAttackTarget
+        jest.fn(), // onCancel
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );

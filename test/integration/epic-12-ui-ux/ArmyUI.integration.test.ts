@@ -81,6 +81,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -100,6 +101,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -117,6 +119,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         onCancel,
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -240,6 +243,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -255,6 +259,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -284,6 +289,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -339,6 +345,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );
@@ -355,6 +362,7 @@ describe('[エピック12] Army UI System Integration Tests', () => {
         jest.fn(),
         jest.fn(),
         jest.fn(),
+        jest.fn(), // onInventory (新しく追加)
         jest.fn(), // onOccupy
         false, // canOccupy
       );

@@ -8,6 +8,7 @@ export interface ActionMenuConfig {
   onStandby?: () => void;
   onAttackTarget?: () => void;
   onClearAttackTarget?: () => void;
+  onInventory?: () => void;
   onGarrison?: () => void;
   onOccupy?: () => void;
   onCancel?: () => void;
@@ -21,12 +22,14 @@ export class ActionMenu extends Phaser.GameObjects.Container {
   private moveButton: Phaser.GameObjects.Container;
   private standbyButton: Phaser.GameObjects.Container;
   private attackTargetButton: Phaser.GameObjects.Container;
+  private inventoryButton: Phaser.GameObjects.Container;
   private garrisonButton: Phaser.GameObjects.Container | null = null;
   private occupyButton: Phaser.GameObjects.Container | null = null;
   private onMoveCallback?: () => void;
   private onStandbyCallback?: () => void;
   private onAttackTargetCallback?: () => void;
   private onClearAttackTargetCallback?: () => void;
+  private onInventoryCallback?: () => void;
   private onGarrisonCallback?: () => void;
   private onOccupyCallback?: () => void;
   private onCancelCallback?: () => void;
@@ -41,6 +44,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     this.onStandbyCallback = config.onStandby;
     this.onAttackTargetCallback = config.onAttackTarget;
     this.onClearAttackTargetCallback = config.onClearAttackTarget;
+    this.onInventoryCallback = config.onInventory;
     this.onGarrisonCallback = config.onGarrison;
     this.onOccupyCallback = config.onOccupy;
     this.onCancelCallback = config.onCancel;
@@ -52,7 +56,7 @@ export class ActionMenu extends Phaser.GameObjects.Container {
     console.log('[ActionMenu] canOccupy:', this.canOccupy);
 
     // メニューの背景（駐留ボタンや占領ボタンがある場合は高さを調整）
-    let buttonCount = 3; // 基本ボタン数（移動、攻撃目標、待機）
+    let buttonCount = 4; // 基本ボタン数（移動、攻撃目標、待機、持物）
     if (this.canGarrison) buttonCount++;
     if (this.canOccupy) buttonCount++;
     const menuHeight = 60 + buttonCount * 50;
@@ -107,6 +111,16 @@ export class ActionMenu extends Phaser.GameObjects.Container {
       this.hide();
     });
     this.add(this.standbyButton);
+    currentY += buttonSpacing;
+
+    // 持物ボタン
+    this.inventoryButton = this.createButton('持物', 0, currentY, () => {
+      if (this.onInventoryCallback) {
+        this.onInventoryCallback();
+      }
+      this.hide();
+    });
+    this.add(this.inventoryButton);
     currentY += buttonSpacing;
 
     // 駐留ボタン（駐留可能な場合のみ）

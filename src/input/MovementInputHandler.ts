@@ -69,43 +69,60 @@ export class MovementInputHandler {
   }
 
   private handleLeftClick(x: number, y: number): void {
+    console.log(`[MovementInputHandler] handleLeftClick開始 - 座標: (${x}, ${y})`);
+
     // 攻撃目標指定モード中は何もしない
     if (this.isAttackTargetMode) {
-      console.log('MovementInputHandler: 攻撃目標指定モード中なのでクリックを無視');
+      console.log('[MovementInputHandler] 攻撃目標指定モード中なのでクリックを無視');
       return;
     }
 
     // 駐留選択モード中は何もしない
     if (this.isGarrisonSelectionMode) {
-      console.log('MovementInputHandler: 駐留選択モード中なのでクリックを無視');
+      console.log('[MovementInputHandler] 駐留選択モード中なのでクリックを無視');
       return;
     }
 
     // UIが表示されている場合は何もしない
-    if (this.uiManager.isAnyMenuVisible()) {
+    const isMenuVisible = this.uiManager.isAnyMenuVisible();
+    console.log(`[MovementInputHandler] メニュー表示状態: ${isMenuVisible}`);
+    if (isMenuVisible) {
+      console.log('[MovementInputHandler] メニューが表示中なのでクリックを無視');
       return;
     }
 
+    console.log(
+      `[MovementInputHandler] isSettingPath: ${this.isSettingPath}, isSelectingAction: ${this.isSelectingAction}`,
+    );
+
     if (!this.isSettingPath && !this.isSelectingAction) {
+      console.log('[MovementInputHandler] オブジェクト選択モード - 軍団を検索');
       // 軍団選択を試みる
       const clickedArmy = this.findArmyAtPosition(x, y);
 
       if (clickedArmy) {
+        console.log(`[MovementInputHandler] 軍団発見: ${clickedArmy.getCommander().getName()}`);
         this.showActionMenu(clickedArmy);
       } else {
+        console.log('[MovementInputHandler] 軍団が見つからない - 拠点を検索');
         // 軍団が見つからなかった場合、拠点を探す
         const clickedBase = this.findBaseAtPosition(x, y);
         if (clickedBase) {
+          console.log(`[MovementInputHandler] 拠点発見: ${clickedBase.getName()}`);
           this.uiManager.showBaseInfo(clickedBase);
         } else {
+          console.log('[MovementInputHandler] 軍団も拠点も見つからない - BaseInfoPanelを非表示');
           // 軍団も拠点も見つからなかった場合、BaseInfoPanelと関連メニューを非表示
           this.uiManager.hideBaseInfo();
         }
       }
     } else if (this.isSettingPath) {
+      console.log('[MovementInputHandler] 経路設定モード - ウェイポイント追加');
       // 経路点を追加
       this.addWaypoint(x, y);
     }
+
+    console.log('[MovementInputHandler] handleLeftClick完了');
   }
 
   private handleRightClick(): void {
@@ -160,6 +177,7 @@ export class MovementInputHandler {
   }
 
   private showActionMenu(army: Army): void {
+    console.log(`[MovementInputHandler] showActionMenu - isSelectingAction設定: true`);
     this.isSelectingAction = true;
 
     // 前の選択を解除
@@ -233,37 +251,52 @@ export class MovementInputHandler {
       army,
       () => {
         // 移動が選択された
+        console.log(`[MovementInputHandler] Move選択 - isSelectingActionリセット: false`);
         this.isSelectingAction = false;
         this.startMovementProcess();
       },
       () => {
         // 待機が選択された
+        console.log(`[MovementInputHandler] Standby選択 - isSelectingActionリセット: false`);
         this.isSelectingAction = false;
         this.setArmyStandby();
       },
       () => {
         // 駐留が選択された
+        console.log(`[MovementInputHandler] Garrison選択 - isSelectingActionリセット: false`);
         this.isSelectingAction = false;
         this.startGarrisonProcess();
       },
       () => {
         // 攻撃目標解除が選択された
+        console.log(
+          `[MovementInputHandler] ClearAttackTarget選択 - isSelectingActionリセット: false`,
+        );
         this.isSelectingAction = false;
         this.clearAttackTarget();
       },
       () => {
         // 攻撃目標指定が選択された
+        console.log(`[MovementInputHandler] AttackTarget選択 - isSelectingActionリセット: false`);
         this.isSelectingAction = false;
         this.startAttackTargetSelection();
       },
       () => {
         // キャンセルされた
+        console.log(`[MovementInputHandler] Cancel選択 - isSelectingActionリセット: false`);
         this.isSelectingAction = false;
         this.deselectArmy();
+      },
+      () => {
+        // 持物が選択された
+        console.log(`[MovementInputHandler] Inventory選択 - isSelectingActionリセット: false`);
+        this.isSelectingAction = false;
+        // UIManagerで持物UIが表示される
       },
       occupiableBase
         ? () => {
             // 占領が選択された
+            console.log(`[MovementInputHandler] Occupy選択 - isSelectingActionリセット: false`);
             this.isSelectingAction = false;
             if (occupiableBase) {
               this.executeOccupation(army, occupiableBase);

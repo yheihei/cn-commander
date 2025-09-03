@@ -7,6 +7,7 @@ import { BaseActionMenu } from './BaseActionMenu';
 import { BarracksSubMenu } from './BarracksSubMenu';
 import { ArmyFormationUI, FormationData } from './ArmyFormationUI';
 import { ItemSelectionUI, ItemEquippedFormationData } from './ItemSelectionUI';
+import { ItemInventoryUI } from './ItemInventoryUI';
 import { DeploymentPositionUI } from './DeploymentPositionUI';
 import { ProductionFactoryMenu } from './ProductionFactoryMenu';
 import { GarrisonedArmiesPanel } from './GarrisonedArmiesPanel';
@@ -18,6 +19,8 @@ import { EconomyManager } from '../economy/EconomyManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
+import { IConsumable, IWeapon } from '../types/ItemTypes';
+import { Character } from '../character/Character';
 
 export class UIManager {
   private scene: Phaser.Scene;
@@ -34,6 +37,7 @@ export class UIManager {
   private barracksSubMenu: BarracksSubMenu | null = null;
   private armyFormationUI: ArmyFormationUI | null = null;
   private itemSelectionUI: ItemSelectionUI | null = null;
+  private itemInventoryUI: ItemInventoryUI | null = null;
   private deploymentPositionUI: DeploymentPositionUI | null = null;
   private productionFactoryMenu: ProductionFactoryMenu | null = null;
   private garrisonedArmiesPanel: GarrisonedArmiesPanel | null = null;
@@ -93,9 +97,11 @@ export class UIManager {
     onClearGarrison: () => void,
     onAttackTarget: () => void,
     onCancel: () => void,
+    onInventory: () => void, // 追加
     onOccupy?: () => void,
     canOccupy?: boolean,
   ): void {
+    console.log('[UIManager] showActionMenu called');
     // 既存のメニューを非表示
     this.hideActionMenu();
     this.hideMovementModeMenu();
@@ -118,7 +124,7 @@ export class UIManager {
     const hasAttackTarget = army.hasAttackTarget();
 
     // ボタン数をカウント（ActionMenuと同じロジック）
-    let buttonCount = 3; // 基本ボタン数（移動、攻撃目標、待機）
+    let buttonCount = 4; // 基本ボタン数（移動、攻撃目標、待機、持物）
     if (canGarrison) buttonCount++;
     if (canOccupy) buttonCount++;
 
@@ -137,36 +143,50 @@ export class UIManager {
       x: menuX,
       y: menuY,
       onMove: () => {
+        console.log('[UIManager] ActionMenu - Move selected');
         onMove();
         this.actionMenu = null;
         // 移動を選択したら情報パネルを非表示
         this.hideArmyInfo();
       },
       onStandby: () => {
+        console.log('[UIManager] ActionMenu - Standby selected');
         onStandby();
         this.actionMenu = null;
         // 待機を選択したら情報パネルも非表示
         this.hideArmyInfo();
       },
+      onInventory: () => {
+        console.log('[UIManager] ActionMenu - Inventory selected');
+        onInventory(); // MovementInputHandlerのコールバックを呼ぶ
+        this.actionMenu = null;
+        this.hideArmyInfo();
+        // 持物UIを表示
+        this.showItemInventoryUI(army);
+      },
       onGarrison: () => {
+        console.log('[UIManager] ActionMenu - Garrison selected');
         onGarrison();
         this.actionMenu = null;
         // 駐留を選択したら情報パネルを非表示
         this.hideArmyInfo();
       },
       onClearAttackTarget: () => {
+        console.log('[UIManager] ActionMenu - Clear attack target selected');
         onClearGarrison();
         this.actionMenu = null;
         // 攻撃目標解除も情報パネルを非表示
         this.hideArmyInfo();
       },
       onAttackTarget: () => {
+        console.log('[UIManager] ActionMenu - Attack target selected');
         onAttackTarget();
         this.actionMenu = null;
         // 攻撃目標指定も情報パネルを非表示
         this.hideArmyInfo();
       },
       onCancel: () => {
+        console.log('[UIManager] ActionMenu - Cancel selected');
         onCancel();
         this.actionMenu = null;
         // キャンセルも情報パネルを非表示
@@ -174,6 +194,7 @@ export class UIManager {
       },
       onOccupy: onOccupy
         ? () => {
+            console.log('[UIManager] ActionMenu - Occupy selected');
             onOccupy();
             this.actionMenu = null;
             // 占領も情報パネルを非表示
@@ -300,6 +321,7 @@ export class UIManager {
       this.isWarehouseSubMenuVisible() ||
       this.isArmyFormationUIVisible() ||
       this.isItemSelectionUIVisible() ||
+      this.isItemInventoryUIVisible() ||
       this.isDeploymentPositionUIVisible()
     );
   }
@@ -686,6 +708,39 @@ export class UIManager {
     }
   }
 
+  public showItemInventoryUI(army: Army): void {
+    // 他のメニューを閉じる
+    this.hideActionMenu();
+    this.hideMovementModeMenu();
+    this.hideArmyInfo();
+    this.hideItemInventoryUI();
+
+    // ItemInventoryUIを作成
+    this.itemInventoryUI = new ItemInventoryUI({
+      scene: this.scene,
+      army: army,
+      onClose: () => {
+        this.hideItemInventoryUI();
+      },
+      onUseItem: (character: Character, item: IConsumable) => {
+        // task-9-3-2で実装予定
+        console.log(`[ItemInventoryUI] 使用: ${character.getName()} - ${item.name}`);
+      },
+      onEquipWeapon: (character: Character, weapon: IWeapon) => {
+        // 装備処理
+        character.getItemHolder().equipWeapon(weapon);
+        console.log(`[ItemInventoryUI] 装備: ${character.getName()} - ${weapon.name}`);
+      },
+    });
+  }
+
+  public hideItemInventoryUI(): void {
+    if (this.itemInventoryUI) {
+      this.itemInventoryUI.destroy();
+      this.itemInventoryUI = null;
+    }
+  }
+
   public update(): void {
     // 軍団情報パネルの更新は既存のupdateArmyInfoで行う
     if (this.currentSelectedArmy && this.armyInfoPanel) {
@@ -809,6 +864,20 @@ export class UIManager {
       this.warehouseSubMenu.updatePosition();
     }
 
+    // ItemInventoryUIの位置更新
+    if (this.itemInventoryUI) {
+      const cam = this.scene.cameras.main;
+      const zoom = cam.zoom || 2.25;
+      const viewWidth = 1280 / zoom;
+      const viewHeight = 720 / zoom;
+      const viewLeft = cam.worldView.x;
+      const viewTop = cam.worldView.y;
+      const centerX = viewLeft + viewWidth / 2;
+      const centerY = viewTop + viewHeight / 2;
+
+      this.itemInventoryUI.setPosition(centerX, centerY);
+    }
+
     // MedicalManagerの更新
     if (this.medicalManager) {
       const armyManager = (this.scene as any).armyManager;
@@ -891,6 +960,10 @@ export class UIManager {
 
   public isWarehouseSubMenuVisible(): boolean {
     return this.warehouseSubMenu !== null;
+  }
+
+  public isItemInventoryUIVisible(): boolean {
+    return this.itemInventoryUI !== null;
   }
 
   public isItemSelectionUIVisible(): boolean {
@@ -1143,6 +1216,7 @@ export class UIManager {
     this.hideProductionFactoryMenu();
     this.hideMedicalFacilityMenu();
     this.hideWarehouseSubMenu();
+    this.hideItemInventoryUI();
     this.hideGuideMessage();
     // 注: armyFormationUIは意図的に含めない（専用のhideメソッドがあるため）
   }
@@ -1157,6 +1231,7 @@ export class UIManager {
     this.hideProductionFactoryMenu();
     this.hideMedicalFacilityMenu();
     this.hideWarehouseSubMenu();
+    this.hideItemInventoryUI();
     this.hideGuideMessage();
     this.hideArmyFormationUI();
     this.hideItemSelectionUI();

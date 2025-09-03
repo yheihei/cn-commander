@@ -61,16 +61,16 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
         canOccupy: false,
       });
 
-      // 3つのボタンが作成されることを確認（移動、攻撃目標指定、待機）
+      // 4つのボタンが作成されることを確認（移動、攻撃目標指定、待機、持物）
       // 占領ボタンはcanOccupy=falseなので作成されない
       const rectangleCalls = scene.add.rectangle.mock.calls;
 
-      // 背景と3つのボタンの背景で計4回rectangleが呼ばれる
-      expect(rectangleCalls.length).toBe(4);
+      // 背景と4つのボタンの背景で計5回rectangleが呼ばれる
+      expect(rectangleCalls.length).toBe(5);
 
-      // 背景の高さが210に調整されていることを確認（3つのボタン用: 60 + 3 * 50）
+      // 背景の高さが260に調整されていることを確認（4つのボタン用: 60 + 4 * 50）
       const backgroundCall = rectangleCalls[0];
-      expect(backgroundCall[3]).toBe(210); // height引数 (x, y, width, height, fillColor, fillAlpha)
+      expect(backgroundCall[3]).toBe(260); // height引数 (x, y, width, height, fillColor, fillAlpha)
     });
 
     test('攻撃目標指定ボタンをクリックするとコールバックが呼ばれる', () => {
