@@ -782,6 +782,9 @@ export class UIManager {
             console.log(`[UIManager] ${member.getName()} は既にHP満タンのため回復不要`);
           }
         });
+
+        // 薬忍使用時のメッセージ表示
+        this.showGuideMessage('軍団全員のHPが回復しました');
       } else {
         // 通常：使用者のみHP全快
         console.log(`[UIManager] 通常効果: 使用者のみHP全快を実行`);
@@ -796,6 +799,9 @@ export class UIManager {
         } else {
           console.log(`[UIManager] ${user.getName()} は既にHP満タンのため回復不要`);
         }
+
+        // 通常忍者使用時のメッセージ表示
+        this.showGuideMessage(`${user.getName()}のHPが回復しました`);
       }
 
       // 使用後のHP状況をログ出力
