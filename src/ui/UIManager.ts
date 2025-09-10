@@ -439,6 +439,11 @@ export class UIManager {
       y,
       message,
     });
+
+    // 2秒後に自動的にメッセージを消す
+    this.scene.time.delayedCall(2000, () => {
+      this.hideGuideMessage();
+    });
   }
 
   public hideGuideMessage(): void {
