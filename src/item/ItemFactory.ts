@@ -157,7 +157,7 @@ export class ItemFactory {
       name: '兵糧丸',
       type: ItemType.CONSUMABLE,
       stackable: true,
-      effect: 'HP全快',
+      effect: 'heal_full',
       uses: 1,
       maxUses: 1,
       price: 50,

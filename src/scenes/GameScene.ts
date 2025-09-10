@@ -16,8 +16,9 @@ import { WeaponFactory } from '../item/WeaponFactory';
 import { CombatSystem } from '../combat/CombatSystem';
 import { BaseManager } from '../base/BaseManager';
 import { CharacterFactory } from '../character/CharacterFactory';
-import { ProductionManager } from '../production/ProductionManager';
+import { ProductionManager, ProductionItemType } from '../production/ProductionManager';
 import { EconomyManager } from '../economy/EconomyManager';
+import { ItemFactory } from '../item/ItemFactory';
 import { InventoryManager } from '../item/InventoryManager';
 
 export class GameScene extends Phaser.Scene {
@@ -282,6 +283,22 @@ export class GameScene extends Phaser.Scene {
           itemHolder.addItem(sword);
           // 忍者刀の方が攻撃力が高いので自動装備される
         }
+
+        // task-9-3-2テスト用：全員に兵糧丸を配布
+        const foodPill = ItemFactory.createItems(ProductionItemType.FOOD_PILL, 1)[0];
+        if (foodPill) {
+          itemHolder.addItem(foodPill);
+          console.log(`[GameScene] テスト用兵糧丸を配布: ${member.getName()} に兵糧丸を追加`);
+        }
+
+        // task-9-3-2テスト用：HPを50%に減らす
+        const maxHp = member.getMaxHP();
+        const reducedHp = Math.floor(maxHp * 0.5);
+        const damage = maxHp - reducedHp;
+        member.takeDamage(damage);
+        console.log(
+          `[GameScene] テスト用HP減少: ${member.getName()} HP ${maxHp} -> ${member.getStats().hp}`,
+        );
       });
     }
 

@@ -743,31 +743,71 @@ export class UIManager {
    * - 使用後、アイテムは消費され持物から削除
    */
   private handleConsumableUse(user: Character, consumable: IConsumable, army: Army): void {
-    console.log(`[UIManager] 消耗品使用: ${user.getName()} が ${consumable.name} を使用`);
+    console.log(`[UIManager] 消耗品使用開始: ${user.getName()} が ${consumable.name} を使用`);
+    console.log(
+      `[UIManager] アイテム詳細: effect="${consumable.effect}", uses=${consumable.uses}, maxUses=${consumable.maxUses}`,
+    );
+
+    // 使用前のHP状況をログ出力
+    console.log(`[UIManager] === 使用前のHP状況 ===`);
+    const allMembers = army.getAllMembers();
+    allMembers.forEach((member) => {
+      const stats = member.getStats();
+      console.log(
+        `[UIManager] ${member.getName()} (${member.getJobType()}): ${stats.hp}/${stats.maxHp} HP`,
+      );
+    });
 
     // 兵糧丸の場合の処理
     if (consumable.effect === 'heal_full') {
+      console.log(`[UIManager] 兵糧丸の効果を適用中...`);
+
       // 薬忍のクラススキル判定
       const userJob = user.getJobType();
+      console.log(`[UIManager] 使用者の職業: ${userJob}`);
+
       if (userJob === 'medicine') {
         // 薬忍：軍団全員のHP全快
-        console.log(`[UIManager] 薬忍スキル発動: 軍団全員のHP全快`);
-        const allMembers = army.getAllMembers();
+        console.log(`[UIManager] 薬忍スキル発動: 軍団全員のHP全快を実行`);
         allMembers.forEach((member) => {
-          const stats = member.getStats();
-          member.heal(stats.maxHp - stats.hp); // 最大HPまで回復
-          console.log(
-            `[UIManager] ${member.getName()} HP回復: ${stats.hp}/${stats.maxHp} -> ${member.getStats().hp}/${member.getStats().maxHp}`,
-          );
+          const beforeStats = member.getStats();
+          const healAmount = beforeStats.maxHp - beforeStats.hp;
+          if (healAmount > 0) {
+            member.heal(healAmount); // 最大HPまで回復
+            const afterStats = member.getStats();
+            console.log(
+              `[UIManager] ${member.getName()} HP回復: ${beforeStats.hp}/${beforeStats.maxHp} -> ${afterStats.hp}/${afterStats.maxHp} (回復量: ${healAmount})`,
+            );
+          } else {
+            console.log(`[UIManager] ${member.getName()} は既にHP満タンのため回復不要`);
+          }
         });
       } else {
         // 通常：使用者のみHP全快
-        const stats = user.getStats();
-        user.heal(stats.maxHp - stats.hp); // 最大HPまで回復
-        console.log(
-          `[UIManager] ${user.getName()} HP回復: ${stats.hp}/${stats.maxHp} -> ${user.getStats().hp}/${user.getStats().maxHp}`,
-        );
+        console.log(`[UIManager] 通常効果: 使用者のみHP全快を実行`);
+        const beforeStats = user.getStats();
+        const healAmount = beforeStats.maxHp - beforeStats.hp;
+        if (healAmount > 0) {
+          user.heal(healAmount); // 最大HPまで回復
+          const afterStats = user.getStats();
+          console.log(
+            `[UIManager] ${user.getName()} HP回復: ${beforeStats.hp}/${beforeStats.maxHp} -> ${afterStats.hp}/${afterStats.maxHp} (回復量: ${healAmount})`,
+          );
+        } else {
+          console.log(`[UIManager] ${user.getName()} は既にHP満タンのため回復不要`);
+        }
       }
+
+      // 使用後のHP状況をログ出力
+      console.log(`[UIManager] === 使用後のHP状況 ===`);
+      allMembers.forEach((member) => {
+        const stats = member.getStats();
+        console.log(
+          `[UIManager] ${member.getName()} (${member.getJobType()}): ${stats.hp}/${stats.maxHp} HP`,
+        );
+      });
+    } else {
+      console.log(`[UIManager] 警告: 未対応のeffect "${consumable.effect}"`);
     }
 
     // 消耗品を使用者の持物から削除

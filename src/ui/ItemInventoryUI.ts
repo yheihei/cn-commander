@@ -134,14 +134,29 @@ export class ItemInventoryUI extends PhaserContainer {
   }
 
   private initializeArmyMembers(): void {
+    console.log(`[ItemInventoryUI] 軍団メンバー初期化開始`);
     const commander = this.army.getCommander();
     const soldiers = this.army.getSoldiers();
+
+    console.log(
+      `[ItemInventoryUI] 指揮官: ${commander ? commander.getName() + ' (' + commander.getJobType() + ')' : 'なし'}`,
+    );
+    console.log(`[ItemInventoryUI] 一般兵数: ${soldiers.length}`);
+    soldiers.forEach((soldier, index) => {
+      console.log(
+        `[ItemInventoryUI] 一般兵${index + 1}: ${soldier.getName()} (${soldier.getJobType()})`,
+      );
+    });
 
     this.armyMembers = [];
     if (commander) {
       this.armyMembers.push(commander);
     }
     this.armyMembers.push(...soldiers);
+
+    console.log(
+      `[ItemInventoryUI] 軍団メンバー初期化完了: 総メンバー数=${this.armyMembers.length}`,
+    );
   }
 
   private createModalBackground(): void {
@@ -229,16 +244,20 @@ export class ItemInventoryUI extends PhaserContainer {
     this.add(this.characterNameText);
 
     // 前のキャラクターボタン（非表示、クリックでキャラクター切り替え）
-    this.prevCharButton = this.createInvisibleButton(-100, selectorY, 50, 30, () =>
+    console.log(`[ItemInventoryUI] 前のキャラクターボタン作成: x=-100, y=${selectorY}, size=50x30`);
+    this.prevCharButton = this.createPageButton('<', -100, selectorY, 40, 30, () =>
       this.selectPreviousCharacter(),
     );
     this.add(this.prevCharButton);
+    console.log(`[ItemInventoryUI] 前のキャラクターボタンをコンテナに追加完了`);
 
     // 次のキャラクターボタン（非表示、クリックでキャラクター切り替え）
-    this.nextCharButton = this.createInvisibleButton(100, selectorY, 50, 30, () =>
+    console.log(`[ItemInventoryUI] 次のキャラクターボタン作成: x=100, y=${selectorY}, size=50x30`);
+    this.nextCharButton = this.createPageButton('>', 100, selectorY, 40, 30, () =>
       this.selectNextCharacter(),
     );
     this.add(this.nextCharButton);
+    console.log(`[ItemInventoryUI] 次のキャラクターボタンをコンテナに追加完了`);
   }
 
   private createItemList(): void {
@@ -299,23 +318,36 @@ export class ItemInventoryUI extends PhaserContainer {
     return container;
   }
 
-  private createInvisibleButton(
+  private createPageButton(
+    text: string,
     x: number,
     y: number,
     width: number,
     height: number,
     onClick: () => void,
   ): Phaser.GameObjects.Container {
-    const container = this.phaserScene.add.container(x, y);
+    const button = this.phaserScene.add.container(x, y);
 
-    // 透明なボタン（クリック可能領域のみ）
-    const bg = this.phaserScene.add.rectangle(0, 0, width, height, 0x000000, 0);
+    const bg = this.phaserScene.add.rectangle(0, 0, width, height, 0x4682b4);
+    bg.setOrigin(0.5, 0.5);
     bg.setInteractive({ useHandCursor: true });
-    container.add(bg);
+
+    const label = this.phaserScene.add.text(0, 0, text, {
+      fontSize: '16px',
+      color: '#ffffff',
+      resolution: 2,
+    });
+    label.setOrigin(0.5, 0.5);
+
+    button.add([bg, label]);
 
     bg.on('pointerdown', onClick);
+    bg.on('pointerover', () => bg.setFillStyle(0x5f9fd3));
+    bg.on('pointerout', () => bg.setFillStyle(0x4682b4));
 
-    return container;
+    button.setDepth(10); // メインパネルより前面に配置
+
+    return button;
   }
 
   private createActionButton(
@@ -359,36 +391,74 @@ export class ItemInventoryUI extends PhaserContainer {
   }
 
   private selectPreviousCharacter(): void {
-    if (this.armyMembers.length <= 1) return;
+    console.log(`[ItemInventoryUI] 前のキャラクターボタンクリック検出`);
+    console.log(`[ItemInventoryUI] 軍団メンバー数: ${this.armyMembers.length}`);
 
+    // メンバーリストの詳細出力
+    this.armyMembers.forEach((member, index) => {
+      console.log(
+        `[ItemInventoryUI] メンバー${index}: ${member.getName()} (${member.getJobType()})`,
+      );
+    });
+
+    if (this.armyMembers.length <= 1) {
+      console.log(`[ItemInventoryUI] メンバー数が1以下のため、ページネーション無効`);
+      return;
+    }
+
+    const beforeIndex = this.currentCharacterIndex;
     this.currentCharacterIndex--;
     if (this.currentCharacterIndex < 0) {
       this.currentCharacterIndex = this.armyMembers.length - 1;
     }
+    console.log(
+      `[ItemInventoryUI] インデックス変更: ${beforeIndex} -> ${this.currentCharacterIndex}`,
+    );
     this.updateDisplay();
   }
 
   private selectNextCharacter(): void {
-    if (this.armyMembers.length <= 1) return;
+    console.log(`[ItemInventoryUI] 次のキャラクターボタンクリック検出`);
+    console.log(`[ItemInventoryUI] 軍団メンバー数: ${this.armyMembers.length}`);
 
+    if (this.armyMembers.length <= 1) {
+      console.log(`[ItemInventoryUI] メンバー数が1以下のため、ページネーション無効`);
+      return;
+    }
+
+    const beforeIndex = this.currentCharacterIndex;
     this.currentCharacterIndex++;
     if (this.currentCharacterIndex >= this.armyMembers.length) {
       this.currentCharacterIndex = 0;
     }
+    console.log(
+      `[ItemInventoryUI] インデックス変更: ${beforeIndex} -> ${this.currentCharacterIndex}`,
+    );
     this.updateDisplay();
   }
 
   private updateDisplay(): void {
-    if (this.armyMembers.length === 0) return;
+    console.log(`[ItemInventoryUI] updateDisplay() 実行開始`);
+    console.log(`[ItemInventoryUI] 現在のインデックス: ${this.currentCharacterIndex}`);
+
+    if (this.armyMembers.length === 0) {
+      console.log(`[ItemInventoryUI] 軍団メンバーが0のため、表示更新をスキップ`);
+      return;
+    }
 
     const currentCharacter = this.armyMembers[this.currentCharacterIndex];
+    console.log(
+      `[ItemInventoryUI] 表示対象キャラクター: ${currentCharacter.getName()} (${currentCharacter.getJobType()})`,
+    );
 
     // キャラクター名を「< キャラクター名 >」形式で表示
     const displayName = `< ${currentCharacter.getName()} >`;
+    console.log(`[ItemInventoryUI] 表示名更新: "${displayName}"`);
     this.characterNameText.setText(displayName);
 
     // アイテムリストを更新
     this.updateItemList(currentCharacter);
+    console.log(`[ItemInventoryUI] updateDisplay() 実行完了`);
   }
 
   private updateItemList(character: Character): void {
