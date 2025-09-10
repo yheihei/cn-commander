@@ -19,7 +19,7 @@ import { EconomyManager } from '../economy/EconomyManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
-import { IConsumable, IWeapon } from '../types/ItemTypes';
+import { IConsumable, IWeapon, IItem } from '../types/ItemTypes';
 import { Character } from '../character/Character';
 
 export class UIManager {
@@ -723,15 +723,104 @@ export class UIManager {
         this.hideItemInventoryUI();
       },
       onUseItem: (character: Character, item: IConsumable) => {
-        // task-9-3-2で実装予定
-        console.log(`[ItemInventoryUI] 使用: ${character.getName()} - ${item.name}`);
+        this.handleConsumableUse(character, item, army);
       },
       onEquipWeapon: (character: Character, weapon: IWeapon) => {
         // 装備処理
         character.getItemHolder().equipWeapon(weapon);
         console.log(`[ItemInventoryUI] 装備: ${character.getName()} - ${weapon.name}`);
       },
+      onTransferItem: (from: Character, to: Character, item: IItem) => {
+        this.handleItemTransfer(from, to, item);
+      },
     });
+  }
+
+  /**
+   * 消耗品使用処理
+   * - 兵糧丸：使用者のHP全快
+   * - 薬忍の場合：軍団全員のHP全快
+   * - 使用後、アイテムは消費され持物から削除
+   */
+  private handleConsumableUse(user: Character, consumable: IConsumable, army: Army): void {
+    console.log(`[UIManager] 消耗品使用: ${user.getName()} が ${consumable.name} を使用`);
+
+    // 兵糧丸の場合の処理
+    if (consumable.effect === 'heal_full') {
+      // 薬忍のクラススキル判定
+      const userJob = user.getJobType();
+      if (userJob === 'medicine') {
+        // 薬忍：軍団全員のHP全快
+        console.log(`[UIManager] 薬忍スキル発動: 軍団全員のHP全快`);
+        const allMembers = army.getAllMembers();
+        allMembers.forEach((member) => {
+          const stats = member.getStats();
+          member.heal(stats.maxHp - stats.hp); // 最大HPまで回復
+          console.log(
+            `[UIManager] ${member.getName()} HP回復: ${stats.hp}/${stats.maxHp} -> ${member.getStats().hp}/${member.getStats().maxHp}`,
+          );
+        });
+      } else {
+        // 通常：使用者のみHP全快
+        const stats = user.getStats();
+        user.heal(stats.maxHp - stats.hp); // 最大HPまで回復
+        console.log(
+          `[UIManager] ${user.getName()} HP回復: ${stats.hp}/${stats.maxHp} -> ${user.getStats().hp}/${user.getStats().maxHp}`,
+        );
+      }
+    }
+
+    // 消耗品を使用者の持物から削除
+    const itemHolder = user.getItemHolder();
+    itemHolder.removeItem(consumable);
+    console.log(`[UIManager] アイテム削除: ${consumable.name} を ${user.getName()} の持物から削除`);
+
+    // 使用回数を減らす（将来的な拡張用）
+    if (consumable.maxUses > 1) {
+      consumable.maxUses--;
+      if (consumable.maxUses > 0) {
+        // まだ使用回数が残っている場合は持物に戻す
+        itemHolder.addItem(consumable);
+      }
+    }
+  }
+
+  /**
+   * アイテム譲渡処理
+   * - 軍団内の他のメンバーにアイテムを譲渡
+   * - 譲渡先の所持上限チェック
+   * - 装備中武器の場合は自動装備解除
+   */
+  private handleItemTransfer(from: Character, to: Character, item: IItem): void {
+    console.log(
+      `[UIManager] アイテム譲渡: ${from.getName()} から ${to.getName()} へ ${item.name} を譲渡`,
+    );
+
+    // 譲渡先の所持数チェック
+    const toItemHolder = to.getItemHolder();
+    if (toItemHolder.items.length >= 4) {
+      console.log(`[UIManager] 譲渡失敗: ${to.getName()} の持物が満杯です`);
+      return;
+    }
+
+    // 譲渡元から アイテムを削除（装備中の場合は自動的に装備解除される）
+    const fromItemHolder = from.getItemHolder();
+    const wasEquipped = fromItemHolder.getEquippedWeapon() === item;
+    const removed = fromItemHolder.removeItem(item);
+
+    if (!removed) {
+      console.log(`[UIManager] 譲渡失敗: ${item.name} が ${from.getName()} の持物に見つかりません`);
+      return;
+    }
+
+    // 譲渡先にアイテムを追加
+    toItemHolder.addItem(item);
+
+    if (wasEquipped) {
+      console.log(`[UIManager] 装備武器を譲渡: ${item.name} の装備が解除されました`);
+    }
+
+    console.log(`[UIManager] アイテム譲渡完了: ${from.getName()} -> ${to.getName()}: ${item.name}`);
   }
 
   public hideItemInventoryUI(): void {

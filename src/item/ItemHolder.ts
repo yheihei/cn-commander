@@ -60,7 +60,13 @@ export class ItemHolder implements IItemHolder {
       throw new Error('Can only equip weapons');
     }
 
+    // 既に装備中の武器がある場合は自動的に装備解除
+    if (this._equippedWeapon && this._equippedWeapon !== weapon) {
+      console.log(`[ItemHolder] 装備解除: ${this._equippedWeapon.name}`);
+    }
+
     this._equippedWeapon = weapon;
+    console.log(`[ItemHolder] 装備: ${weapon.name}`);
   }
 
   getEquippedWeapon(): IWeapon | null {

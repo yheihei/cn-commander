@@ -57,6 +57,7 @@ export class ItemInventoryUI extends PhaserContainer {
   private readonly onCloseCallback?: () => void;
   private readonly onUseItemCallback?: (character: Character, item: IConsumable) => void;
   private readonly onEquipWeaponCallback?: (character: Character, weapon: IWeapon) => void;
+  private readonly onTransferItemCallback?: (from: Character, to: Character, item: IItem) => void;
 
   // UI要素
   private modalBackground!: Phaser.GameObjects.Rectangle;
@@ -80,11 +81,11 @@ export class ItemInventoryUI extends PhaserContainer {
   // レイアウト設定
   private readonly layoutConfig = {
     padding: 20,
-    headerHeight: 60,
-    characterHeight: 40,
-    itemHeight: 50,
-    buttonWidth: 50,
-    buttonHeight: 20,
+    headerHeight: 40,
+    characterHeight: 25,
+    itemHeight: 25,
+    buttonWidth: 40,
+    buttonHeight: 18,
     buttonSpacing: 5,
   };
 
@@ -108,6 +109,7 @@ export class ItemInventoryUI extends PhaserContainer {
     this.onCloseCallback = config.onClose;
     this.onUseItemCallback = config.onUseItem;
     this.onEquipWeaponCallback = config.onEquipWeapon;
+    this.onTransferItemCallback = config.onTransferItem;
 
     // 軍団メンバーを取得
     this.initializeArmyMembers();
@@ -168,81 +170,80 @@ export class ItemInventoryUI extends PhaserContainer {
     const viewWidth = 1280 / zoom;
     const viewHeight = 720 / zoom;
 
-    // パネルサイズ（画面の80%）
-    const panelWidth = viewWidth * 0.8;
-    const panelHeight = viewHeight * 0.8;
+    // ArmyFormationUIと同じサイズ（90%）
+    const panelWidth = viewWidth * 0.9;
+    const panelHeight = viewHeight * 0.9;
 
-    this.background = this.phaserScene.add.rectangle(0, 0, panelWidth, panelHeight, 0x333333, 0.95);
-    this.background.setStrokeStyle(2, 0xffffff);
+    this.background = this.phaserScene.add.rectangle(0, 0, panelWidth, panelHeight, 0x222222, 0.95);
+    this.background.setStrokeStyle(3, 0xffffff);
     this.add(this.background);
+
+    // パネルサイズを保存（他のメソッドで使用）
+    (this as any).panelWidth = panelWidth;
+    (this as any).panelHeight = panelHeight;
   }
 
   private createHeader(): void {
     const { padding } = this.layoutConfig;
+    const panelHeight = (this as any).panelHeight;
+    const titleY = Math.round(-panelHeight / 2 + padding);
 
-    // パネルの高さを動的に取得
-    const cam = this.phaserScene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewHeight = 720 / zoom;
-    const panelHeight = viewHeight * 0.8;
-
-    this.titleText = this.phaserScene.add.text(0, -panelHeight / 2 + padding, '持物管理', {
+    this.titleText = this.phaserScene.add.text(0, titleY, '持物', {
       fontSize: '14px',
+      fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
       fontStyle: 'bold',
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     this.titleText.setOrigin(0.5, 0);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (this.titleText.setPosition) {
+      this.titleText.setPosition(Math.round(this.titleText.x), Math.round(this.titleText.y));
+    }
     this.add(this.titleText);
   }
 
   private createCharacterSelector(): void {
     const { padding, headerHeight } = this.layoutConfig;
+    const panelHeight = (this as any).panelHeight;
 
-    // パネルのサイズを動的に取得
-    const cam = this.phaserScene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewWidth = 1280 / zoom;
-    const viewHeight = 720 / zoom;
-    const panelWidth = viewWidth * 0.8;
-    const panelHeight = viewHeight * 0.8;
+    const selectorY = Math.round(-panelHeight / 2 + headerHeight + padding);
 
-    const selectorY = -panelHeight / 2 + headerHeight + padding;
-
-    // キャラクター名表示
+    // キャラクター名を「< キャラクター名 >」形式で表示
     this.characterNameText = this.phaserScene.add.text(0, selectorY, '', {
       fontSize: '12px',
+      fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     this.characterNameText.setOrigin(0.5, 0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (this.characterNameText.setPosition) {
+      this.characterNameText.setPosition(
+        Math.round(this.characterNameText.x),
+        Math.round(this.characterNameText.y),
+      );
+    }
     this.add(this.characterNameText);
 
-    // 前のキャラクターボタン
-    this.prevCharButton = this.createNavigationButton(
-      '◀',
-      -panelWidth / 2 + padding + 20,
-      selectorY,
-      () => this.selectPreviousCharacter(),
+    // 前のキャラクターボタン（非表示、クリックでキャラクター切り替え）
+    this.prevCharButton = this.createInvisibleButton(-100, selectorY, 50, 30, () =>
+      this.selectPreviousCharacter(),
     );
     this.add(this.prevCharButton);
 
-    // 次のキャラクターボタン
-    this.nextCharButton = this.createNavigationButton(
-      '▶',
-      panelWidth / 2 - padding - 20,
-      selectorY,
-      () => this.selectNextCharacter(),
+    // 次のキャラクターボタン（非表示、クリックでキャラクター切り替え）
+    this.nextCharButton = this.createInvisibleButton(100, selectorY, 50, 30, () =>
+      this.selectNextCharacter(),
     );
     this.add(this.nextCharButton);
   }
 
   private createItemList(): void {
     const { padding, headerHeight, characterHeight } = this.layoutConfig;
-
-    // パネルの高さを動的に取得
-    const cam = this.phaserScene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewHeight = 720 / zoom;
-    const panelHeight = viewHeight * 0.8;
+    const panelHeight = (this as any).panelHeight;
 
     const listY = -panelHeight / 2 + headerHeight + characterHeight + padding * 2;
 
@@ -251,48 +252,13 @@ export class ItemInventoryUI extends PhaserContainer {
   }
 
   private createCloseButton(): void {
-    const { padding } = this.layoutConfig;
+    const panelHeight = (this as any).panelHeight;
 
-    // パネルのサイズを動的に取得
-    const cam = this.phaserScene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewWidth = 1280 / zoom;
-    const viewHeight = 720 / zoom;
-    const panelWidth = viewWidth * 0.8;
-    const panelHeight = viewHeight * 0.8;
+    // 「とじる」ボタンを下部中央に配置
+    const buttonY = panelHeight / 2 - 50;
 
-    const buttonX = panelWidth / 2 - padding - 20;
-    const buttonY = -panelHeight / 2 + padding;
-
-    this.closeButton = this.createSmallButton('✕', buttonX, buttonY, () => this.close());
+    this.closeButton = this.createSmallButton('とじる', 0, buttonY, () => this.close());
     this.add(this.closeButton);
-  }
-
-  private createNavigationButton(
-    text: string,
-    x: number,
-    y: number,
-    onClick: () => void,
-  ): Phaser.GameObjects.Container {
-    const container = this.phaserScene.add.container(x, y);
-
-    const bg = this.phaserScene.add.rectangle(0, 0, 30, 30, 0x555555);
-    bg.setStrokeStyle(1, 0xaaaaaa);
-    bg.setInteractive({ useHandCursor: true });
-
-    const label = this.phaserScene.add.text(0, 0, text, {
-      fontSize: '12px',
-      color: '#ffffff',
-    });
-    label.setOrigin(0.5);
-
-    container.add([bg, label]);
-
-    bg.on('pointerover', () => bg.setFillStyle(0x777777));
-    bg.on('pointerout', () => bg.setFillStyle(0x555555));
-    bg.on('pointerdown', onClick);
-
-    return container;
   }
 
   private createSmallButton(
@@ -303,20 +269,50 @@ export class ItemInventoryUI extends PhaserContainer {
   ): Phaser.GameObjects.Container {
     const container = this.phaserScene.add.container(x, y);
 
-    const bg = this.phaserScene.add.rectangle(0, 0, 30, 30, 0x555555);
+    // サイズを調整
+    const width = text === 'とじる' ? 60 : 30;
+    const height = text === 'とじる' ? 25 : 30;
+
+    const bg = this.phaserScene.add.rectangle(0, 0, width, height, 0x555555);
     bg.setStrokeStyle(1, 0xaaaaaa);
     bg.setInteractive({ useHandCursor: true });
 
     const label = this.phaserScene.add.text(0, 0, text, {
       fontSize: '10px',
+      fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     label.setOrigin(0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (label.setPosition) {
+      label.setPosition(Math.round(label.x), Math.round(label.y));
+    }
 
     container.add([bg, label]);
 
     bg.on('pointerover', () => bg.setFillStyle(0x777777));
     bg.on('pointerout', () => bg.setFillStyle(0x555555));
+    bg.on('pointerdown', onClick);
+
+    return container;
+  }
+
+  private createInvisibleButton(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
+    const container = this.phaserScene.add.container(x, y);
+
+    // 透明なボタン（クリック可能領域のみ）
+    const bg = this.phaserScene.add.rectangle(0, 0, width, height, 0x000000, 0);
+    bg.setInteractive({ useHandCursor: true });
+    container.add(bg);
+
     bg.on('pointerdown', onClick);
 
     return container;
@@ -336,7 +332,7 @@ export class ItemInventoryUI extends PhaserContainer {
     const textColor = enabled ? '#ffffff' : '#666666';
 
     const bg = this.phaserScene.add.rectangle(0, 0, buttonWidth, buttonHeight, bgColor);
-    bg.setStrokeStyle(1, enabled ? 0xaaaaaa : 0x555555);
+    bg.setStrokeStyle(2, enabled ? 0xaaaaaa : 0x555555);
 
     if (enabled && onClick) {
       bg.setInteractive({ useHandCursor: true });
@@ -347,9 +343,16 @@ export class ItemInventoryUI extends PhaserContainer {
 
     const label = this.phaserScene.add.text(0, 0, text, {
       fontSize: '10px',
+      fontFamily: 'monospace, "Courier New", Courier',
       color: textColor,
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     label.setOrigin(0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (label.setPosition) {
+      label.setPosition(Math.round(label.x), Math.round(label.y));
+    }
 
     container.add([bg, label]);
     return container;
@@ -380,9 +383,9 @@ export class ItemInventoryUI extends PhaserContainer {
 
     const currentCharacter = this.armyMembers[this.currentCharacterIndex];
 
-    // キャラクター名を更新
-    const jobName = this.getJobDisplayName(currentCharacter.getJobType());
-    this.characterNameText.setText(`${currentCharacter.getName()}（${jobName}）`);
+    // キャラクター名を「< キャラクター名 >」形式で表示
+    const displayName = `< ${currentCharacter.getName()} >`;
+    this.characterNameText.setText(displayName);
 
     // アイテムリストを更新
     this.updateItemList(currentCharacter);
@@ -392,7 +395,10 @@ export class ItemInventoryUI extends PhaserContainer {
     // 既存のアイテム表示をクリア
     this.itemContainers.forEach((container) => container.destroy());
     this.itemContainers = [];
-    this.itemListContainer.removeAll();
+    // テスト環境でremoveAllが存在しない場合は省略
+    if (this.itemListContainer.removeAll) {
+      this.itemListContainer.removeAll();
+    }
 
     const itemHolder = character.getItemHolder();
     const items = itemHolder.items;
@@ -414,7 +420,7 @@ export class ItemInventoryUI extends PhaserContainer {
         this.itemContainers.push(emptySlot);
       }
 
-      currentY += this.layoutConfig.itemHeight + 5;
+      currentY += this.layoutConfig.itemHeight + 2;
     }
   }
 
@@ -425,62 +431,66 @@ export class ItemInventoryUI extends PhaserContainer {
   ): Phaser.GameObjects.Container {
     const container = this.phaserScene.add.container(0, y);
     const { padding, buttonWidth, buttonSpacing } = this.layoutConfig;
+    const panelWidth = (this as any).panelWidth;
 
-    // パネルの幅を動的に取得
-    const cam = this.phaserScene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewWidth = 1280 / zoom;
-    const panelWidth = viewWidth * 0.8;
+    // スロット番号を取得
+    const itemHolder = character.getItemHolder();
+    const slotIndex = itemHolder.items.indexOf(item) + 1;
 
     // アイテム名
-    let itemText = item.name;
+    let itemText = `${slotIndex}. ${item.name}`;
     if (item.type === ItemType.WEAPON) {
       const weapon = item as IWeapon;
-      itemText += ` (${weapon.durability}/${weapon.maxDurability})`;
+      itemText += `(${weapon.durability}/${weapon.maxDurability})`;
     }
 
-    const nameText = this.phaserScene.add.text(-panelWidth / 2 + padding, 0, itemText, {
+    const nameText = this.phaserScene.add.text(Math.round(-panelWidth / 2 + padding), 0, itemText, {
       fontSize: '10px',
+      fontFamily: 'monospace, "Courier New", Courier',
       color: '#ffffff',
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     nameText.setOrigin(0, 0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (nameText.setPosition) {
+      nameText.setPosition(Math.round(nameText.x), Math.round(nameText.y));
+    }
     container.add(nameText);
 
     // ボタン状態を取得
     const buttonState = this.getButtonState(item, character);
 
-    // ボタンを配置
-    const buttonStartX = -panelWidth / 2 + padding;
-    const buttonY = 20;
-    let currentX = buttonStartX;
+    // ボタンを右端に横並びで配置
+    let buttonX = panelWidth / 2 - padding - buttonWidth * 3 - buttonSpacing * 2;
 
     // 使用ボタン
     const useButton = this.createActionButton(
       buttonState.use.text,
-      currentX + buttonWidth / 2,
-      buttonY,
+      buttonX + buttonWidth / 2,
+      0,
       buttonState.use.enabled,
       buttonState.use.callback,
     );
     container.add(useButton);
-    currentX += buttonWidth + buttonSpacing;
+    buttonX += buttonWidth + buttonSpacing;
 
     // 装備ボタン
     const equipButton = this.createActionButton(
       buttonState.equip.text,
-      currentX + buttonWidth / 2,
-      buttonY,
+      buttonX + buttonWidth / 2,
+      0,
       buttonState.equip.enabled,
       buttonState.equip.callback,
     );
     container.add(equipButton);
-    currentX += buttonWidth + buttonSpacing;
+    buttonX += buttonWidth + buttonSpacing;
 
     // 渡すボタン
     const transferButton = this.createActionButton(
       buttonState.transfer.text,
-      currentX + buttonWidth / 2,
-      buttonY,
+      buttonX + buttonWidth / 2,
+      0,
       buttonState.transfer.enabled,
       buttonState.transfer.callback,
     );
@@ -492,23 +502,25 @@ export class ItemInventoryUI extends PhaserContainer {
   private createEmptySlot(slotNumber: number, y: number): Phaser.GameObjects.Container {
     const container = this.phaserScene.add.container(0, y);
     const { padding } = this.layoutConfig;
-
-    // パネルの幅を動的に取得
-    const cam = this.phaserScene.cameras.main;
-    const zoom = cam.zoom || 2.25;
-    const viewWidth = 1280 / zoom;
-    const panelWidth = viewWidth * 0.8;
+    const panelWidth = (this as any).panelWidth;
 
     const text = this.phaserScene.add.text(
-      -panelWidth / 2 + padding,
+      Math.round(-panelWidth / 2 + padding),
       0,
-      `${slotNumber}. [空きスロット]`,
+      `${slotNumber}. 空きスロット`,
       {
         fontSize: '10px',
+        fontFamily: 'monospace, "Courier New", Courier',
         color: '#666666',
+        resolution: 2,
+        padding: { x: 2, y: 2 },
       },
     );
     text.setOrigin(0, 0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める（テスト環境では省略）
+    if (text.setPosition) {
+      text.setPosition(Math.round(text.x), Math.round(text.y));
+    }
     container.add(text);
 
     return container;
@@ -519,6 +531,9 @@ export class ItemInventoryUI extends PhaserContainer {
     const isWeapon = item.type === ItemType.WEAPON;
     const itemHolder = character.getItemHolder();
     const isEquipped = itemHolder.getEquippedWeapon() === item;
+
+    // 譲渡可能条件：軍団に他のメンバーがいること
+    const hasOtherMembers = this.armyMembers.length > 1;
 
     return {
       use: {
@@ -537,9 +552,9 @@ export class ItemInventoryUI extends PhaserContainer {
             : undefined,
       },
       transfer: {
-        enabled: false, // 将来実装
+        enabled: hasOtherMembers,
         text: '渡す',
-        callback: undefined,
+        callback: hasOtherMembers ? () => this.handleTransferItem(character, item) : undefined,
       },
     };
   }
@@ -560,19 +575,34 @@ export class ItemInventoryUI extends PhaserContainer {
     this.updateDisplay();
   }
 
-  private getJobDisplayName(jobType: string): string {
-    switch (jobType) {
-      case 'wind':
-        return '風忍';
-      case 'iron':
-        return '鉄忍';
-      case 'shadow':
-        return '影忍';
-      case 'medicine':
-        return '薬忍';
-      default:
-        return '忍者';
+  private handleTransferItem(from: Character, item: IItem): void {
+    console.log(`[ItemInventoryUI] アイテム譲渡開始: ${from.getName()} の ${item.name} を譲渡`);
+
+    // 譲渡可能な他のメンバーを取得
+    const availableTargets = this.armyMembers.filter((member) => member !== from);
+
+    if (availableTargets.length === 0) {
+      console.log(`[ItemInventoryUI] 譲渡失敗: 譲渡可能な他のメンバーがいません`);
+      return;
     }
+
+    // 簡易実装：最初の利用可能なメンバーに自動譲渡
+    // （将来的には譲渡先選択UIを実装予定）
+    const target = availableTargets[0];
+
+    // 譲渡先の所持数チェック（UI側でも確認）
+    if (target.getItemHolder().items.length >= 4) {
+      console.log(`[ItemInventoryUI] 譲渡失敗: ${target.getName()} の持物が満杯です`);
+      return;
+    }
+
+    // UIManagerのコールバックを呼び出し
+    if (this.onTransferItemCallback) {
+      this.onTransferItemCallback(from, target, item);
+    }
+
+    // UIを更新（アイテムが移動した後の表示更新）
+    this.updateDisplay();
   }
 
   private setupInputHandlers(): void {
