@@ -90,8 +90,16 @@ export class CombatSystem {
   }
 
   private performCharacterAttack(attacker: Character, attackerArmy: Army): void {
+    console.log(`[CombatSystem] 攻撃実行チェック: ${attacker.getName()}`);
+    
     // 攻撃可能かチェック
-    if (!this.combatCalculator.canAttack(attacker)) {
+    const canAttack = this.combatCalculator.canAttack(attacker);
+    const weapon = attacker.getItemHolder().getEquippedWeapon();
+    console.log(`  - 装備武器: ${weapon ? weapon.name : 'なし'}`);
+    console.log(`  - 攻撃可能: ${canAttack}`);
+    
+    if (!canAttack) {
+      console.log(`  → 攻撃不可のためスキップ`);
       return;
     }
 
@@ -120,10 +128,12 @@ export class CombatSystem {
 
         if (!target) {
           // 攻撃目標が射程外の場合は攻撃しない
+          console.log(`  → 攻撃目標が射程外`);
           return;
         }
 
         // 攻撃を実行
+        console.log(`  → ${target.getName()}を攻撃`);
         this.executeAttack(attacker, target);
         return;
       }
@@ -131,6 +141,7 @@ export class CombatSystem {
       else if (isBaseTarget(attackTarget) && !attackTarget.isDestroyed()) {
         if (this.baseCombatSystem && this.baseCombatSystem.isBaseInRange(attacker, attackTarget)) {
           // 拠点への攻撃を実行
+          console.log(`  → 拠点「${attackTarget.name}」を攻撃`);
           this.executeBaseAttack(attacker, attackTarget);
         }
         return;
@@ -151,7 +162,10 @@ export class CombatSystem {
       }
     });
 
-    if (allEnemies.length === 0) return;
+    if (allEnemies.length === 0) {
+      console.log(`  → 敵が見つからない`);
+      return;
+    }
 
     // 距離順にソート（近い順）
     const sortedEnemies = this.rangeCalculator.sortByDistance(attacker, allEnemies);
@@ -166,10 +180,12 @@ export class CombatSystem {
     }
 
     if (!target) {
+      console.log(`  → 射程内に敵がいない`);
       return;
     }
 
     // 攻撃を実行
+    console.log(`  → ${target.getName()}を攻撃`);
     this.executeAttack(attacker, target);
   }
 

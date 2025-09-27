@@ -58,6 +58,8 @@ export interface IItemHolder {
   getItemCount(): number;
 
   equipWeapon(weapon: IWeapon): void;
+
+  unequipWeapon(): void;
   getEquippedWeapon(): IWeapon | null;
   autoEquipBestWeapon(): void;
   getWeapons(): IWeapon[];

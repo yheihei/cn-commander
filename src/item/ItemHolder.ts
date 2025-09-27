@@ -62,11 +62,19 @@ export class ItemHolder implements IItemHolder {
 
     // 既に装備中の武器がある場合は自動的に装備解除
     if (this._equippedWeapon && this._equippedWeapon !== weapon) {
-      console.log(`[ItemHolder] 装備解除: ${this._equippedWeapon.name}`);
+      console.log(`[ItemHolder] 自動装備解除: ${this._equippedWeapon.name}`);
     }
 
+    const previousWeapon = this._equippedWeapon;
     this._equippedWeapon = weapon;
-    console.log(`[ItemHolder] 装備: ${weapon.name}`);
+    console.log(`[ItemHolder] 装備: ${weapon.name} (前の装備: ${previousWeapon ? previousWeapon.name : 'なし'})`);
+  }
+
+  unequipWeapon(): void {
+    if (this._equippedWeapon) {
+      console.log(`[ItemHolder] 装備解除: ${this._equippedWeapon.name}`);
+      this._equippedWeapon = null;
+    }
   }
 
   getEquippedWeapon(): IWeapon | null {

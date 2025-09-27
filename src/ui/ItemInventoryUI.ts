@@ -506,12 +506,17 @@ export class ItemInventoryUI extends PhaserContainer {
     // スロット番号を取得
     const itemHolder = character.getItemHolder();
     const slotIndex = itemHolder.items.indexOf(item) + 1;
+    const isEquipped = itemHolder.getEquippedWeapon() === item;
 
     // アイテム名
     let itemText = `${slotIndex}. ${item.name}`;
     if (item.type === ItemType.WEAPON) {
       const weapon = item as IWeapon;
       itemText += `(${weapon.durability}/${weapon.maxDurability})`;
+    }
+    // 装備中の場合は【装備中】を追加
+    if (isEquipped) {
+      itemText += '【装備中】';
     }
 
     const nameText = this.phaserScene.add.text(Math.round(-panelWidth / 2 + padding), 0, itemText, {
@@ -614,12 +619,13 @@ export class ItemInventoryUI extends PhaserContainer {
           : undefined,
       },
       equip: {
-        enabled: isWeapon && !isEquipped,
-        text: isEquipped ? '装備中' : '装備',
-        callback:
-          isWeapon && !isEquipped
-            ? () => this.handleEquipWeapon(character, item as IWeapon)
-            : undefined,
+        enabled: isWeapon,  // 武器なら常に有効（装備/装備解除両方）
+        text: isEquipped ? '装備解除' : '装備',
+        callback: isWeapon
+          ? isEquipped
+            ? () => this.handleUnequipWeapon(character)  // 装備中なら解除
+            : () => this.handleEquipWeapon(character, item as IWeapon)  // 未装備なら装備
+          : undefined,
       },
       transfer: {
         enabled: hasOtherMembers,
@@ -641,6 +647,15 @@ export class ItemInventoryUI extends PhaserContainer {
     if (this.onEquipWeaponCallback) {
       this.onEquipWeaponCallback(character, weapon);
     }
+    // UIを更新（装備状態の表示更新）
+    this.updateDisplay();
+  }
+
+  private handleUnequipWeapon(character: Character): void {
+    const itemHolder = character.getItemHolder();
+    const weapon = itemHolder.getEquippedWeapon();
+    console.log(`[ItemInventoryUI] 装備解除: ${character.getName()} - ${weapon ? weapon.name : 'なし'}`);
+    itemHolder.unequipWeapon();
     // UIを更新（装備状態の表示更新）
     this.updateDisplay();
   }
