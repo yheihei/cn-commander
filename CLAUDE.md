@@ -61,6 +61,7 @@ use serena whenever possible
   - テスト作成ルール: @.claude/rules/integration-test.md （モックベースの統合テスト作成ガイド）
 - テストが通ったらフォーマッタをかける
 - lintチェックを行い、エラーがあればImpに戻り、修正する
+- エラーを見る際は起動しているURLを chrome-devtools で開きログを確認すること
 
 #### Phase4 Review
 
