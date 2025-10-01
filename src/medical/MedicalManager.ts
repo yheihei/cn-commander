@@ -1,6 +1,7 @@
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyManager } from '../army/ArmyManager';
+import { GameTimeManager } from '../time/GameTimeManager';
 
 interface TreatmentInfo {
   armyId: string;
@@ -16,11 +17,11 @@ export class MedicalManager {
   private static readonly TREATMENT_DURATION = 120; // 2分（秒）
   private static readonly TREATMENT_COST = 500; // 治療費用（両）
 
-  private scene: Phaser.Scene;
+  private gameTimeManager: GameTimeManager;
   private treatments: Map<string, TreatmentInfo> = new Map();
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
+  constructor(gameTimeManager: GameTimeManager) {
+    this.gameTimeManager = gameTimeManager;
   }
 
   /**
@@ -46,11 +47,11 @@ export class MedicalManager {
       return false;
     }
 
-    // 治療開始
+    // 治療開始（GameTimeManagerの累積時間を使用）
     this.treatments.set(armyId, {
       armyId,
       baseId: base.getId(),
-      startTime: this.scene.time.now,
+      startTime: this.gameTimeManager.getTotalElapsedTime(),
       cost: MedicalManager.TREATMENT_COST,
     });
 
@@ -73,7 +74,7 @@ export class MedicalManager {
       return 0;
     }
 
-    const elapsed = (this.scene.time.now - treatment.startTime) / 1000;
+    const elapsed = (this.gameTimeManager.getTotalElapsedTime() - treatment.startTime) / 1000;
     const remaining = MedicalManager.TREATMENT_DURATION - elapsed;
     return Math.max(0, Math.ceil(remaining));
   }

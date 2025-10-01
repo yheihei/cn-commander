@@ -6,12 +6,14 @@ import { Army } from '../../../src/army/Army';
 import { CharacterFactory } from '../../../src/character/CharacterFactory';
 import { JobType } from '../../../src/types/CharacterTypes';
 import { BaseType } from '../../../src/types/BaseTypes';
+import { GameTimeManager } from '../../../src/time/GameTimeManager';
 import { createMockScene } from '../../setup';
 
 // Phaser モックはsetup.tsで定義済み
 
 describe('[エピック7] GarrisonManagement Integration Tests', () => {
   let scene: any;
+  let gameTimeManager: GameTimeManager;
   let medicalManager: MedicalManager;
   let armyManager: ArmyManager;
   let base: Base;
@@ -22,7 +24,9 @@ describe('[エピック7] GarrisonManagement Integration Tests', () => {
     scene = createMockScene();
 
     // 各マネージャーの初期化
-    medicalManager = new MedicalManager(scene);
+    gameTimeManager = new GameTimeManager();
+    gameTimeManager.setScene(scene);
+    medicalManager = new MedicalManager(gameTimeManager);
     armyManager = new ArmyManager(scene);
 
     // テスト用の拠点を作成

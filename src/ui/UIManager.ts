@@ -27,7 +27,7 @@ import { Character } from '../character/Character';
 export class UIManager {
   private scene: Phaser.Scene;
   private productionManager: ProductionManager;
-  private medicalManager: MedicalManager;
+  private medicalManager: MedicalManager | null = null;
   private economyManager: EconomyManager;
   private baseManager: any; // BaseManagerの型は後で適切に設定
   private gameTimeManager: GameTimeManager | null = null;
@@ -61,7 +61,6 @@ export class UIManager {
     this.scene = scene;
     this.productionManager = productionManager;
     this.economyManager = economyManager;
-    this.medicalManager = new MedicalManager(scene);
     this.baseManager = baseManager;
     this.initializeInfoPanels();
   }
@@ -114,9 +113,12 @@ export class UIManager {
   /**
    * GameTimeManagerへの参照を設定
    * モーダルUI表示時の自動ポーズ制御に使用
+   * MedicalManagerもGameTimeManagerと連携するため、ここで再初期化
    */
   public setGameTimeManager(gameTimeManager: GameTimeManager): void {
     this.gameTimeManager = gameTimeManager;
+    // MedicalManagerをGameTimeManager対応で再初期化
+    this.medicalManager = new MedicalManager(gameTimeManager);
   }
 
   public showActionMenu(
@@ -682,6 +684,9 @@ export class UIManager {
       return;
     }
 
+    // 型の安全性のためローカル変数に代入
+    const medicalManager = this.medicalManager;
+
     // MedicalFacilityMenuは自身で中央配置を管理するため、座標指定は不要
     this.medicalFacilityMenu = new MedicalFacilityMenu({
       scene: this.scene,
@@ -690,7 +695,7 @@ export class UIManager {
       baseId: this.currentSelectedBase.getId(),
       baseManager: this.baseManager,
       armyManager,
-      medicalManager: this.medicalManager,
+      medicalManager,
       money: this.economyManager.getMoney(),
       onStartTreatment: (_armyId: string, cost: number) => {
         // 資金チェックと支払い処理
@@ -1337,6 +1342,12 @@ export class UIManager {
   public showGarrisonedArmiesPanel(base: Base): void {
     console.log(`showGarrisonedArmiesPanel called for base: ${base.getName()}`);
 
+    // MedicalManagerの初期化チェック
+    if (!this.medicalManager) {
+      console.error('MedicalManager not initialized');
+      return;
+    }
+
     // 既存のUIを非表示
     this.hideAllUI();
 
@@ -1358,12 +1369,15 @@ export class UIManager {
       return;
     }
 
+    // 型の安全性のためローカル変数に代入
+    const medicalManager = this.medicalManager;
+
     // 駐留軍団管理パネルを作成
     this.garrisonedArmiesPanel = new GarrisonedArmiesPanel({
       scene: this.scene,
       base,
       armies: garrisonedArmies,
-      medicalManager: this.medicalManager,
+      medicalManager,
       onProceedToItemSelection: (army: Army) => {
         console.log('アイテム装備へ進む:', army.getName());
 

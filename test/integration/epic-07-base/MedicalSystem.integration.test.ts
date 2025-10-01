@@ -9,12 +9,14 @@ import { CharacterFactory } from '../../../src/character/CharacterFactory';
 import { JobType } from '../../../src/types/CharacterTypes';
 import { BaseType } from '../../../src/types/BaseTypes';
 import { ProductionManager } from '../../../src/production/ProductionManager';
+import { GameTimeManager } from '../../../src/time/GameTimeManager';
 import { createMockScene } from '../../setup';
 
 // Phaser モックはsetup.tsで定義済み
 
 describe('[エピック7] MedicalSystem Integration Tests', () => {
   let scene: any;
+  let gameTimeManager: GameTimeManager;
   let medicalManager: MedicalManager;
   let armyManager: ArmyManager;
   let economyManager: EconomyManager;
@@ -26,7 +28,9 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
     scene = createMockScene();
 
     // 各マネージャーの初期化
-    medicalManager = new MedicalManager(scene);
+    gameTimeManager = new GameTimeManager();
+    gameTimeManager.setScene(scene);
+    medicalManager = new MedicalManager(gameTimeManager);
     armyManager = new ArmyManager(scene);
     economyManager = new EconomyManager(scene);
 
@@ -41,6 +45,7 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
     const baseManager = new BaseManager(scene, mockMapManager);
 
     uiManager = new UIManager(scene, productionManager, economyManager, baseManager);
+    uiManager.setGameTimeManager(gameTimeManager);
 
     // scene にarmyManagerを設定（UIManagerが参照するため）
     scene.armyManager = armyManager;
@@ -131,9 +136,6 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
 
   describe('2分間のHP回復処理', () => {
     test('2分後に軍団のHPが全回復する', () => {
-      // 初期時間を0に設定
-      scene.time.now = 0;
-
       // 初期HP確認
       const commander = army.getCommander();
       const members = army.getAllMembers();
@@ -147,7 +149,7 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
       medicalManager.startTreatment(army, base, economyManager.getMoney());
 
       // 2分経過をシミュレート
-      scene.time.now = 120000; // 120秒 = 2分
+      gameTimeManager.update(120000); // 120秒 = 2分
 
       // update処理で自動完了
       medicalManager.update(armyManager);
@@ -159,24 +161,21 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
     });
 
     test('治療時間の残り時間が正しく計算される', () => {
-      // 初期時間を0に設定
-      scene.time.now = 0;
-
       // 治療開始
       medicalManager.startTreatment(army, base, economyManager.getMoney());
 
       // 30秒経過
-      scene.time.now = 30000;
+      gameTimeManager.update(30000);
       let remaining = medicalManager.getRemainingTime(army.getId());
       expect(remaining).toBe(90);
 
-      // 60秒経過
-      scene.time.now = 60000;
+      // さらに30秒経過（合計60秒）
+      gameTimeManager.update(30000);
       remaining = medicalManager.getRemainingTime(army.getId());
       expect(remaining).toBe(60);
 
-      // 120秒経過
-      scene.time.now = 120000;
+      // さらに60秒経過（合計120秒）
+      gameTimeManager.update(60000);
       remaining = medicalManager.getRemainingTime(army.getId());
       expect(remaining).toBe(0);
       expect(medicalManager.isCompleted(army.getId())).toBe(true);
@@ -185,9 +184,6 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
 
   describe('UIとバックグラウンド処理の独立性', () => {
     test('UIを閉じても治療が継続される', () => {
-      // 初期時間を0に設定
-      scene.time.now = 0;
-
       // 治療開始
       medicalManager.startTreatment(army, base, economyManager.getMoney());
       expect(medicalManager.isInTreatment(army.getId())).toBe(true);
@@ -196,14 +192,14 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
       // UIManagerにはmedicalFacilityMenuがnullの状態
 
       // 時間経過
-      scene.time.now = 60000; // 1分経過
+      gameTimeManager.update(60000); // 1分経過
 
       // UIが閉じられていても治療は継続
       expect(medicalManager.isInTreatment(army.getId())).toBe(true);
       expect(medicalManager.getRemainingTime(army.getId())).toBe(60);
 
       // さらに時間経過
-      scene.time.now = 120000; // 2分経過
+      gameTimeManager.update(60000); // さらに1分経過（合計2分）
 
       // update処理
       medicalManager.update(armyManager);
@@ -214,9 +210,6 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
     });
 
     test('複数の軍団の治療を同時に管理できる', () => {
-      // 初期時間を0に設定
-      scene.time.now = 0;
-
       // 2つ目の軍団を作成
       const commander2 = CharacterFactory.createCharacter(scene, 0, 0, 'shadow' as JobType, '太郎');
       const commander2MaxHp = commander2.getMaxHP();
@@ -227,14 +220,14 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
       // 両方の軍団の治療を開始（時間差）
       medicalManager.startTreatment(army, base, economyManager.getMoney());
 
-      scene.time.now = 30000; // 30秒後
+      gameTimeManager.update(30000); // 30秒経過
       medicalManager.startTreatment(army2, base, economyManager.getMoney());
 
       expect(medicalManager.isInTreatment(army.getId())).toBe(true);
       expect(medicalManager.isInTreatment(army2.getId())).toBe(true);
 
-      // 最初の軍団の治療が完了
-      scene.time.now = 120000;
+      // 最初の軍団の治療が完了（合計120秒経過）
+      gameTimeManager.update(90000); // さらに90秒経過（30 + 90 = 120秒）
       medicalManager.update(armyManager);
 
       expect(medicalManager.isInTreatment(army.getId())).toBe(false);
@@ -242,8 +235,8 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
       expect(army.getCommander().getCurrentHP()).toBe(army.getCommander().getMaxHP());
       expect(army2.getCommander().getCurrentHP()).toBe(40); // まだ治療中
 
-      // 2つ目の軍団の治療も完了
-      scene.time.now = 150000;
+      // 2つ目の軍団の治療も完了（合計150秒経過）
+      gameTimeManager.update(30000); // さらに30秒経過（120 + 30 = 150秒）
       medicalManager.update(armyManager);
 
       expect(medicalManager.isInTreatment(army2.getId())).toBe(false);
@@ -253,9 +246,6 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
 
   describe('拠点ごとの治療管理', () => {
     test('特定の拠点で治療中の軍団リストを取得できる', () => {
-      // 初期時間を0に設定
-      scene.time.now = 0;
-
       // 複数の拠点を作成
       const base2 = new Base(scene, {
         id: 'base-2',
