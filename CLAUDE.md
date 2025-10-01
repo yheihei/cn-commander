@@ -186,6 +186,15 @@ TypeScript型定義：
 - `VisionSystem` - 視界計算と敵発見メカニクス
 - `VisionCalculator` - 視界範囲の計算
 
+#### `src/item/`
+アイテム・装備システム：
+- `ItemFactory` - アイテム生成のファクトリー
+- `InventoryManager` - アイテム在庫管理（倉庫システム）
+
+#### `src/production/`
+生産システム：
+- `ProductionManager` - アイテム生産管理（生産ライン、キュー管理、バックグラウンド処理）
+
 ### データフロー
 1. **入力処理**: `MovementInputHandler`がマウス入力を受け取る
 2. **UI表示**: `UIManager`が適切なメニューを表示
