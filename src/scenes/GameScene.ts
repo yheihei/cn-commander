@@ -20,6 +20,7 @@ import { ProductionManager, ProductionItemType } from '../production/ProductionM
 import { EconomyManager } from '../economy/EconomyManager';
 import { ItemFactory } from '../item/ItemFactory';
 import { InventoryManager } from '../item/InventoryManager';
+import { GameTimeManager } from '../time/GameTimeManager';
 
 export class GameScene extends Phaser.Scene {
   private mapManager!: MapManager;
@@ -29,6 +30,7 @@ export class GameScene extends Phaser.Scene {
   private productionManager!: ProductionManager;
   private economyManager!: EconomyManager;
   private inventoryManager!: InventoryManager;
+  private gameTimeManager!: GameTimeManager;
   private uiManager!: UIManager;
   private inputHandler!: MovementInputHandler;
   private commandSystem!: MovementCommandSystem;
@@ -113,6 +115,9 @@ export class GameScene extends Phaser.Scene {
     this.productionManager.setEconomyManager(this.economyManager);
     this.productionManager.setInventoryManager(this.inventoryManager);
 
+    // ゲーム時間マネージャーの初期化
+    this.gameTimeManager = new GameTimeManager();
+
     // カメラの設定（UIManagerより先に実行）
     this.setupCamera();
 
@@ -123,6 +128,9 @@ export class GameScene extends Phaser.Scene {
       this.economyManager,
       this.baseManager,
     );
+
+    // UIマネージャーにGameTimeManagerを設定
+    this.uiManager.setGameTimeManager(this.gameTimeManager);
 
     // 入力ハンドラーの初期化
     this.inputHandler = new MovementInputHandler(
@@ -569,6 +577,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    // GameTimeManagerでdeltaを調整（ポーズ中は0になる）
+    const adjustedDelta = this.gameTimeManager.update(delta);
+
     // キーボードでカメラ移動
     const scrollSpeed = 5;
 
@@ -586,27 +597,27 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 軍団の更新
-    this.armyManager.update(time, delta);
+    this.armyManager.update(time, adjustedDelta);
 
     // 拠点の更新
-    this.baseManager.update(delta);
+    this.baseManager.update(adjustedDelta);
 
     // 移動システムの更新
-    this.movementManager.update(time, delta);
+    this.movementManager.update(time, adjustedDelta);
 
     // 視界・発見システムの更新
     this.updateVisionAndDiscovery();
 
     // 戦闘システムの更新
-    this.combatSystem.update(time, delta);
+    this.combatSystem.update(time, adjustedDelta);
 
     // 生産システムの更新（deltaをミリ秒から秒に変換）
-    this.productionManager.update(delta / 1000);
+    this.productionManager.update(adjustedDelta / 1000);
 
     // 経済システムの更新（収入処理）
-    this.economyManager.update(delta, this.baseManager);
+    this.economyManager.update(adjustedDelta, this.baseManager);
 
-    // UIシステムの更新
+    // UIシステムの更新（モーダルUI監視と自動ポーズ制御）
     this.uiManager.update();
   }
 

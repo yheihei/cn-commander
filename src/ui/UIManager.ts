@@ -17,6 +17,7 @@ import { SystemInfoBar } from './SystemInfoBar';
 import { MedicalManager } from '../medical/MedicalManager';
 import { ProductionManager } from '../production/ProductionManager';
 import { EconomyManager } from '../economy/EconomyManager';
+import { GameTimeManager } from '../time/GameTimeManager';
 import { Army } from '../army/Army';
 import { Base } from '../base/Base';
 import { ArmyFormationData } from '../types/ArmyFormationTypes';
@@ -29,6 +30,8 @@ export class UIManager {
   private medicalManager: MedicalManager;
   private economyManager: EconomyManager;
   private baseManager: any; // BaseManagerの型は後で適切に設定
+  private gameTimeManager: GameTimeManager | null = null;
+  private wasAnyMenuVisible: boolean = false;
   private actionMenu: ActionMenu | null = null;
   private actionMenuButtonCount: number = 3; // ActionMenuのボタン数を記憶
   private movementModeMenu: MovementModeMenu | null = null;
@@ -106,6 +109,14 @@ export class UIManager {
     const income = this.economyManager.calculateIncomePerMinute(playerBases);
     this.systemInfoBar.updateDisplay(this.economyManager.getMoney(), income);
     this.systemInfoBar.show();
+  }
+
+  /**
+   * GameTimeManagerへの参照を設定
+   * モーダルUI表示時の自動ポーズ制御に使用
+   */
+  public setGameTimeManager(gameTimeManager: GameTimeManager): void {
+    this.gameTimeManager = gameTimeManager;
   }
 
   public showActionMenu(
@@ -1068,6 +1079,19 @@ export class UIManager {
       const playerBases = this.baseManager.getBasesByOwner('player');
       const income = this.economyManager.calculateIncomePerMinute(playerBases);
       this.systemInfoBar.updateDisplay(this.economyManager.getMoney(), income);
+    }
+
+    // モーダルUI状態に基づく自動ポーズ制御
+    if (this.gameTimeManager) {
+      const isAnyMenuVisible = this.isAnyMenuVisible();
+      if (isAnyMenuVisible && !this.wasAnyMenuVisible) {
+        // メニューが開いた → ポーズ
+        this.gameTimeManager.pause();
+      } else if (!isAnyMenuVisible && this.wasAnyMenuVisible) {
+        // メニューが閉じた → 再開
+        this.gameTimeManager.resume();
+      }
+      this.wasAnyMenuVisible = isAnyMenuVisible;
     }
 
     // ArmyFormationUIは全画面モーダルなので位置更新不要
