@@ -17,6 +17,7 @@
 2. ポーズ機能（pause/resume）
 3. モーダルUI表示時の自動ポーズ
 4. 全ゲームシステムの一時停止
+5. Phaserタイムシステムの制御（攻撃タイマー、アニメーション等の停止）
 
 ## High-level design
 
@@ -24,7 +25,11 @@
 ```
 GameScene
   └─ GameTimeManager ← ポーズ状態を管理
+       ├─ setScene(this) ← Phaserシーンへの参照を設定
        ├─ update(delta) → 調整されたdelta
+       │
+       ├─ pause() → isPaused = true + scene.time.paused = true
+       ├─ resume() → isPaused = false + scene.time.paused = false
        │
        ├─ ArmyManager.update(adjustedDelta)
        ├─ BaseManager.update(adjustedDelta)
@@ -34,6 +39,9 @@ GameScene
        ├─ EconomyManager.update(adjustedDelta, baseManager)
        └─ UIManager.update()
             └─ isAnyMenuVisible() → 自動ポーズ制御
+
+AttackTimer (Phaser.Scene.timeを使用)
+  └─ scene.time.paused = true でタイマーが停止
 ```
 
 ### 主要コンポーネント
@@ -43,6 +51,7 @@ GameScene
 - ゲーム時間の管理
 - ポーズ状態の管理
 - delta値の調整（ポーズ中は0を返す）
+- Phaserタイムシステムの制御（攻撃タイマー等のPhaser内部タイマーも停止）
 
 **配置場所**: `src/time/GameTimeManager.ts`
 
@@ -59,14 +68,24 @@ GameScene
 export class GameTimeManager {
   private isPaused: boolean = false;
   private totalElapsedTime: number = 0; // オプション：累積ゲーム時間
+  private scene: Phaser.Scene | null = null;
+
+  /**
+   * Phaserシーンを設定
+   * Phaserの内部タイムシステムもポーズ制御するために必要
+   * @param scene - Phaserシーン
+   */
+  public setScene(scene: Phaser.Scene): void;
 
   /**
    * ゲームをポーズ
+   * Phaserの内部タイムシステムも停止します
    */
   public pause(): void;
 
   /**
    * ゲームを再開
+   * Phaserの内部タイムシステムも再開します
    */
   public resume(): void;
 
@@ -86,6 +105,12 @@ export class GameTimeManager {
    * 累積ゲーム時間を取得（オプション）
    */
   public getTotalElapsedTime(): number;
+
+  /**
+   * 累積ゲーム時間をリセット
+   * Phaserタイムシステムも再開します
+   */
+  public reset(): void;
 }
 ```
 
@@ -130,6 +155,7 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     // GameTimeManagerの初期化
     this.gameTimeManager = new GameTimeManager();
+    this.gameTimeManager.setScene(this); // Phaserシーンを設定
 
     // ... 各マネージャーの初期化 ...
 
@@ -175,12 +201,19 @@ export class GameScene extends Phaser.Scene {
    - ポーズ中はupdate()が0を返すこと
    - 通常時はupdate()が渡されたdeltaを返すこと
 
-3. **モーダルUI連動**
+3. **Phaserタイムシステム制御**
+   - pause()でPhaser.Scene.time.pausedがtrueになること
+   - resume()でPhaser.Scene.time.pausedがfalseになること
+   - reset()でPhaser.Scene.time.pausedがfalseになること
+   - シーン未設定時もエラーにならないこと
+
+4. **モーダルUI連動**
    - モーダルUIが開いたときに自動的にポーズされること
    - モーダルUIが閉じたときに自動的に再開されること
 
-4. **ゲームシステムへの影響**
+5. **ゲームシステムへの影響**
    - ポーズ中は各マネージャーの時間進行が停止すること
+   - ポーズ中は攻撃タイマーが停止すること（Phaserタイマー）
    - 再開後は正常に時間進行すること
 
 ## 未解決事項

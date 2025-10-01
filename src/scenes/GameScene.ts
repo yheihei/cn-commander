@@ -117,6 +117,7 @@ export class GameScene extends Phaser.Scene {
 
     // ゲーム時間マネージャーの初期化
     this.gameTimeManager = new GameTimeManager();
+    this.gameTimeManager.setScene(this);
 
     // カメラの設定（UIManagerより先に実行）
     this.setupCamera();

@@ -191,4 +191,73 @@ describe('[エピック1] GameTimeManager Integration Tests', () => {
       expect(gameTimeManager.getTotalElapsedTime()).toBe(smallDelta);
     });
   });
+
+  describe('Phaserタイムシステム制御', () => {
+    let mockScene: any;
+
+    beforeEach(() => {
+      mockScene = {
+        time: {
+          paused: false,
+        },
+      };
+      gameTimeManager.setScene(mockScene);
+    });
+
+    test('setScene()でシーンを設定できる', () => {
+      // setScene()がエラーなく実行できることを確認
+      expect(() => gameTimeManager.setScene(mockScene)).not.toThrow();
+    });
+
+    test('pause()でPhaserタイムシステムもポーズされる', () => {
+      gameTimeManager.pause();
+      expect(mockScene.time.paused).toBe(true);
+      expect(gameTimeManager.getIsPaused()).toBe(true);
+    });
+
+    test('resume()でPhaserタイムシステムも再開される', () => {
+      gameTimeManager.pause();
+      expect(mockScene.time.paused).toBe(true);
+
+      gameTimeManager.resume();
+      expect(mockScene.time.paused).toBe(false);
+      expect(gameTimeManager.getIsPaused()).toBe(false);
+    });
+
+    test('reset()でPhaserタイムシステムも再開される', () => {
+      gameTimeManager.pause();
+      expect(mockScene.time.paused).toBe(true);
+
+      gameTimeManager.reset();
+      expect(mockScene.time.paused).toBe(false);
+      expect(gameTimeManager.getIsPaused()).toBe(false);
+      expect(gameTimeManager.getTotalElapsedTime()).toBe(0);
+    });
+
+    test('シーン未設定時もpause/resumeは正常に動作する', () => {
+      const gameTimeManagerWithoutScene = new GameTimeManager();
+      // シーンを設定せずにpause/resumeを呼んでもエラーにならない
+      expect(() => gameTimeManagerWithoutScene.pause()).not.toThrow();
+      expect(() => gameTimeManagerWithoutScene.resume()).not.toThrow();
+      expect(() => gameTimeManagerWithoutScene.reset()).not.toThrow();
+    });
+
+    test('攻撃タイマーのポーズシナリオ', () => {
+      // 通常プレイ中（攻撃タイマーが動作）
+      expect(mockScene.time.paused).toBe(false);
+      gameTimeManager.update(100);
+
+      // 軍団編成UIを開く → 攻撃タイマーが停止
+      gameTimeManager.pause();
+      expect(mockScene.time.paused).toBe(true);
+      gameTimeManager.update(100); // ポーズ中なので時間は進まない
+      expect(gameTimeManager.getTotalElapsedTime()).toBe(100);
+
+      // UIを閉じる → 攻撃タイマーが再開
+      gameTimeManager.resume();
+      expect(mockScene.time.paused).toBe(false);
+      gameTimeManager.update(100);
+      expect(gameTimeManager.getTotalElapsedTime()).toBe(200);
+    });
+  });
 });

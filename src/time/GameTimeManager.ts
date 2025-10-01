@@ -1,3 +1,5 @@
+import * as Phaser from 'phaser';
+
 /**
  * ゲーム時間管理クラス
  * task-1-2で実装
@@ -8,19 +10,28 @@
 export class GameTimeManager {
   private isPaused: boolean = false;
   private totalElapsedTime: number = 0;
+  private scene: Phaser.Scene | null = null;
 
   /**
    * ゲームをポーズ
+   * Phaserの内部タイムシステム（攻撃タイマー、アニメーション等）も停止します。
    */
   public pause(): void {
     this.isPaused = true;
+    if (this.scene) {
+      this.scene.time.paused = true;
+    }
   }
 
   /**
    * ゲームを再開
+   * Phaserの内部タイムシステムも再開します。
    */
   public resume(): void {
     this.isPaused = false;
+    if (this.scene) {
+      this.scene.time.paused = false;
+    }
   }
 
   /**
@@ -29,6 +40,15 @@ export class GameTimeManager {
    */
   public getIsPaused(): boolean {
     return this.isPaused;
+  }
+
+  /**
+   * Phaserシーンを設定
+   * Phaserの内部タイムシステム（攻撃タイマー等）もポーズ制御するために必要
+   * @param scene - Phaserシーン
+   */
+  public setScene(scene: Phaser.Scene): void {
+    this.scene = scene;
   }
 
   /**
@@ -64,5 +84,8 @@ export class GameTimeManager {
   public reset(): void {
     this.totalElapsedTime = 0;
     this.isPaused = false;
+    if (this.scene) {
+      this.scene.time.paused = false;
+    }
   }
 }
