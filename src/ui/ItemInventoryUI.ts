@@ -734,10 +734,10 @@ export class ItemInventoryUI extends PhaserContainer {
       panelY,
       panelWidth,
       panelHeight,
-      0xffffff,
-      0.95,
+      0x333333,
+      0.9,
     );
-    selectPanel.setStrokeStyle(2, 0x000000);
+    selectPanel.setStrokeStyle(2, 0xffffff);
     this.transferTargetSelectContainer.add(selectPanel);
 
     // selectPanelの範囲を保存（overlayBgのクリック判定用）
@@ -790,11 +790,17 @@ export class ItemInventoryUI extends PhaserContainer {
       '誰に渡しますか？',
       {
         fontSize: '16px',
-        color: '#000000',
-        fontFamily: 'Arial',
+        color: '#ffffff',
+        fontFamily: 'monospace, "Courier New", Courier',
+        resolution: 2,
+        padding: { x: 0, top: 2 },
       },
     );
     titleText.setOrigin(0.5);
+    // ピクセルパーフェクトレンダリングのため位置を整数に丸める
+    if (titleText.setPosition) {
+      titleText.setPosition(Math.round(titleText.x), Math.round(titleText.y));
+    }
     this.transferTargetSelectContainer.add(titleText);
 
     // メンバーボタンリスト
@@ -809,18 +815,18 @@ export class ItemInventoryUI extends PhaserContainer {
         currentY + buttonHeight / 2,
         panelWidth - 40,
         buttonHeight,
-        isFull ? 0xcccccc : 0xffffff,
+        isFull ? 0x444444 : 0x555555,
       );
-      buttonBg.setStrokeStyle(1, 0x000000);
+      buttonBg.setStrokeStyle(1, 0xaaaaaa);
 
       // ホバー効果とクリック処理（満杯でない場合のみ）
       if (!isFull) {
         buttonBg.setInteractive();
         buttonBg.on('pointerover', () => {
-          buttonBg.setFillStyle(0xccddff);
+          buttonBg.setFillStyle(0x777777);
         });
         buttonBg.on('pointerout', () => {
-          buttonBg.setFillStyle(0xffffff);
+          buttonBg.setFillStyle(0x555555);
         });
         buttonBg.on(
           'pointerdown',
@@ -846,11 +852,17 @@ export class ItemInventoryUI extends PhaserContainer {
         `${member.getName()}（${itemCount}/4）`,
         {
           fontSize: '14px',
-          color: isFull ? '#888888' : '#000000',
-          fontFamily: 'Arial',
+          color: isFull ? '#888888' : '#ffffff',
+          fontFamily: 'monospace, "Courier New", Courier',
+          resolution: 2,
+          padding: { x: 0, top: 2 },
         },
       );
       buttonText.setOrigin(0.5);
+      // ピクセルパーフェクトレンダリングのため位置を整数に丸める
+      if (buttonText.setPosition) {
+        buttonText.setPosition(Math.round(buttonText.x), Math.round(buttonText.y));
+      }
       this.transferTargetSelectContainer!.add(buttonText);
 
       currentY += buttonHeight + buttonSpacing;
