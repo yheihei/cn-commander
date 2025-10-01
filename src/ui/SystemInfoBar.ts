@@ -23,7 +23,7 @@ export class SystemInfoBar extends Phaser.GameObjects.Container {
 
     this.createVisuals();
     config.scene.add.existing(this);
-    this.setDepth(1000); // UIレイヤーの最前面
+    this.setDepth(500); // オブジェクトより前、他のUIより後ろ
   }
 
   private createVisuals(): void {
