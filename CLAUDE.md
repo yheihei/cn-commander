@@ -25,6 +25,7 @@ use serena whenever possible
 ## git操作をするとき
 
 - `gh` コマンドを使うこと
+- commitはしてよいが、pushは許可なくしてはいけない
 - serenaのキャッシュファイルもpushしてよい
 
 ### 具体的なgit操作例
