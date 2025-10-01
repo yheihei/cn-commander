@@ -24,7 +24,8 @@ use serena whenever possible
 
 ## git操作をするとき
 
-`gh` コマンドを使うこと
+- `gh` コマンドを使うこと
+- serenaのキャッシュファイルもpushしてよい
 
 ### 具体的なgit操作例
 - `gh pr create`: プルリクエスト作成
