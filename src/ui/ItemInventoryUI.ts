@@ -144,7 +144,7 @@ export class ItemInventoryUI extends PhaserContainer {
     const soldiers = this.army.getSoldiers();
 
     console.log(
-      `[ItemInventoryUI] 指揮官: ${commander ? commander.getName() + ' (' + commander.getJobType() + ')' : 'なし'}`,
+      `[ItemInventoryUI] 指揮官: ${commander ? `${commander.getName()} (${commander.getJobType()})` : 'なし'}`,
     );
     console.log(`[ItemInventoryUI] 一般兵数: ${soldiers.length}`);
     soldiers.forEach((soldier, index) => {
