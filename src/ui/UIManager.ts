@@ -351,6 +351,7 @@ export class UIManager {
       this.isProductionFactoryMenuVisible() ||
       this.isMedicalFacilityMenuVisible() ||
       this.isWarehouseSubMenuVisible() ||
+      this.isGarrisonedArmiesPanelVisible() ||
       this.isArmyFormationUIVisible() ||
       this.isItemSelectionUIVisible() ||
       this.isItemInventoryUIVisible() ||
@@ -1173,6 +1174,10 @@ export class UIManager {
 
   public isWarehouseSubMenuVisible(): boolean {
     return this.warehouseSubMenu !== null;
+  }
+
+  public isGarrisonedArmiesPanelVisible(): boolean {
+    return this.garrisonedArmiesPanel !== null;
   }
 
   public isItemInventoryUIVisible(): boolean {
