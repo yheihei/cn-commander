@@ -40,7 +40,7 @@ describe('[エピック7] MedicalSystem Integration Tests', () => {
     } as any;
     const baseManager = new BaseManager(scene, mockMapManager);
 
-    uiManager = new UIManager(scene, productionManager, baseManager);
+    uiManager = new UIManager(scene, productionManager, economyManager, baseManager);
 
     // scene にarmyManagerを設定（UIManagerが参照するため）
     scene.armyManager = armyManager;

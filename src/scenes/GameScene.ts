@@ -116,8 +116,13 @@ export class GameScene extends Phaser.Scene {
     // カメラの設定（UIManagerより先に実行）
     this.setupCamera();
 
-    // UIマネージャーの初期化（カメラ設定後、ProductionManager初期化後）
-    this.uiManager = new UIManager(this, this.productionManager, this.baseManager);
+    // UIマネージャーの初期化（カメラ設定後、ProductionManager/EconomyManager初期化後）
+    this.uiManager = new UIManager(
+      this,
+      this.productionManager,
+      this.economyManager,
+      this.baseManager,
+    );
 
     // 入力ハンドラーの初期化
     this.inputHandler = new MovementInputHandler(
@@ -597,6 +602,9 @@ export class GameScene extends Phaser.Scene {
 
     // 生産システムの更新（deltaをミリ秒から秒に変換）
     this.productionManager.update(delta / 1000);
+
+    // 経済システムの更新（収入処理）
+    this.economyManager.update(delta, this.baseManager);
 
     // UIシステムの更新
     this.uiManager.update();

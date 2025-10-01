@@ -1,6 +1,7 @@
 import { UIManager } from '../../../src/ui/UIManager';
 import { WarehouseSubMenu } from '../../../src/ui/WarehouseSubMenu';
 import { InventoryManager } from '../../../src/item/InventoryManager';
+import { EconomyManager } from '../../../src/economy/EconomyManager';
 import { Base } from '../../../src/base/Base';
 import { BaseManager } from '../../../src/base/BaseManager';
 import { ProductionManager, ProductionItemType } from '../../../src/production/ProductionManager';
@@ -26,6 +27,7 @@ const createMockScene = () => {
         setOrigin: jest.fn(),
         setPosition: jest.fn(),
         setColor: jest.fn(),
+        setText: jest.fn(),
         destroy: jest.fn(),
       })),
       container: jest.fn(() => ({
@@ -92,8 +94,10 @@ describe('[エピック7] Warehouse UI Integration Tests', () => {
     // sceneにproductionManagerを設定（WarehouseSubMenuがアクセスできるように）
     scene.productionManager = productionManager;
 
+    const economyManager = new EconomyManager(scene);
+
     try {
-      uiManager = new UIManager(scene, productionManager, baseManager);
+      uiManager = new UIManager(scene, productionManager, economyManager, baseManager);
     } catch (e) {
       console.error('UIManager initialization error:', e);
     }

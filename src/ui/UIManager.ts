@@ -13,6 +13,7 @@ import { ProductionFactoryMenu } from './ProductionFactoryMenu';
 import { GarrisonedArmiesPanel } from './GarrisonedArmiesPanel';
 import { MedicalFacilityMenu } from './MedicalFacilityMenu';
 import { WarehouseSubMenu } from './WarehouseSubMenu';
+import { SystemInfoBar } from './SystemInfoBar';
 import { MedicalManager } from '../medical/MedicalManager';
 import { ProductionManager } from '../production/ProductionManager';
 import { EconomyManager } from '../economy/EconomyManager';
@@ -46,12 +47,18 @@ export class UIManager {
   private currentSelectedArmy: Army | null = null;
   private currentSelectedBase: Base | null = null;
   private guideMessage: Phaser.GameObjects.Container | null = null;
+  private systemInfoBar: SystemInfoBar | null = null;
 
-  constructor(scene: Phaser.Scene, productionManager: ProductionManager, baseManager: any) {
+  constructor(
+    scene: Phaser.Scene,
+    productionManager: ProductionManager,
+    economyManager: EconomyManager,
+    baseManager: any,
+  ) {
     this.scene = scene;
     this.productionManager = productionManager;
+    this.economyManager = economyManager;
     this.medicalManager = new MedicalManager(scene);
-    this.economyManager = new EconomyManager(scene);
     this.baseManager = baseManager;
     this.initializeInfoPanels();
   }
@@ -87,6 +94,18 @@ export class UIManager {
       width: panelWidth,
       height: baseInfoPanelHeight,
     });
+
+    // SystemInfoBar（画面右上）
+    this.systemInfoBar = new SystemInfoBar({
+      scene: this.scene,
+      x: -1000, // 初期位置は画面外
+      y: -1000,
+    });
+    // 初期表示
+    const playerBases = this.baseManager.getBasesByOwner('player');
+    const income = this.economyManager.calculateIncomePerMinute(playerBases);
+    this.systemInfoBar.updateDisplay(this.economyManager.getMoney(), income);
+    this.systemInfoBar.show();
   }
 
   public showActionMenu(
@@ -201,8 +220,8 @@ export class UIManager {
             this.hideArmyInfo();
           }
         : undefined,
-      hasAttackTarget: hasAttackTarget,
-      canGarrison: canGarrison,
+      hasAttackTarget,
+      canGarrison,
       canOccupy: canOccupy || false,
     });
   }
@@ -659,7 +678,7 @@ export class UIManager {
       y: 0, // コンストラクタ内で中央配置される
       baseId: this.currentSelectedBase.getId(),
       baseManager: this.baseManager,
-      armyManager: armyManager,
+      armyManager,
       medicalManager: this.medicalManager,
       money: this.economyManager.getMoney(),
       onStartTreatment: (_armyId: string, cost: number) => {
@@ -725,7 +744,7 @@ export class UIManager {
     // ItemInventoryUIを作成
     this.itemInventoryUI = new ItemInventoryUI({
       scene: this.scene,
-      army: army,
+      army,
       onClose: () => {
         this.hideItemInventoryUI();
       },
@@ -1033,6 +1052,22 @@ export class UIManager {
           this.showGuideMessage(`${armyName}の治療が完了しました`);
         });
       }
+    }
+
+    // SystemInfoBarの位置更新と表示更新
+    if (this.systemInfoBar) {
+      const cam = this.scene.cameras.main;
+      const viewTop = cam.worldView.y;
+      const viewRight = cam.worldView.right;
+
+      const barX = viewRight - 110; // 右端から110px（バーの中心）
+      const barY = viewTop + 40; // 上端から40px（バーの中心）
+      this.systemInfoBar.setPosition(barX, barY);
+
+      // 所持金と収入を更新
+      const playerBases = this.baseManager.getBasesByOwner('player');
+      const income = this.economyManager.calculateIncomePerMinute(playerBases);
+      this.systemInfoBar.updateDisplay(this.economyManager.getMoney(), income);
     }
 
     // ArmyFormationUIは全画面モーダルなので位置更新不要
@@ -1396,6 +1431,10 @@ export class UIManager {
     }
     if (this.medicalManager) {
       this.medicalManager.destroy();
+    }
+    if (this.systemInfoBar) {
+      this.systemInfoBar.destroy();
+      this.systemInfoBar = null;
     }
   }
 }

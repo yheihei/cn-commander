@@ -1,5 +1,6 @@
 import { UIManager } from '../../../src/ui/UIManager';
 import { createMockProductionManager } from '../../mocks/ProductionManagerMock';
+import { EconomyManager } from '../../../src/economy/EconomyManager';
 import { Base } from '../../../src/base/Base';
 import { BaseManager } from '../../../src/base/BaseManager';
 import { MapManager } from '../../../src/map/MapManager';
@@ -98,10 +99,13 @@ describe('[エピック7] Base UI Integration Tests', () => {
     // MapManagerのモック
     const mockMapManager = {} as MapManager;
 
-    // UIManagerとBaseManagerの初期化
-    const productionManager = createMockProductionManager();
-    uiManager = new UIManager(scene, productionManager, {});
+    // BaseManagerを先に初期化（UIManagerが必要とするため）
     baseManager = new BaseManager(scene, mockMapManager);
+
+    // UIManagerの初期化
+    const productionManager = createMockProductionManager();
+    const economyManager = new EconomyManager(scene);
+    uiManager = new UIManager(scene, productionManager, economyManager, baseManager);
 
     // テスト用拠点の作成
     playerBase = baseManager.addBase({

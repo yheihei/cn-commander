@@ -9,6 +9,7 @@ import { MovementMode } from '../../../src/types/MovementTypes';
 import { createMockScene } from '../../setup';
 import { VisionSystem } from '../../../src/vision/VisionSystem';
 import { BaseManager } from '../../../src/base/BaseManager';
+import { EconomyManager } from '../../../src/economy/EconomyManager';
 import { createMockProductionManager } from '../../mocks/ProductionManagerMock';
 
 describe('[エピック4] Movement Execution Integration Tests', () => {
@@ -30,7 +31,8 @@ describe('[エピック4] Movement Execution Integration Tests', () => {
     commandSystem = new MovementCommandSystem();
     movementManager = new MovementManager(scene, armyManager, mapManager, commandSystem);
     const productionManager = createMockProductionManager();
-    uiManager = new UIManager(scene, productionManager, {});
+    const economyManager = new EconomyManager(scene);
+    uiManager = new UIManager(scene, productionManager, economyManager, baseManager);
     visionSystem = new VisionSystem(mapManager);
     inputHandler = new MovementInputHandler(
       scene,
