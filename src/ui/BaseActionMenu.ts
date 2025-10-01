@@ -169,11 +169,18 @@ export class BaseActionMenu extends Phaser.GameObjects.Container {
 
     // 次のフレームでイベントリスナーを追加（即座に閉じるのを防ぐ）
     this.scene.time.delayedCall(0, () => {
+      // UIが破棄されている場合は処理をスキップ
+      if (!this.scene || !this.active) {
+        return;
+      }
+
       this.scene.input.on('pointerdown', clickHandler);
 
       // メニューが破棄される時にリスナーを削除
       this.once('destroy', () => {
-        this.scene.input.off('pointerdown', clickHandler);
+        if (this.scene && this.scene.input) {
+          this.scene.input.off('pointerdown', clickHandler);
+        }
       });
     });
   }

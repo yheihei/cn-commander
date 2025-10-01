@@ -192,12 +192,13 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
       const onAttackTarget = jest.fn();
       const onCancel = jest.fn();
 
-      // delayedCallをモック化して、コールバックを即座に実行
+      // delayedCallをモック化して、コールバックを保存
+      let delayedCallback: (() => void) | null = null;
       scene.time.delayedCall = jest.fn((_delay: number, callback: () => void) => {
-        callback(); // 即座に実行
+        delayedCallback = callback;
       });
 
-      new ActionMenu({
+      const actionMenu = new ActionMenu({
         scene,
         x: 100,
         y: 100,
@@ -208,6 +209,14 @@ describe('[エピック12] 攻撃目標指定UI統合テスト', () => {
         onOccupy: jest.fn(),
         canOccupy: false,
       });
+
+      // テスト環境でactiveプロパティを明示的に設定
+      (actionMenu as any).active = true;
+
+      // delayedCallのコールバックを実行
+      if (delayedCallback) {
+        (delayedCallback as () => void)();
+      }
 
       // delayedCallが呼ばれたことを確認
       expect(scene.time.delayedCall).toHaveBeenCalled();

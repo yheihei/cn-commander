@@ -42,11 +42,6 @@ export class CombatEffectManager {
     weaponType: string,
     onComplete?: () => void,
   ): void {
-    console.log(`[CombatEffectManager] createAttackEffect開始`);
-    console.log(`[CombatEffectManager] this.scene存在確認: ${this?.scene !== undefined}`);
-    console.log(`[CombatEffectManager] attacker: ${attacker?.getName()}`);
-    console.log(`[CombatEffectManager] target: ${target?.getName()}`);
-
     const effectType = weaponType === 'melee' ? 'slash' : 'shuriken';
     const config = CombatEffectManager.EFFECT_CONFIGS[effectType];
 
