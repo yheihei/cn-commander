@@ -22,9 +22,22 @@ export class AttackTimer {
 
     const attackInterval = this.getAttackInterval(character);
 
+    console.log(`[AttackTimer] タイマー開始: ${character.getName()}, 間隔: ${attackInterval}ms`);
+    console.log(`[AttackTimer] this.scene存在確認: ${this.scene !== undefined && this.scene !== null}`);
+
     const timer = this.scene.time.addEvent({
       delay: attackInterval,
-      callback: onAttack,
+      callback: () => {
+        console.log(`[AttackTimer] コールバック実行: ${character.getName()}`);
+        console.log(`[AttackTimer] onAttack存在確認: ${onAttack !== undefined && onAttack !== null}`);
+        try {
+          onAttack();
+        } catch (error) {
+          console.error(`[AttackTimer] コールバックエラー:`, error);
+          console.error(`[AttackTimer] character:`, character);
+          console.error(`[AttackTimer] this:`, this);
+        }
+      },
       loop: true,
     });
 

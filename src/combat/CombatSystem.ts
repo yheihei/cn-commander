@@ -64,7 +64,9 @@ export class CombatSystem {
   }
 
   startCombat(army: Army): void {
+    console.log(`[CombatSystem] startCombat開始: ${army.getName()}`);
     const movementMode = army.getMovementMode();
+    console.log(`[CombatSystem] 軍団モード: ${movementMode}`);
 
     // 通常移動モードでは攻撃しない
     if (movementMode === MovementMode.NORMAL) {
@@ -74,10 +76,13 @@ export class CombatSystem {
 
     // 既に戦闘中の場合はスキップ
     if (this.combatArmies.has(army)) {
+      console.log(`[CombatSystem] 既に戦闘中のためスキップ`);
       return;
     }
 
     // 戦闘移動または待機モードの場合のみ攻撃開始
+    console.log(`[CombatSystem] 戦闘開始処理実行`);
+    console.log(`[CombatSystem] this.attackTimerManager存在確認: ${this.attackTimerManager !== undefined}`);
     this.combatArmies.add(army);
     this.attackTimerManager.startArmyAttackTimers(army, (attacker) => {
       this.performCharacterAttack(attacker, army);
@@ -91,6 +96,10 @@ export class CombatSystem {
 
   private performCharacterAttack(attacker: Character, attackerArmy: Army): void {
     console.log(`[CombatSystem] 攻撃実行チェック: ${attacker.getName()}`);
+    console.log(`[CombatSystem] this存在確認: ${this !== undefined && this !== null}`);
+    console.log(`[CombatSystem] this.combatCalculator存在確認: ${this?.combatCalculator !== undefined}`);
+    console.log(`[CombatSystem] this.rangeCalculator存在確認: ${this?.rangeCalculator !== undefined}`);
+    console.log(`[CombatSystem] this.effectManager存在確認: ${this?.effectManager !== undefined}`);
 
     // 攻撃可能かチェック
     const canAttack = this.combatCalculator.canAttack(attacker);
