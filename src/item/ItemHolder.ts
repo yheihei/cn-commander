@@ -67,7 +67,9 @@ export class ItemHolder implements IItemHolder {
 
     const previousWeapon = this._equippedWeapon;
     this._equippedWeapon = weapon;
-    console.log(`[ItemHolder] 装備: ${weapon.name} (前の装備: ${previousWeapon ? previousWeapon.name : 'なし'})`);
+    console.log(
+      `[ItemHolder] 装備: ${weapon.name} (前の装備: ${previousWeapon ? previousWeapon.name : 'なし'})`,
+    );
   }
 
   unequipWeapon(): void {

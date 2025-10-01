@@ -91,13 +91,13 @@ export class CombatSystem {
 
   private performCharacterAttack(attacker: Character, attackerArmy: Army): void {
     console.log(`[CombatSystem] 攻撃実行チェック: ${attacker.getName()}`);
-    
+
     // 攻撃可能かチェック
     const canAttack = this.combatCalculator.canAttack(attacker);
     const weapon = attacker.getItemHolder().getEquippedWeapon();
     console.log(`  - 装備武器: ${weapon ? weapon.name : 'なし'}`);
     console.log(`  - 攻撃可能: ${canAttack}`);
-    
+
     if (!canAttack) {
       console.log(`  → 攻撃不可のためスキップ`);
       return;

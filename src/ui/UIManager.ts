@@ -872,6 +872,9 @@ export class UIManager {
     }
 
     console.log(`[UIManager] アイテム譲渡完了: ${from.getName()} -> ${to.getName()}: ${item.name}`);
+
+    // メッセージ表示
+    this.showGuideMessage(`${item.name}を${to.getName()}に渡しました`);
   }
 
   public hideItemInventoryUI(): void {

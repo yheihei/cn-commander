@@ -78,6 +78,11 @@ export class ItemInventoryUI extends PhaserContainer {
   private currentCharacterIndex: number = 0;
   private armyMembers: Character[] = [];
 
+  // 譲渡UI関連
+  private transferTargetSelectContainer?: Phaser.GameObjects.Container;
+  private transferringItem?: IItem;
+  private transferringCharacter?: Character;
+
   // レイアウト設定
   private readonly layoutConfig = {
     padding: 20,
@@ -619,12 +624,12 @@ export class ItemInventoryUI extends PhaserContainer {
           : undefined,
       },
       equip: {
-        enabled: isWeapon,  // 武器なら常に有効（装備/装備解除両方）
+        enabled: isWeapon, // 武器なら常に有効（装備/装備解除両方）
         text: isEquipped ? '装備解除' : '装備',
         callback: isWeapon
           ? isEquipped
-            ? () => this.handleUnequipWeapon(character)  // 装備中なら解除
-            : () => this.handleEquipWeapon(character, item as IWeapon)  // 未装備なら装備
+            ? () => this.handleUnequipWeapon(character) // 装備中なら解除
+            : () => this.handleEquipWeapon(character, item as IWeapon) // 未装備なら装備
           : undefined,
       },
       transfer: {
@@ -654,7 +659,9 @@ export class ItemInventoryUI extends PhaserContainer {
   private handleUnequipWeapon(character: Character): void {
     const itemHolder = character.getItemHolder();
     const weapon = itemHolder.getEquippedWeapon();
-    console.log(`[ItemInventoryUI] 装備解除: ${character.getName()} - ${weapon ? weapon.name : 'なし'}`);
+    console.log(
+      `[ItemInventoryUI] 装備解除: ${character.getName()} - ${weapon ? weapon.name : 'なし'}`,
+    );
     itemHolder.unequipWeapon();
     // UIを更新（装備状態の表示更新）
     this.updateDisplay();
@@ -663,31 +670,249 @@ export class ItemInventoryUI extends PhaserContainer {
   private handleTransferItem(from: Character, item: IItem): void {
     console.log(`[ItemInventoryUI] アイテム譲渡開始: ${from.getName()} の ${item.name} を譲渡`);
 
-    // 譲渡可能な他のメンバーを取得
-    const availableTargets = this.armyMembers.filter((member) => member !== from);
+    // 譲渡元と譲渡アイテムを保存
+    this.transferringCharacter = from;
+    this.transferringItem = item;
 
-    if (availableTargets.length === 0) {
-      console.log(`[ItemInventoryUI] 譲渡失敗: 譲渡可能な他のメンバーがいません`);
+    // 譲渡対象選択UIを表示
+    this.createTransferTargetSelectUI();
+  }
+
+  /**
+   * 譲渡対象選択UIを作成・表示
+   */
+  private createTransferTargetSelectUI(): void {
+    if (!this.transferringCharacter || !this.transferringItem) {
       return;
     }
 
-    // 簡易実装：最初の利用可能なメンバーに自動譲渡
-    // （将来的には譲渡先選択UIを実装予定）
-    const target = availableTargets[0];
+    // 既存の譲渡UIコンテナがあれば破棄（transferringItem/Characterはクリアしない）
+    if (this.transferTargetSelectContainer) {
+      this.transferTargetSelectContainer.destroy();
+      this.transferTargetSelectContainer = undefined;
+    }
 
-    // 譲渡先の所持数チェック（UI側でも確認）
-    if (target.getItemHolder().items.length >= 4) {
-      console.log(`[ItemInventoryUI] 譲渡失敗: ${target.getName()} の持物が満杯です`);
+    // カメラの表示範囲を取得
+    const cam = this.phaserScene.cameras.main;
+    const viewLeft = cam.worldView.x;
+    const viewTop = cam.worldView.y;
+    const viewWidth = cam.worldView.width;
+    const viewHeight = cam.worldView.height;
+
+    // コンテナ作成
+    this.transferTargetSelectContainer = this.phaserScene.add.container(0, 0);
+    this.transferTargetSelectContainer.setDepth(2000); // 持物UIより前面
+
+    // オーバーレイ背景（半透明黒、インタラクティブ）
+    const overlayBg = this.phaserScene.add.rectangle(
+      viewLeft + viewWidth / 2,
+      viewTop + viewHeight / 2,
+      viewWidth,
+      viewHeight,
+      0x000000,
+      0.5,
+    );
+    this.transferTargetSelectContainer.add(overlayBg);
+
+    // 譲渡可能なメンバーリスト（自分以外）
+    const availableTargets = this.armyMembers.filter(
+      (member) => member !== this.transferringCharacter,
+    );
+
+    // 選択パネルのサイズ計算
+    const panelWidth = 300;
+    const titleHeight = 40;
+    const buttonHeight = 40;
+    const buttonSpacing = 10;
+    const panelHeight = titleHeight + availableTargets.length * (buttonHeight + buttonSpacing) + 20;
+
+    // 選択パネル（中央配置）
+    const panelX = viewLeft + viewWidth / 2;
+    const panelY = viewTop + viewHeight / 2;
+    const selectPanel = this.phaserScene.add.rectangle(
+      panelX,
+      panelY,
+      panelWidth,
+      panelHeight,
+      0xffffff,
+      0.95,
+    );
+    selectPanel.setStrokeStyle(2, 0x000000);
+    this.transferTargetSelectContainer.add(selectPanel);
+
+    // selectPanelの範囲を保存（overlayBgのクリック判定用）
+    const panelBounds = {
+      left: panelX - panelWidth / 2,
+      right: panelX + panelWidth / 2,
+      top: panelY - panelHeight / 2,
+      bottom: panelY + panelHeight / 2,
+    };
+
+    // overlayBgのイベントハンドラ設定（panel外のクリックで閉じる）
+    overlayBg.setInteractive();
+    overlayBg.on(
+      'pointerdown',
+      (
+        pointer: Phaser.Input.Pointer,
+        _localX: number,
+        _localY: number,
+        event: Phaser.Types.Input.EventData,
+      ) => {
+        const clickX = pointer.worldX;
+        const clickY = pointer.worldY;
+
+        // クリック位置がpanel内かどうかをチェック
+        const isInsidePanel =
+          clickX >= panelBounds.left &&
+          clickX <= panelBounds.right &&
+          clickY >= panelBounds.top &&
+          clickY <= panelBounds.bottom;
+
+        console.log(
+          `[ItemInventoryUI] overlayBg clicked - クリック位置: (${clickX}, ${clickY}), panel内: ${isInsidePanel}`,
+        );
+
+        if (!isInsidePanel) {
+          // panel外のクリックの場合のみUIを閉じる
+          console.log('[ItemInventoryUI] panel外クリック - UIを閉じます');
+          event.stopPropagation();
+          this.closeTransferTargetSelectUI();
+        } else {
+          console.log('[ItemInventoryUI] panel内クリック - UIを閉じません');
+        }
+      },
+    );
+
+    // タイトルテキスト
+    const titleText = this.phaserScene.add.text(
+      panelX,
+      panelY - panelHeight / 2 + 20,
+      '誰に渡しますか？',
+      {
+        fontSize: '16px',
+        color: '#000000',
+        fontFamily: 'Arial',
+      },
+    );
+    titleText.setOrigin(0.5);
+    this.transferTargetSelectContainer.add(titleText);
+
+    // メンバーボタンリスト
+    let currentY = panelY - panelHeight / 2 + titleHeight + buttonSpacing;
+    availableTargets.forEach((member) => {
+      const itemCount = member.getItemHolder().items.length;
+      const isFull = itemCount >= 4;
+
+      // ボタン背景
+      const buttonBg = this.phaserScene.add.rectangle(
+        panelX,
+        currentY + buttonHeight / 2,
+        panelWidth - 40,
+        buttonHeight,
+        isFull ? 0xcccccc : 0xffffff,
+      );
+      buttonBg.setStrokeStyle(1, 0x000000);
+
+      // ホバー効果とクリック処理（満杯でない場合のみ）
+      if (!isFull) {
+        buttonBg.setInteractive();
+        buttonBg.on('pointerover', () => {
+          buttonBg.setFillStyle(0xccddff);
+        });
+        buttonBg.on('pointerout', () => {
+          buttonBg.setFillStyle(0xffffff);
+        });
+        buttonBg.on(
+          'pointerdown',
+          (
+            _pointer: Phaser.Input.Pointer,
+            _localX: number,
+            _localY: number,
+            event: Phaser.Types.Input.EventData,
+          ) => {
+            console.log(`[ItemInventoryUI] buttonBg clicked - ${member.getName()}を選択`);
+            event.stopPropagation();
+            this.executeTransfer(member);
+          },
+        );
+      }
+
+      this.transferTargetSelectContainer!.add(buttonBg);
+
+      // メンバー名と所持数
+      const buttonText = this.phaserScene.add.text(
+        panelX,
+        currentY + buttonHeight / 2,
+        `${member.getName()}（${itemCount}/4）`,
+        {
+          fontSize: '14px',
+          color: isFull ? '#888888' : '#000000',
+          fontFamily: 'Arial',
+        },
+      );
+      buttonText.setOrigin(0.5);
+      this.transferTargetSelectContainer!.add(buttonText);
+
+      currentY += buttonHeight + buttonSpacing;
+    });
+
+    console.log(`[ItemInventoryUI] 譲渡対象選択UI表示: ${availableTargets.length}名`);
+  }
+
+  /**
+   * 譲渡を実行
+   */
+  private executeTransfer(to: Character): void {
+    console.log(`[ItemInventoryUI] executeTransfer開始: ${to.getName()}`);
+    console.log(
+      `[ItemInventoryUI] transferringItem: ${this.transferringItem?.name}, transferringCharacter: ${this.transferringCharacter?.getName()}`,
+    );
+
+    if (!this.transferringItem || !this.transferringCharacter) {
+      console.log(
+        '[ItemInventoryUI] transferringItemまたはtransferringCharacterがnullのため処理を中断',
+      );
       return;
     }
 
-    // UIManagerのコールバックを呼び出し
+    const from = this.transferringCharacter;
+    const item = this.transferringItem;
+
+    // 譲渡先の所持数チェック（念のため再確認）
+    if (to.getItemHolder().items.length >= 4) {
+      console.log(`[ItemInventoryUI] 譲渡失敗: ${to.getName()}の持物が満杯です`);
+      return;
+    }
+
+    console.log(
+      `[ItemInventoryUI] 譲渡実行: ${from.getName()} → ${to.getName()}, アイテム: ${item.name}`,
+    );
+
+    // UIManagerのコールバック呼び出し
     if (this.onTransferItemCallback) {
-      this.onTransferItemCallback(from, target, item);
+      this.onTransferItemCallback(from, to, item);
     }
 
-    // UIを更新（アイテムが移動した後の表示更新）
+    // メッセージ表示は、UIManager経由で行う必要がある
+    // （このクラスからは直接showGuideMessageを呼べないため、UIManagerに任せる）
+
+    // UIを更新
     this.updateDisplay();
+
+    // 譲渡対象選択UIを閉じる
+    this.closeTransferTargetSelectUI();
+  }
+
+  /**
+   * 譲渡対象選択UIを閉じる
+   */
+  private closeTransferTargetSelectUI(): void {
+    if (this.transferTargetSelectContainer) {
+      this.transferTargetSelectContainer.destroy();
+      this.transferTargetSelectContainer = undefined;
+    }
+    this.transferringItem = undefined;
+    this.transferringCharacter = undefined;
   }
 
   private setupInputHandlers(): void {

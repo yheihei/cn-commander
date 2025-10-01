@@ -90,15 +90,15 @@ export class AttackTimerManager {
     const allMembers = [army.getCommander(), ...army.getSoldiers()];
     console.log(`[AttackTimerManager] 軍団「${army.getName()}」の攻撃タイマー開始処理`);
     console.log(`[AttackTimerManager] メンバー数: ${allMembers.length}`);
-    
+
     allMembers.forEach((member, index) => {
       const isAlive = member.isAlive();
       const equippedWeapon = member.getItemHolder().getEquippedWeapon();
-      
+
       console.log(`[AttackTimerManager] メンバー${index + 1}: ${member.getName()}`);
       console.log(`  - 生存: ${isAlive}`);
       console.log(`  - 装備武器: ${equippedWeapon ? equippedWeapon.name : 'なし'}`);
-      
+
       if (isAlive && equippedWeapon) {
         console.log(`  → 攻撃タイマー開始`);
         timer.start(member, () => onCharacterAttack(member));
