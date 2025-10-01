@@ -113,16 +113,23 @@ export class MedicalManager {
 
   /**
    * 更新処理（完了した治療を自動的に処理）
+   * @returns 完了した軍団名のリスト
    */
-  public update(armyManager: ArmyManager): void {
+  public update(armyManager: ArmyManager): string[] {
+    const completedArmyNames: string[] = [];
+
     this.treatments.forEach((treatment) => {
       if (this.isCompleted(treatment.armyId)) {
         const army = armyManager.getArmyById(treatment.armyId);
         if (army) {
+          // 完了した軍団名を記録（HP回復前に取得）
+          completedArmyNames.push(army.getName());
           this.completeTreatment(army);
         }
       }
     });
+
+    return completedArmyNames;
   }
 
   /**

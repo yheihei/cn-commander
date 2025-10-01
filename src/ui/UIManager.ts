@@ -1025,7 +1025,11 @@ export class UIManager {
     if (this.medicalManager) {
       const armyManager = (this.scene as any).armyManager;
       if (armyManager) {
-        this.medicalManager.update(armyManager);
+        const completedArmyNames = this.medicalManager.update(armyManager);
+        // 完了した軍団ごとに通知を表示
+        completedArmyNames.forEach((armyName) => {
+          this.showGuideMessage(`${armyName}の治療が完了しました`);
+        });
       }
     }
 
