@@ -411,9 +411,9 @@ export class UIManager {
     const viewTop = cam.worldView.y;
     const viewWidth = cam.worldView.width;
 
-    // 画面上部中央に配置
-    const x = viewLeft + viewWidth / 2;
-    const y = viewTop + 30;
+    // 画面上部中央に配置（整数座標でピクセルパーフェクト）
+    const x = Math.round(viewLeft + viewWidth / 2);
+    const y = Math.round(viewTop + 30);
 
     // ガイドメッセージコンテナを作成
     this.guideMessage = this.scene.add.container(x, y);
@@ -428,6 +428,8 @@ export class UIManager {
       fontSize: '14px',
       color: '#ffffff',
       align: 'center',
+      padding: { x: 0, top: 2 },
+      resolution: 2,
     });
     text.setOrigin(0.5);
     this.guideMessage.add(text);
